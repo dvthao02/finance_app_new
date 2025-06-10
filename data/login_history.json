@@ -372,5 +372,95 @@
     "user_id": "user_001",
     "action": "login",
     "timestamp": "2025-06-10T22:29:10.972650"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T22:41:11.160220"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T22:49:15.264641"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T22:53:48.479145"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T22:58:44.098135"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T23:16:53.410653"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T23:17:43.154936"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T23:19:55.846152"
+  },
+  {
+    "user_id": "user_001",
+    "action": "logout",
+    "timestamp": "2025-06-10T23:22:51.227202"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-11T00:08:57.630273"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-11T00:12:26.032322"
+  },
+  {
+    "user_id": "user_007",
+    "action": "Khóa tài khoản: sa",
+    "timestamp": "2025-06-11T00:13:13.313876"
+  },
+  {
+    "user_id": "user_007",
+    "action": "Mở khóa tài khoản",
+    "timestamp": "2025-06-11T00:13:18.708533"
+  },
+  {
+    "user_id": "user_007",
+    "action": "Cấp lại mật khẩu mới: Uwhr8C88",
+    "timestamp": "2025-06-11T00:13:28.355129"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-11T00:23:16.361899"
+  },
+  {
+    "user_id": "user_004",
+    "action": "Mở khóa tài khoản",
+    "timestamp": "2025-06-11T00:23:47.635217"
+  },
+  {
+    "user_id": "user_008",
+    "action": "Cấp lại mật khẩu mới: bJp5EKzV",
+    "timestamp": "2025-06-11T00:23:53.468935"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-11T00:31:49.788797"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-11T00:37:08.103696"
   }
 ]

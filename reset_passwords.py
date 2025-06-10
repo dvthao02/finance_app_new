@@ -4,9 +4,9 @@ import sys
 def main():
     try:
         user_manager = UserManager()
-        updated_count = user_manager.reset_all_passwords("123456aA@")
+        updated_count = user_manager.reset_all_passwords("12345aA@")
         print(f"Đã reset mật khẩu thành công cho {updated_count} tài khoản")
-        print("Mật khẩu mới: 123456aA@")
+        print("Mật khẩu mới: 12345aA@")
     except Exception as e:
         print(f"Lỗi: {str(e)}")
         sys.exit(1)

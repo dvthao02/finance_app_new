@@ -1,3 +1,4 @@
+print("=== main.py started ===")
 import sys
 import json
 from PyQt5.QtWidgets import QApplication
@@ -8,6 +9,7 @@ from datetime import datetime
 def main():
     app = QApplication(sys.argv)
     app.admin_dashboard = None  # Giữ tham chiếu admin_dashboard
+    
     def log_history(user_id, action):
         try:
             with open('data/login_history.json', 'r', encoding='utf-8') as f:
@@ -23,27 +25,48 @@ def main():
             json.dump(history, f, ensure_ascii=False, indent=2)
 
     def show_login():
-        login = LoginForm()
-        def on_login_success(user_id):
-            user = login.user_manager.get_user_by_id(user_id)
-            print(f"Đăng nhập thành công! Vai trò: {user.get('role')} | User ID: {user_id}")
-            log_history(user_id, 'login')
-            login.accept()  # Đóng form login ngay khi đăng nhập thành công
-            if user.get('role') == 'admin':
-                app.admin_dashboard = AdminDashboard()
-                app.admin_dashboard.set_current_user(user)  # Gán user hiện tại cho dashboard
-                def on_logout():
-                    log_history(user_id, 'logout')
-                    show_login()
-                app.admin_dashboard.logout_signal.connect(on_logout)
-                app.admin_dashboard.show()
-                app.admin_dashboard.raise_()
-                app.admin_dashboard.activateWindow()
-            else:
-                # TODO: mở dashboard user
-                pass
-        login.login_success.connect(on_login_success)
-        login.exec_()
+        print("[DEBUG] show_login called")
+        try:
+            login = LoginForm()
+            print("[DEBUG] LoginForm instance created successfully")
+        except Exception as e:
+            print("[ERROR] Lỗi khi khởi tạo LoginForm:", e)
+            import traceback
+            traceback.print_exc()
+            print("[DEBUG] Exiting due to LoginForm initialization error")
+            return
+            
+        try:
+            def on_login_success(user_id):
+                user = login.user_manager.get_user_by_id(user_id)
+                print(f"Đăng nhập thành công! Vai trò: {user.get('role')} | User ID: {user_id}")
+                log_history(user_id, 'login')
+                login.accept()  # Đóng form login ngay khi đăng nhập thành công
+                if user.get('role') == 'admin':
+                    app.admin_dashboard = AdminDashboard()
+                    app.admin_dashboard.set_current_user(user)  # Gán user hiện tại cho dashboard
+                    def on_logout():
+                        print("Logout signal received. Đóng dashboard và show lại login.")
+                        app.admin_dashboard.close()  # Đóng dashboard trước khi show login
+                        log_history(user_id, 'logout')
+                        show_login()
+                    app.admin_dashboard.logout_signal.connect(on_logout)
+                    app.admin_dashboard.show()
+                    app.admin_dashboard.raise_()
+                    app.admin_dashboard.activateWindow()
+                else:
+                    # TODO: mở dashboard user
+                    pass
+                    
+            login.login_success.connect(on_login_success)
+            print("[DEBUG] About to show login dialog")
+            result = login.exec_()
+            print(f"[DEBUG] Login dialog closed with result: {result}")
+        except Exception as e:
+            print(f"[ERROR] Error in login dialog execution: {e}")
+            import traceback
+            traceback.print_exc()
+        
     show_login()
     app.exec_()
 
