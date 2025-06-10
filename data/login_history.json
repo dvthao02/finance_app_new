@@ -252,5 +252,125 @@
     "user_id": "user_004",
     "action": "Gửi mã đặt lại mật khẩu: 5HEHBM",
     "timestamp": "2025-06-10T19:31:33.830088"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T21:26:25.714808"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-10T21:29:42.018078"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T21:29:51.640929"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T21:33:03.834425"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T21:34:22.401108"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T21:36:47.969606"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T21:38:15.787263"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T21:43:06.734808"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T21:44:21.732967"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T21:49:55.933479"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T21:51:39.389954"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T21:52:35.824530"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T21:53:35.962409"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T21:54:18.884385"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T21:55:05.702320"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T21:55:38.732266"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-10T22:00:20.266122"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T22:04:37.741107"
+  },
+  {
+    "user_id": "user_001",
+    "action": "logout",
+    "timestamp": "2025-06-10T22:05:17.349465"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T22:05:47.253267"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T22:10:42.201250"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T22:14:29.081357"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T22:19:12.511987"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T22:29:10.972650"
   }
 ]

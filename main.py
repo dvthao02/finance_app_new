@@ -7,6 +7,7 @@ from datetime import datetime
 
 def main():
     app = QApplication(sys.argv)
+    app.admin_dashboard = None  # Giữ tham chiếu admin_dashboard
     def log_history(user_id, action):
         try:
             with open('data/login_history.json', 'r', encoding='utf-8') as f:
@@ -29,19 +30,22 @@ def main():
             log_history(user_id, 'login')
             login.accept()  # Đóng form login ngay khi đăng nhập thành công
             if user.get('role') == 'admin':
-                admin_dashboard = AdminDashboard()
-                admin_dashboard.set_current_user(user)  # Gán user hiện tại cho dashboard
+                app.admin_dashboard = AdminDashboard()
+                app.admin_dashboard.set_current_user(user)  # Gán user hiện tại cho dashboard
                 def on_logout():
                     log_history(user_id, 'logout')
                     show_login()
-                admin_dashboard.logout_signal.connect(on_logout)
-                admin_dashboard.exec_()
+                app.admin_dashboard.logout_signal.connect(on_logout)
+                app.admin_dashboard.show()
+                app.admin_dashboard.raise_()
+                app.admin_dashboard.activateWindow()
             else:
                 # TODO: mở dashboard user
                 pass
         login.login_success.connect(on_login_success)
         login.exec_()
     show_login()
+    app.exec_()
 
 if __name__ == "__main__":
     main()

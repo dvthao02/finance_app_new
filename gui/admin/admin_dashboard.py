@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QDialog, QTabWidget, QVBoxLayout, QWidget, QLabel, QPushButton, QHBoxLayout, QTableWidget, QTableWidgetItem, QLineEdit, QComboBox, QTextEdit, QMessageBox, QInputDialog, QDateEdit, QHeaderView
+from PyQt5.QtWidgets import QMainWindow, QTabWidget, QVBoxLayout, QWidget, QLabel, QPushButton, QHBoxLayout, QTableWidget, QTableWidgetItem, QLineEdit, QComboBox, QTextEdit, QMessageBox, QInputDialog, QDateEdit, QHeaderView
 from PyQt5.QtCore import pyqtSignal, QDate
 from data_manager.user_manager import UserManager
 from data_manager.category_manager import CategoryManager
@@ -7,14 +7,16 @@ from data_manager.audit_log_manager import AuditLogManager
 from data_manager.transaction_manager import TransactionManager
 from datetime import datetime
 
-class AdminDashboard(QDialog):
+class AdminDashboard(QMainWindow):
     logout_signal = pyqtSignal()
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Admin Dashboard")
         self.setMinimumSize(1100, 700)
         self.current_user = None
-        self.init_ui()
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        self.init_ui(central_widget)
 
     def set_current_user(self, user):
         self.current_user = user
@@ -32,8 +34,9 @@ class AdminDashboard(QDialog):
         self.load_dashboard_stats()
         self.load_audit_log_table()
 
-    def init_ui(self):
-        layout = QVBoxLayout(self)
+    def init_ui(self, parent_widget):
+        layout = QVBoxLayout(parent_widget)
+        # Bỏ thanh tiêu đề tuỳ chỉnh, dùng mặc định của hệ điều hành
         self.tabs = QTabWidget()
         layout.addWidget(self.tabs)
         # 1. User Management
@@ -181,24 +184,218 @@ class AdminDashboard(QDialog):
     # 2. Default Category Management Tab
     def init_category_tab(self):
         layout = QVBoxLayout(self.category_tab)
-        self.category_table = QTableWidget(0, 2)
-        self.category_table.setHorizontalHeaderLabels(["Tên danh mục", "Biểu tượng"])
+        self.category_table = QTableWidget(0, 8)
+        self.category_table.setHorizontalHeaderLabels([
+            "Icon", "Tên danh mục", "Loại", "Màu sắc", "Mô tả", "Trạng thái", "Ngày tạo", "Người tạo"
+        ])
+        self.category_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.category_table.horizontalHeader().setStretchLastSection(True)
+        self.category_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         layout.addWidget(self.category_table)
         btn_layout = QHBoxLayout()
-        btn_layout.addWidget(QPushButton("Thêm danh mục"))
-        btn_layout.addWidget(QPushButton("Sửa danh mục"))
-        btn_layout.addWidget(QPushButton("Xóa danh mục"))
+        self.btn_add_cat = QPushButton("Thêm danh mục")
+        self.btn_edit_cat = QPushButton("Sửa danh mục")
+        self.btn_del_cat = QPushButton("Xóa danh mục")
+        btn_layout.addWidget(self.btn_add_cat)
+        btn_layout.addWidget(self.btn_edit_cat)
+        btn_layout.addWidget(self.btn_del_cat)
         layout.addLayout(btn_layout)
+        self.btn_add_cat.clicked.connect(self.add_category_dialog)
+        self.btn_edit_cat.clicked.connect(self.edit_category_dialog)
+        self.btn_del_cat.clicked.connect(self.delete_category)
 
     def load_categories_table(self):
+        from PyQt5.QtGui import QIcon, QPixmap
+        import os
         categories = self.category_manager.load_categories()
         self.category_table.setRowCount(0)
         for cat in categories:
             if cat.get('user_id', 'system') == 'system':
                 row = self.category_table.rowCount()
                 self.category_table.insertRow(row)
-                self.category_table.setItem(row, 0, QTableWidgetItem(cat.get('name', '')))
-                self.category_table.setItem(row, 1, QTableWidgetItem(cat.get('icon', '')))
+                # Cột 0: Icon lớn
+                icon = cat.get('icon', '')
+                icon_item = QTableWidgetItem()
+                if os.path.isfile(icon):
+                    pixmap = QPixmap(icon)
+                    if not pixmap.isNull():
+                        pixmap = pixmap.scaled(32, 32)
+                        icon_item.setIcon(QIcon(pixmap))
+                else:
+                    icon_item.setText(icon)
+                self.category_table.setItem(row, 0, icon_item)
+                # Cột 1: Tên danh mục
+                self.category_table.setItem(row, 1, QTableWidgetItem(cat.get('name', '')))
+                self.category_table.setItem(row, 2, QTableWidgetItem('Chi' if cat.get('type')=='expense' else 'Thu'))
+                self.category_table.setItem(row, 3, QTableWidgetItem(cat.get('color', '')))
+                self.category_table.setItem(row, 4, QTableWidgetItem(cat.get('description', '')))
+                self.category_table.setItem(row, 5, QTableWidgetItem('Hoạt động' if cat.get('is_active', True) else 'Ẩn'))
+                self.category_table.setItem(row, 6, QTableWidgetItem(self.format_datetime(cat.get('created_at', ''))))
+                self.category_table.setItem(row, 7, QTableWidgetItem('Hệ thống'))
+
+    def add_category_dialog(self):
+        from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QComboBox, QColorDialog, QTextEdit, QPushButton, QLabel, QFileDialog
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Thêm danh mục mới")
+        layout = QVBoxLayout(dialog)
+        name_edit = QLineEdit(); name_edit.setPlaceholderText("Tên danh mục")
+        icon_combo = QComboBox(); icon_combo.setEditable(True)
+        emoji_list = ["🍽️","🍳","🍜","🚗","🎬","🛒","💊","📚","💡","💰","💼","📈","🎁","🏠"]
+        icon_combo.addItems(emoji_list)
+        icon_file_btn = QPushButton("Chọn icon từ file...")
+        icon_path = {'value': ''}
+        def choose_icon_file():
+            file, _ = QFileDialog.getOpenFileName(self, "Chọn icon", "", "Images (*.png *.jpg *.jpeg *.ico)")
+            if file:
+                icon_path['value'] = file
+                icon_combo.setEditText(file)
+        icon_file_btn.clicked.connect(choose_icon_file)
+        type_combo = QComboBox(); type_combo.addItems(["Chi", "Thu"])
+        color_btn = QPushButton("Chọn màu")
+        color_val = {'value': '#FF6B6B'}
+        def choose_color():
+            color = QColorDialog.getColor()
+            if color.isValid():
+                color_val['value'] = color.name()
+        color_btn.clicked.connect(choose_color)
+        desc_edit = QTextEdit(); desc_edit.setPlaceholderText("Mô tả")
+        ok_btn = QPushButton("Thêm")
+        cancel_btn = QPushButton("Hủy")
+        btns = QHBoxLayout(); btns.addWidget(ok_btn); btns.addWidget(cancel_btn)
+        layout.addWidget(QLabel("Tên danh mục:")); layout.addWidget(name_edit)
+        layout.addWidget(QLabel("Biểu tượng (emoji hoặc file):")); layout.addWidget(icon_combo); layout.addWidget(icon_file_btn)
+        layout.addWidget(QLabel("Loại danh mục:")); layout.addWidget(type_combo)
+        layout.addWidget(QLabel("Màu sắc:")); layout.addWidget(color_btn)
+        layout.addWidget(QLabel("Mô tả:")); layout.addWidget(desc_edit)
+        layout.addLayout(btns)
+        def on_ok():
+            name = name_edit.text().strip()
+            icon = icon_combo.currentText().strip()
+            if icon_path['value']:
+                icon = icon_path['value']
+            cat_type = 'expense' if type_combo.currentText()=="Chi" else 'income'
+            color = color_val['value']
+            desc = desc_edit.toPlainText().strip()
+            if not name or not icon:
+                QMessageBox.warning(dialog, "Thiếu thông tin", "Vui lòng nhập tên và chọn biểu tượng!")
+                return
+            try:
+                self.category_manager.create_category(
+                    user_id="system",
+                    name=name,
+                    category_type=cat_type,
+                    icon=icon,
+                    color=color,
+                    description=desc,
+                    is_active=True
+                )
+                self.load_categories_table()
+                dialog.accept()
+            except Exception as e:
+                QMessageBox.warning(dialog, "Lỗi", str(e))
+        ok_btn.clicked.connect(on_ok)
+        cancel_btn.clicked.connect(dialog.reject)
+        dialog.exec_()
+
+    def edit_category_dialog(self):
+        row = self.category_table.currentRow()
+        if row < 0:
+            QMessageBox.warning(self, "Chọn danh mục", "Vui lòng chọn một danh mục để sửa!")
+            return
+        cat_name = self.category_table.item(row, 1).text().strip()
+        categories = self.category_manager.load_categories()
+        cat = next((c for c in categories if c.get('name') == cat_name), None)
+        if not cat:
+            QMessageBox.warning(self, "Không tìm thấy", "Không tìm thấy danh mục này!")
+            return
+        from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QComboBox, QColorDialog, QTextEdit, QPushButton, QLabel, QFileDialog
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Sửa danh mục")
+        layout = QVBoxLayout(dialog)
+        name_edit = QLineEdit(cat.get('name', ''))
+        icon_combo = QComboBox(); icon_combo.setEditable(True)
+        emoji_list = ["🍽️","🍳","🍜","🚗","🎬","🛒","💊","📚","💡","💰","💼","📈","🎁","🏠"]
+        icon_combo.addItems(emoji_list)
+        icon_combo.setEditText(cat.get('icon', ''))
+        icon_file_btn = QPushButton("Chọn icon từ file...")
+        icon_path = {'value': ''}
+        def choose_icon_file():
+            file, _ = QFileDialog.getOpenFileName(self, "Chọn icon", "", "Images (*.png *.jpg *.jpeg *.ico)")
+            if file:
+                icon_path['value'] = file
+                icon_combo.setEditText(file)
+        icon_file_btn.clicked.connect(choose_icon_file)
+        type_combo = QComboBox(); type_combo.addItems(["Chi", "Thu"])
+        type_combo.setCurrentText("Chi" if cat.get('type')=="expense" else "Thu")
+        color_btn = QPushButton("Chọn màu")
+        color_val = {'value': cat.get('color', '#FF6B6B')}
+        def choose_color():
+            color = QColorDialog.getColor()
+            if color.isValid():
+                color_val['value'] = color.name()
+        color_btn.clicked.connect(choose_color)
+        desc_edit = QTextEdit(cat.get('description', ''))
+        ok_btn = QPushButton("Lưu")
+        cancel_btn = QPushButton("Hủy")
+        btns = QHBoxLayout(); btns.addWidget(ok_btn); btns.addWidget(cancel_btn)
+        layout.addWidget(QLabel("Tên danh mục:")); layout.addWidget(name_edit)
+        layout.addWidget(QLabel("Biểu tượng (emoji hoặc file):")); layout.addWidget(icon_combo); layout.addWidget(icon_file_btn)
+        layout.addWidget(QLabel("Loại danh mục:")); layout.addWidget(type_combo)
+        layout.addWidget(QLabel("Màu sắc:")); layout.addWidget(color_btn)
+        layout.addWidget(QLabel("Mô tả:")); layout.addWidget(desc_edit)
+        layout.addLayout(btns)
+        def on_ok():
+            name = name_edit.text().strip()
+            icon = icon_combo.currentText().strip()
+            if icon_path['value']:
+                icon = icon_path['value']
+            cat_type = 'expense' if type_combo.currentText()=="Chi" else 'income'
+            color = color_val['value']
+            desc = desc_edit.toPlainText().strip()
+            if not name or not icon:
+                QMessageBox.warning(dialog, "Thiếu thông tin", "Vui lòng nhập tên và chọn biểu tượng!")
+                return
+            try:
+                self.category_manager.update_category(
+                    category_id=cat.get('category_id'),
+                    current_user_id='system',
+                    is_admin=True,
+                    name=name,
+                    icon=icon,
+                    type=cat_type,
+                    color=color,
+                    description=desc
+                )
+                self.load_categories_table()
+                dialog.accept()
+            except Exception as e:
+                QMessageBox.warning(dialog, "Lỗi", str(e))
+        ok_btn.clicked.connect(on_ok)
+        cancel_btn.clicked.connect(dialog.reject)
+        dialog.exec_()
+
+    def delete_category(self):
+        row = self.category_table.currentRow()
+        if row < 0:
+            QMessageBox.warning(self, "Chọn danh mục", "Vui lòng chọn một danh mục để xóa!")
+            return
+        cat_name = self.category_table.item(row, 1).text().strip()
+        categories = self.category_manager.load_categories()
+        cat = next((c for c in categories if c.get('name') == cat_name), None)
+        if not cat:
+            QMessageBox.warning(self, "Không tìm thấy", "Không tìm thấy danh mục này!")
+            return
+        reply = QMessageBox.question(self, "Xác nhận xóa", f"Bạn có chắc muốn xóa danh mục '{cat_name}'?", QMessageBox.Yes | QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            try:
+                self.category_manager.delete_category(
+                    category_id=cat.get('category_id'),
+                    current_user_id='system',
+                    is_admin=True
+                )
+                self.load_categories_table()
+            except Exception as e:
+                QMessageBox.warning(self, "Lỗi", str(e))
 
     # 3. System Notifications Tab
     def init_notify_tab(self):
@@ -367,16 +564,29 @@ class AdminDashboard(QDialog):
         user = self.get_selected_user()
         if not user:
             return
-        # Thực hiện gửi email đặt lại mật khẩu thực tế (nếu có hệ thống email)
-        # Ở đây sẽ tạo một mã đặt lại và lưu vào user, đồng thời gửi email nếu có cấu hình
         import random, string
-        reset_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-        user['reset_code'] = reset_code
+        new_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+        # Hash password nếu cần (giả lập: lưu plain text, thực tế nên hash)
+        user['password'] = new_password
         users = self.user_manager.load_users()
         for u in users:
             if u.get('user_id') == user['user_id']:
-                u['reset_code'] = reset_code
+                u['password'] = new_password
         self.user_manager.save_users(users)
-        self.audit_log_manager.add_log(user['user_id'], f'Gửi mã đặt lại mật khẩu: {reset_code}')
-        # Nếu có hệ thống gửi email thực tế, gọi hàm gửi email ở đây
-        QMessageBox.information(self, 'Đặt lại mật khẩu', f"Mã đặt lại mật khẩu cho {user.get('email','')}: {reset_code}")
+        self.audit_log_manager.add_log(user['user_id'], f'Cấp lại mật khẩu mới: {new_password}')
+        QMessageBox.information(self, 'Cấp lại mật khẩu', f"Mật khẩu mới cho {user.get('email','')}: {new_password}")
+
+    def toggle_fullscreen(self):
+        if self.isFullScreen():
+            self.showNormal()
+        else:
+            self.showFullScreen()
+
+    def toggle_tabs(self):
+        self.tabs.tabBar().setVisible(not self.tabs.tabBar().isVisible())
+
+    def toggle_maximize(self):
+        if self.isMaximized():
+            self.showNormal()
+        else:
+            self.showMaximized()

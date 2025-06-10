@@ -1,7 +1,8 @@
+from PyQt5.QtWidgets import QMainWindow
 import customtkinter as ctk
 import os
 
-class BaseDashboard(ctk.CTkToplevel):
+class BaseDashboard(QMainWindow):
     def __init__(self, master=None):
         super().__init__(master)
         self.current_user = None

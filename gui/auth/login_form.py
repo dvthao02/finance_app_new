@@ -124,6 +124,13 @@ class LoginForm(QDialog):
         self.login_button.clicked.connect(self.handle_login)
         card_layout.addWidget(self.login_button)
 
+        # Forgot password button
+        self.forgot_button = QPushButton("Quên mật khẩu?")
+        self.forgot_button.setCursor(Qt.PointingHandCursor)
+        self.forgot_button.setStyleSheet("color: #1A73E8; border: none; background: transparent; font-size: 13px;")
+        self.forgot_button.clicked.connect(self.show_forgot_password_dialog)
+        card_layout.addWidget(self.forgot_button)
+
         # Register button
         self.register_button = QPushButton("Chưa có tài khoản? Đăng ký ngay")
         self.register_button.setCursor(Qt.PointingHandCursor)
@@ -141,13 +148,6 @@ class LoginForm(QDialog):
         """)
         self.register_button.clicked.connect(self.show_register_form)
         card_layout.addWidget(self.register_button)
-
-        # Forgot password button
-        self.forgot_button = QPushButton("Quên mật khẩu?")
-        self.forgot_button.setCursor(Qt.PointingHandCursor)
-        self.forgot_button.setStyleSheet("color: #1A73E8; border: none; background: transparent; font-size: 13px;")
-        self.forgot_button.clicked.connect(self.show_forgot_password_dialog)
-        card_layout.addWidget(self.forgot_button)
 
         self.main_layout.addWidget(login_card)
 
@@ -199,6 +199,18 @@ class LoginForm(QDialog):
             result = self.user_manager.generate_reset_code(identifier.strip())
             if result["status"] == "success":
                 QMessageBox.information(self, "Gửi mã thành công", result["message"])
+                # Bổ sung: Cho phép nhập mã xác nhận và mật khẩu mới
+                code, ok2 = QInputDialog.getText(self, "Mã xác nhận", "Nhập mã xác nhận đã nhận:")
+                if not (ok2 and code):
+                    return
+                new_password, ok3 = QInputDialog.getText(self, "Mật khẩu mới", "Nhập mật khẩu mới:")
+                if not (ok3 and new_password):
+                    return
+                reset_result = self.user_manager.reset_password_with_code(identifier.strip(), code.strip(), new_password)
+                if reset_result["status"] == "success":
+                    QMessageBox.information(self, "Thành công", reset_result["message"])
+                else:
+                    QMessageBox.warning(self, "Lỗi", reset_result["message"])
             else:
                 QMessageBox.warning(self, "Lỗi", result["message"])
 
