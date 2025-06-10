@@ -1,0 +1,42 @@
+[
+  {
+    "history_id": "hist_001",
+    "budget_id": "budget_001",
+    "user_id": "user_002",
+    "change_type": "create",
+    "old_amount": null,
+    "new_amount": 3000000,
+    "old_alert_threshold": null,
+    "new_alert_threshold": 80,
+    "reason": "Tạo ngân sách ăn uống tháng 6",
+    "changed_at": "2025-05-30T09:00:00Z",
+    "changed_by": "user_002"
+  },
+  {
+    "history_id": "hist_002",
+    "budget_id": "budget_001",
+    "user_id": "user_002",
+    "change_type": "update",
+    "old_amount": 3000000,
+    "new_amount": 3500000,
+    "old_alert_threshold": 80,
+    "new_alert_threshold": 85,
+    "reason": "Tăng ngân sách ăn uống do chi phí tăng",
+    "changed_at": "2025-06-05T14:30:00Z",
+    "changed_by": "user_002"
+  },
+  {
+    "history_id": "hist_003",
+    "budget_id": "budget_002",
+    "user_id": "user_001",
+    "change_type": "create",
+    "old_amount": null,
+    "new_amount": 2000000,
+    "old_alert_threshold": null,
+    "new_alert_threshold": 75,
+    "reason": "Tạo ngân sách mua sắm tháng 6",
+    "changed_at": "2025-05-30T10:00:00Z",
+    "changed_by": "user_001"
+  }
+]
+

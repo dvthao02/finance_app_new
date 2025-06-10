@@ -1,0 +1,256 @@
+[
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T17:14:15.265949"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T17:16:22.943676"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T17:17:09.249375"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T17:18:32.688039"
+  },
+  {
+    "user_id": "user_002",
+    "username": "dvthao",
+    "action": "login",
+    "timestamp": "2025-06-10T17:20:52.372449"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T17:21:00.241074"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T17:24:25.406316"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "logout",
+    "timestamp": "2025-06-10T17:24:35.302388"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T17:24:43.750130"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T17:32:29.333424"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T17:36:21.476676"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T17:39:23.903333"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T17:43:26.596321"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "logout",
+    "timestamp": "2025-06-10T17:45:27.524634"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T17:45:38.716336"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "logout",
+    "timestamp": "2025-06-10T17:45:42.104487"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T17:49:21.065473"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T17:55:56.290522"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T17:57:35.248512"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T18:04:20.762473"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T18:06:03.790913"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T18:07:51.345141"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T18:10:22.212417"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T18:10:55.917309"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T18:16:27.773439"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T18:18:53.602978"
+  },
+  {
+    "user_id": "user_001",
+    "username": "admin",
+    "action": "login",
+    "timestamp": "2025-06-10T18:32:47.124893"
+  },
+  {
+    "user_id": "user_002",
+    "username": "dvthao",
+    "action": "login",
+    "timestamp": "2025-06-10T18:33:08.928753"
+  },
+  {
+    "user_id": "user_004",
+    "action": "login",
+    "timestamp": "2025-06-10T18:35:01.930238"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T18:38:26.791181"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T18:40:30.204486"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T18:45:46.377599"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T18:52:36.727442"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T18:55:45.600568"
+  },
+  {
+    "user_id": "user_001",
+    "action": "Gửi mã đặt lại mật khẩu: B2V3B4",
+    "timestamp": "2025-06-10T18:56:11.233924"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T18:57:59.957324"
+  },
+  {
+    "user_id": "user_004",
+    "action": "Khóa tài khoản: Thích",
+    "timestamp": "2025-06-10T18:58:09.463231"
+  },
+  {
+    "user_id": "user_001",
+    "action": "logout",
+    "timestamp": "2025-06-10T19:00:54.094060"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T19:01:10.433036"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T19:04:28.270899"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T19:08:03.238749"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T19:16:39.858437"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-10T19:22:36.708867"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-10T19:23:48.167232"
+  },
+  {
+    "user_id": "user_004",
+    "action": "Khóa tài khoản: Thích",
+    "timestamp": "2025-06-10T19:23:57.059734"
+  },
+  {
+    "user_id": "user_004",
+    "action": "Gửi mã đặt lại mật khẩu: 5HEHBM",
+    "timestamp": "2025-06-10T19:31:33.830088"
+  }
+]

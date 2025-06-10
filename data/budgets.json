@@ -1,0 +1,35 @@
+[
+  {
+    "budget_id": "budget_001",
+    "user_id": "user_002",
+    "category_id": "cat_001",
+    "budget_name": "Ngân sách ăn uống tháng 6",
+    "amount": 3000000,
+    "currency": "VND",
+    "period": "monthly",
+    "start_date": "2025-06-01T00:00:00Z",
+    "end_date": "2025-06-30T23:59:59Z",
+    "alert_threshold": 80,
+    "is_active": true,
+    "created_at": "2025-05-30T09:00:00Z",
+    "updated_at": "2025-05-30T09:00:00Z",
+    "notes": "Ngân sách ăn uống hàng tháng cho John Doe"
+  },
+  {
+    "budget_id": "budget_002",
+    "user_id": "user_001",
+    "category_id": "cat_004",
+    "budget_name": "Ngân sách mua sắm tháng 6",
+    "amount": 2000000,
+    "currency": "VND",
+    "period": "monthly",
+    "start_date": "2025-06-01T00:00:00Z",
+    "end_date": "2025-06-30T23:59:59Z",
+    "alert_threshold": 75,
+    "is_active": true,
+    "created_at": "2025-05-30T10:00:00Z",
+    "updated_at": "2025-05-30T10:00:00Z",
+    "notes": "Ngân sách mua sắm cho Admin"
+  }
+]
+

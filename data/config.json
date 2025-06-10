@@ -1,0 +1,16 @@
+{
+    "database": {
+        "type": "json",
+        "path": "data"
+    },
+    "security": {
+        "password_salt_rounds": 12,
+        "session_timeout": 30,
+        "max_login_attempts": 3
+    },
+    "defaults": {
+        "currency": "VND",
+        "date_format": "DD/MM/YYYY",
+        "language": "vi"
+    }
+} 

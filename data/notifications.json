@@ -1,0 +1,153 @@
+[
+  {
+    "notification_id": "notif_001",
+    "user_id": "user_002",
+    "type": "budget_alert",
+    "title": "Cảnh báo ngân sách",
+    "message": "Bạn đã chi tiêu 85% ngân sách giải trí tháng này (850,000/1,000,000 VNĐ)",
+    "is_read": true,
+    "priority": "high",
+    "created_at": "2025-05-26T20:30:00.000000",
+    "read_at": "2025-05-31T05:03:44.669040",
+    "data": {
+      "budget_id": "budget_003",
+      "category_name": "Giải trí",
+      "spent_percentage": 85
+    }
+  },
+  {
+    "notification_id": "notif_002",
+    "user_id": "user_003",
+    "type": "recurring_reminder",
+    "title": "Nhắc nhở thanh toán",
+    "message": "Tiền thuê nhà tháng 6 sắp đến hạn (01/06/2025)",
+    "is_read": true,
+    "priority": "medium",
+    "created_at": "2025-05-25T09:00:00.000000",
+    "read_at": "2025-05-25T10:15:00.000000",
+    "data": {
+      "recurring_id": "rec_006",
+      "due_date": "2025-06-01",
+      "amount": 5000000
+    }
+  },
+  {
+    "notification_id": "notif_003",
+    "user_id": "user_002",
+    "type": "transaction_alert",
+    "title": "Giao dịch lớn",
+    "message": "Bạn vừa thực hiện giao dịch chi tiêu 450,000 VNĐ cho Mua áo khoác",
+    "is_read": true,
+    "priority": "low",
+    "created_at": "2025-05-27T15:25:00.000000",
+    "read_at": "2025-05-27T16:00:00.000000",
+    "data": {
+      "transaction_id": "txn_004",
+      "amount": 450000,
+      "category_name": "Mua sắm"
+    }
+  },
+  {
+    "notification_id": "notif_004",
+    "user_id": "user_003",
+    "type": "budget_alert",
+    "title": "Vượt ngân sách",
+    "message": "Bạn đã chi tiêu 82.5% ngân sách mua sắm (1,650,000/2,000,000 VNĐ)",
+    "is_read": false,
+    "priority": "high",
+    "created_at": "2025-05-27T15:30:00.000000",
+    "read_at": null,
+    "data": {
+      "budget_id": "budget_005",
+      "category_name": "Mua sắm",
+      "spent_percentage": 82.5
+    }
+  },
+  {
+    "notification_id": "notif_005",
+    "user_id": "user_002",
+    "type": "income_received",
+    "title": "Thu nhập mới",
+    "message": "Bạn đã nhận được lương tháng 5: 15,000,000 VNĐ",
+    "is_read": true,
+    "priority": "medium",
+    "created_at": "2025-05-01T08:05:00.000000",
+    "read_at": "2025-05-01T08:30:00.000000",
+    "data": {
+      "transaction_id": "txn_001",
+      "amount": 15000000,
+      "category_name": "Lương"
+    }
+  },
+  {
+    "notification_id": "notif_006",
+    "user_id": "user_002",
+    "type": "system",
+    "title": "Cập nhật hệ thống",
+    "message": "Ứng dụng đã được cập nhật phiên bản mới với tính năng báo cáo chi tiết",
+    "is_read": true,
+    "priority": "low",
+    "created_at": "2025-05-20T10:00:00.000000",
+    "read_at": "2025-05-31T05:03:44.669040",
+    "data": {
+      "version": "2.1.0",
+      "features": [
+        "báo cáo chi tiết",
+        "xuất file Excel"
+      ]
+    }
+  },
+  {
+    "notification_id": "notif_007",
+    "user_id": "user_003",
+    "type": "goal_achievement",
+    "title": "Đạt mục tiêu",
+    "message": "Chúc mừng! Bạn đã đạt được mục tiêu tiết kiệm 2,000,000 VNĐ trong tháng",
+    "is_read": true,
+    "priority": "medium",
+    "created_at": "2025-05-28T12:00:00.000000",
+    "read_at": "2025-05-28T12:30:00.000000",
+    "data": {
+      "goal_amount": 2000000,
+      "achieved_amount": 2150000,
+      "achievement_date": "2025-05-28"
+    }
+  },
+  {
+    "notification_id": "notif_008",
+    "user_id": "user_002",
+    "type": "recurring_reminder",
+    "title": "Nhắc nhở thanh toán",
+    "message": "Tiền điện tháng 6 sẽ đến hạn vào ngày 25/06/2025",
+    "is_read": true,
+    "priority": "medium",
+    "created_at": "2025-05-28T09:00:00.000000",
+    "read_at": "2025-05-31T05:03:44.669040",
+    "data": {
+      "recurring_id": "rec_002",
+      "due_date": "2025-06-25",
+      "amount": 180000
+    }
+  },
+  {
+    "notification_id": "notif_009",
+    "user_id": "user_002",
+    "type": "budget_alert",
+    "title": "Ngân sách sắp hết",
+    "message": "Ngân sách cho tháng này đã gần hết. Vui lòng kiểm tra lại.",
+    "is_read": true,
+    "priority": "high",
+    "created_at": "2025-05-29T09:26:57.919433",
+    "read_at": "2025-05-31T05:03:44.669040",
+    "data": {
+      "budget_id": "budget_001"
+    }
+  },
+  {
+    "id": "notify_001",
+    "title": "sa",
+    "content": "adsada",
+    "type": "Tin tức",
+    "created_at": "2025-06-10T18:47:58.187031"
+  }
+]
