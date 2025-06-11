@@ -1,22 +1,49 @@
+print('[DEBUG] login_form.py loaded')
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox, QWidget, QAction
 )
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 import os
-from data_manager.user_manager import UserManager
+
+try:
+    from data_manager.user_manager import UserManager
+    print('[DEBUG] UserManager import OK')
+except Exception as e:
+    print('[ERROR] Lỗi import UserManager:', e)
+    import traceback
+    traceback.print_exc()
+    raise
 
 class LoginForm(QDialog):
     login_success = pyqtSignal(str)
 
     def __init__(self, parent=None):
+        print('[DEBUG] LoginForm __init__ start')
         super().__init__(parent)
-        self.user_manager = UserManager()
+        print('[DEBUG] super().__init__ done')
+        
+        try:
+            self.user_manager = UserManager()
+            print('[DEBUG] UserManager created')
+        except Exception as e:
+            print('[ERROR] Lỗi khi khởi tạo UserManager:', e)
+            import traceback
+            traceback.print_exc()
+            raise
+            
         self.init_ui()
-
+        print('[DEBUG] init_ui done')   
     def init_ui(self):
+        print('[DEBUG] LoginForm init_ui start')
         self.setWindowTitle("Đăng nhập tài khoản")
-        self.setWindowIcon(QIcon(self.get_asset_path("app_icon.png")))
+        try:
+            icon_path = self.get_asset_path("app_icon.png")
+            print(f'[DEBUG] Icon path: {icon_path}')
+            self.setWindowIcon(QIcon(icon_path))
+            print('[DEBUG] Icon set successfully')
+        except Exception as e:
+            print(f'[ERROR] Could not set icon: {e}')
         self.setFixedSize(400, 450)
 
         self.setStyleSheet("QDialog { background-color: #f0f0f0; }")
@@ -48,7 +75,7 @@ class LoginForm(QDialog):
         """)
         card_layout.addWidget(title)
 
-        # Email hoặc Tên đăng nhập (chỉ 1 ô)
+        # Email hoặc Tên đăng nhập
         id_label = QLabel("Email hoặc Tên đăng nhập")
         id_label.setStyleSheet("font-size: 14px; font-weight: bold; border: none; margin-bottom: 2px;")
         self.id_input = QLineEdit()
@@ -91,11 +118,16 @@ class LoginForm(QDialog):
         """)
         self.password_input.setFixedHeight(40)
 
-        self.toggle_password_action = QAction(self)
-        self.toggle_password_action.setIcon(QIcon(self.get_asset_path('eye_closed.png')))
-        self.toggle_password_action.setToolTip("Hiện/Ẩn mật khẩu")
-        self.toggle_password_action.triggered.connect(self.toggle_password_visibility)
-        self.password_input.addAction(self.toggle_password_action, QLineEdit.TrailingPosition)
+        # Toggle password visibility
+        try:
+            self.toggle_password_action = QAction(self)
+            self.toggle_password_action.setIcon(QIcon(self.get_asset_path('eye_closed.png')))
+            self.toggle_password_action.setToolTip("Hiện/Ẩn mật khẩu")
+            self.toggle_password_action.triggered.connect(self.toggle_password_visibility)
+            self.password_input.addAction(self.toggle_password_action, QLineEdit.TrailingPosition)
+            print('[DEBUG] Password toggle action added')
+        except Exception as e:
+            print(f'[ERROR] Could not add password toggle: {e}')
 
         card_layout.addWidget(password_label)
         card_layout.addWidget(self.password_input)
@@ -150,74 +182,95 @@ class LoginForm(QDialog):
         card_layout.addWidget(self.register_button)
 
         self.main_layout.addWidget(login_card)
+        print('[DEBUG] LoginForm init_ui end')
+
+    def handle_login(self):
+        print('[DEBUG] handle_login called')
+        identifier = self.id_input.text().strip()
+        password = self.password_input.text()
+        
+        if not identifier or not password:
+            QMessageBox.warning(self, "Thiếu thông tin", "Vui lòng nhập email hoặc tên đăng nhập và mật khẩu")
+            return
+            
+        try:
+            result = self.user_manager.authenticate_user(identifier, password)
+            print(f'[DEBUG] Authentication result: {result}')
+            
+            if result.get("status") == "success":
+                user = result["user"]
+                print(f'[DEBUG] Login successful for user: {user.get("user_id")}')
+                self.login_success.emit(user["user_id"])
+                self.accept()
+            else:
+                QMessageBox.critical(self, "Đăng nhập thất bại", result.get("message", "Email/tên đăng nhập hoặc mật khẩu không đúng"))
+        except Exception as e:
+            print(f'[ERROR] Error during authentication: {e}')
+            import traceback
+            traceback.print_exc()
+            QMessageBox.critical(self, "Lỗi", "Có lỗi xảy ra trong quá trình đăng nhập")
+
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            self.handle_login()
+
+    def get_asset_path(self, filename):
+        base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        return os.path.join(base_path, "assets", filename)
 
     def toggle_password_visibility(self):
         if self.password_input.echoMode() == QLineEdit.Password:
             self.password_input.setEchoMode(QLineEdit.Normal)
-            self.toggle_password_action.setIcon(QIcon(self.get_asset_path('eye_open.png')))
+            try:
+                self.toggle_password_action.setIcon(QIcon(self.get_asset_path('eye_open.png')))
+            except:
+                pass
         else:
             self.password_input.setEchoMode(QLineEdit.Password)
-            self.toggle_password_action.setIcon(QIcon(self.get_asset_path('eye_closed.png')))
-
-    def handle_login(self):
-        identifier = self.id_input.text().strip()
-        password = self.password_input.text()
-        if not identifier or not password:
-            QMessageBox.warning(self, "Thiếu thông tin", "Vui lòng nhập email hoặc tên đăng nhập và mật khẩu")
-            return
-        result = self.user_manager.authenticate_user(identifier, password)
-        if result.get("status") == "success":
-            user = result["user"]
-            if user.get("role") == "admin":
-                # Chuyển hướng dashboard admin
+            try:
+                self.toggle_password_action.setIcon(QIcon(self.get_asset_path('eye_closed.png')))
+            except:
                 pass
-            else:
-                # Chuyển hướng dashboard user
-                pass
-            self.login_success.emit(user["user_id"])
-            self.accept()
-        else:
-            QMessageBox.critical(self, "Đăng nhập thất bại", result.get("message", "Email/tên đăng nhập hoặc mật khẩu không đúng"))
 
     def show_register_form(self):
-        from gui.auth.register_form import RegisterForm
-        register_form = RegisterForm(self)
-        register_form.register_success.connect(self.on_register_success_from_dialog)
-        
-        dialog_result = register_form.exec_()
-        
-        self.activateWindow()
+        try:
+            from gui.auth.register_form import RegisterForm
+            register_form = RegisterForm(self)
+            register_form.register_success.connect(self.on_register_success_from_dialog)
+            
+            dialog_result = register_form.exec_()
+            
+            self.activateWindow()
+        except Exception as e:
+            print(f'[ERROR] Could not show register form: {e}')
+            QMessageBox.warning(self, "Lỗi", "Không thể mở form đăng ký")
 
     def on_register_success_from_dialog(self, user_id):
         # Đã thông báo ở RegisterForm, không cần thông báo lại ở đây
         pass
 
     def show_forgot_password_dialog(self):
-        from PyQt5.QtWidgets import QInputDialog
-        identifier, ok = QInputDialog.getText(self, "Quên mật khẩu", "Nhập email hoặc tên đăng nhập để nhận mã đặt lại mật khẩu:")
-        if ok and identifier:
-            result = self.user_manager.generate_reset_code(identifier.strip())
-            if result["status"] == "success":
-                QMessageBox.information(self, "Gửi mã thành công", result["message"])
-                # Bổ sung: Cho phép nhập mã xác nhận và mật khẩu mới
-                code, ok2 = QInputDialog.getText(self, "Mã xác nhận", "Nhập mã xác nhận đã nhận:")
-                if not (ok2 and code):
-                    return
-                new_password, ok3 = QInputDialog.getText(self, "Mật khẩu mới", "Nhập mật khẩu mới:")
-                if not (ok3 and new_password):
-                    return
-                reset_result = self.user_manager.reset_password_with_code(identifier.strip(), code.strip(), new_password)
-                if reset_result["status"] == "success":
-                    QMessageBox.information(self, "Thành công", reset_result["message"])
+        try:
+            from PyQt5.QtWidgets import QInputDialog
+            identifier, ok = QInputDialog.getText(self, "Quên mật khẩu", "Nhập email hoặc tên đăng nhập để nhận mã đặt lại mật khẩu:")
+            if ok and identifier:
+                result = self.user_manager.generate_reset_code(identifier.strip())
+                if result["status"] == "success":
+                    QMessageBox.information(self, "Gửi mã thành công", result["message"])
+                    # Bổ sung: Cho phép nhập mã xác nhận và mật khẩu mới
+                    code, ok2 = QInputDialog.getText(self, "Mã xác nhận", "Nhập mã xác nhận đã nhận:")
+                    if not (ok2 and code):
+                        return
+                    new_password, ok3 = QInputDialog.getText(self, "Mật khẩu mới", "Nhập mật khẩu mới:")
+                    if not (ok3 and new_password):
+                        return
+                    reset_result = self.user_manager.reset_password_with_code(identifier.strip(), code.strip(), new_password)
+                    if reset_result["status"] == "success":
+                        QMessageBox.information(self, "Thành công", reset_result["message"])
+                    else:
+                        QMessageBox.warning(self, "Lỗi", reset_result["message"])
                 else:
-                    QMessageBox.warning(self, "Lỗi", reset_result["message"])
-            else:
-                QMessageBox.warning(self, "Lỗi", result["message"])
-
-    def get_asset_path(self, filename):
-        base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        return os.path.join(base_path, "assets", filename)
-
-    def keyPressEvent(self, event):
-        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
-            self.handle_login()
+                    QMessageBox.warning(self, "Lỗi", result["message"])
+        except Exception as e:
+            print(f'[ERROR] Error in forgot password dialog: {e}')
+            QMessageBox.warning(self, "Lỗi", "Có lỗi xảy ra khi xử lý quên mật khẩu")

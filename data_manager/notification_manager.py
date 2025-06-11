@@ -25,3 +25,22 @@ class NotificationManager:
         notifications.append(notification)
         save_json(self.file_path, notifications)
         return notification
+
+    def update_notification(self, notification_id, **kwargs):
+        notifications = self.get_all_notifications()
+        updated = False
+        for n in notifications:
+            if n.get('notification_id') == notification_id or n.get('id') == notification_id:
+                for k, v in kwargs.items():
+                    n[k] = v
+                updated = True
+                break
+        if updated:
+            save_json(self.file_path, notifications)
+        return updated
+
+    def delete_notification(self, notification_id):
+        notifications = self.get_all_notifications()
+        new_list = [n for n in notifications if n.get('notification_id') != notification_id and n.get('id') != notification_id]
+        save_json(self.file_path, new_list)
+        return len(new_list) < len(notifications)

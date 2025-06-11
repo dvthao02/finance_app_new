@@ -13,7 +13,7 @@
     "updated_at": "2025-06-10T22:19:58.426930"
   },
   {
-    "category_id": "cat_001_01",
+    "category_id": "cat_002",
     "name": "Ăn sáng",
     "type": "expense",
     "icon": "🍳",
@@ -21,11 +21,10 @@
     "description": "Chi phí ăn sáng",
     "is_active": true,
     "created_at": "2025-01-01T08:00:00Z",
-    "user_id": "system",
-    "parent_category_id": "cat_001"
+    "user_id": "system"
   },
   {
-    "category_id": "cat_001_02",
+    "category_id": "cat_003",
     "name": "Ăn trưa",
     "type": "expense",
     "icon": "🍜",
@@ -33,11 +32,10 @@
     "description": "Chi phí ăn trưa",
     "is_active": true,
     "created_at": "2025-01-01T08:00:00Z",
-    "user_id": "system",
-    "parent_category_id": "cat_001"
+    "user_id": "system"
   },
   {
-    "category_id": "cat_002",
+    "category_id": "cat_004",
     "name": "Di chuyển",
     "type": "expense",
     "icon": "🚗",
@@ -45,11 +43,10 @@
     "description": "Xe bus, taxi, xăng xe, sửa chữa xe",
     "is_active": true,
     "created_at": "2025-01-01T08:00:00Z",
-    "user_id": "system",
-    "parent_category_id": null
+    "user_id": "system"
   },
   {
-    "category_id": "cat_003",
+    "category_id": "cat_005",
     "name": "Giải trí",
     "type": "expense",
     "icon": "🎬",
@@ -57,11 +54,10 @@
     "description": "Xem phim, karaoke, du lịch",
     "is_active": true,
     "created_at": "2025-01-01T08:00:00Z",
-    "user_id": "system",
-    "parent_category_id": null
+    "user_id": "system"
   },
   {
-    "category_id": "cat_004",
+    "category_id": "cat_006",
     "name": "Mua sắm",
     "type": "expense",
     "icon": "🛍️",
@@ -69,11 +65,10 @@
     "description": "Quần áo, đồ dùng cá nhân",
     "is_active": true,
     "created_at": "2025-01-01T08:00:00Z",
-    "user_id": "system",
-    "parent_category_id": null
+    "user_id": "system"
   },
   {
-    "category_id": "cat_005",
+    "category_id": "cat_007",
     "name": "Y tế",
     "type": "expense",
     "icon": "⚕️",
@@ -81,11 +76,10 @@
     "description": "Khám bệnh, mua thuốc",
     "is_active": true,
     "created_at": "2025-01-01T08:00:00Z",
-    "user_id": "system",
-    "parent_category_id": null
+    "user_id": "system"
   },
   {
-    "category_id": "cat_006",
+    "category_id": "cat_008",
     "name": "Học tập",
     "type": "expense",
     "icon": "📚",
@@ -93,11 +87,10 @@
     "description": "Sách vở, khóa học, học phí",
     "is_active": true,
     "created_at": "2025-01-01T08:00:00Z",
-    "user_id": "system",
-    "parent_category_id": null
+    "user_id": "system"
   },
   {
-    "category_id": "cat_007",
+    "category_id": "cat_009",
     "name": "Hóa đơn",
     "type": "expense",
     "icon": "💡",
@@ -105,11 +98,10 @@
     "description": "Điện, nước, internet, điện thoại",
     "is_active": true,
     "created_at": "2025-01-01T08:00:00Z",
-    "user_id": "system",
-    "parent_category_id": null
+    "user_id": "system"
   },
   {
-    "category_id": "cat_008",
+    "category_id": "cat_010",
     "name": "Lương",
     "type": "income",
     "icon": "💰",
@@ -117,11 +109,10 @@
     "description": "Lương chính thức từ công ty",
     "is_active": true,
     "created_at": "2025-01-01T08:00:00Z",
-    "user_id": "system",
-    "parent_category_id": null
+    "user_id": "system"
   },
   {
-    "category_id": "cat_009",
+    "category_id": "cat_011",
     "name": "Làm thêm",
     "type": "income",
     "icon": "💼",
@@ -129,11 +120,10 @@
     "description": "Thu nhập từ công việc bán thời gian",
     "is_active": true,
     "created_at": "2025-01-01T08:00:00Z",
-    "user_id": "system",
-    "parent_category_id": null
+    "user_id": "system"
   },
   {
-    "category_id": "cat_010",
+    "category_id": "cat_012",
     "name": "Đầu tư",
     "type": "income",
     "icon": "📈",
@@ -141,11 +131,10 @@
     "description": "Lợi nhuận từ cổ phiếu, tiền gửi",
     "is_active": true,
     "created_at": "2025-01-01T08:00:00Z",
-    "user_id": "system",
-    "parent_category_id": null
+    "user_id": "system"
   },
   {
-    "category_id": "cat_011",
+    "category_id": "cat_013",
     "name": "Quà tặng",
     "type": "income",
     "icon": "🎁",
@@ -153,11 +142,10 @@
     "description": "Tiền mừng, quà từ người thân",
     "is_active": true,
     "created_at": "2025-01-01T08:00:00Z",
-    "user_id": "system",
-    "parent_category_id": null
+    "user_id": "system"
   },
   {
-    "category_id": "cat_012",
+    "category_id": "cat_014",
     "name": "Nhà ở",
     "type": "expense",
     "icon": "🏠",
@@ -167,17 +155,5 @@
     "created_at": "2025-01-01T08:00:00Z",
     "user_id": "system",
     "parent_category_id": null
-  },
-  {
-    "category_id": "cat_013",
-    "name": "TEST",
-    "type": "expense",
-    "icon": "D:/APP/finance_app/assets/income_icon.png",
-    "color": "#55ff00",
-    "description": "",
-    "is_active": true,
-    "created_at": "2025-06-10T22:20:28.119645",
-    "updated_at": "2025-06-10T22:20:28.119657",
-    "user_id": "system"
   }
 ]
