@@ -1,5 +1,6 @@
 import os
 from utils.file_helper import load_json, save_json, generate_id
+import datetime
 
 class TransactionManager:
     def __init__(self, file_path='transactions.json'):
@@ -22,3 +23,33 @@ class TransactionManager:
         transactions.append(transaction)
         save_json(self.file_path, transactions)
         return transaction
+
+    def get_transactions_by_month(self, year, month):
+        """Get transactions for a specific month"""
+        transactions = self.get_all_transactions()
+        month_transactions = []
+        
+        for t in transactions:
+            try:
+                # Parse date from ISO format
+                tx_date = datetime.datetime.fromisoformat(t['date'].replace('Z', '+00:00'))
+                if tx_date.year == year and tx_date.month == month:
+                    month_transactions.append(t)
+            except Exception:
+                continue
+                
+        return month_transactions
+    
+    def get_recent_transactions(self, limit=10):
+        """Get recent transactions sorted by date"""
+        transactions = self.get_all_transactions()
+        
+        # Sort by date (newest first)
+        try:
+            sorted_transactions = sorted(transactions, 
+                key=lambda t: datetime.datetime.fromisoformat(t['date'].replace('Z', '+00:00')), 
+                reverse=True)
+        except Exception:
+            sorted_transactions = transactions
+            
+        return sorted_transactions[:limit]

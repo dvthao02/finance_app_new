@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QGroupBox, QLabel, QTableWidget, QTableWidgetItem, QFrame, QSizePolicy, QHeaderView, QHBoxLayout, QComboBox
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
+from utils.ui_styles import TableStyleHelper, ButtonStyleHelper, UIStyles
 
 class AdminOverviewTab(QWidget):
     def __init__(self, user_manager, transaction_manager, parent=None):
@@ -108,18 +109,21 @@ class AdminOverviewTab(QWidget):
         trans_stats_layout.addStretch(1)
         trans_stats.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         top_row.addWidget(trans_stats, 1)
+        
         self.main_layout.addLayout(top_row)
+        
         # --- Bảng recent users bên dưới ---
         users_group = QGroupBox("Người dùng đăng ký gần đây")
         users_layout = QVBoxLayout(users_group)
+        
         self.recent_table = QTableWidget(0, 3)
         self.recent_table.setHorizontalHeaderLabels(["ID", "Tên", "Ngày đăng ký"])
-        self.recent_table.setStyleSheet("font-size:14px;")
+        
+        # Áp dụng styling chung
+        TableStyleHelper.apply_common_table_style(self.recent_table)
+        
         self.recent_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.recent_table.setMinimumHeight(180)
-        self.recent_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.recent_table.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.recent_table.setSelectionBehavior(QTableWidget.SelectRows)
         users_layout.addWidget(self.recent_table)
         users_group.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.main_layout.addWidget(users_group)

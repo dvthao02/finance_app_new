@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTextEdit, QComboBox, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox
+from utils.ui_styles import TableStyleHelper, ButtonStyleHelper, UIStyles
 
 class AdminNotifyTab(QWidget):
     def __init__(self, notification_manager, parent=None):
@@ -17,19 +18,28 @@ class AdminNotifyTab(QWidget):
         layout.addWidget(self.notify_title)
         layout.addWidget(self.notify_content)
         layout.addWidget(self.notify_type)
+        
         layout.addWidget(send_btn)
+        
         self.notify_table = QTableWidget(0, 6)
         self.notify_table.setHorizontalHeaderLabels([
             "Tiêu đề", "Nội dung", "Loại", "Ngày gửi", "Ưu tiên", "Trạng thái"
         ])
-        self.notify_table.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.notify_table.horizontalHeader().setStretchLastSection(True)
-        self.notify_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        
+        # Áp dụng styling chung
+        TableStyleHelper.apply_common_table_style(self.notify_table)
         layout.addWidget(self.notify_table)
+        
         btn_layout = QHBoxLayout()
         self.btn_view_notify = QPushButton("Xem chi tiết")
         self.btn_mark_read = QPushButton("Đánh dấu đã đọc")
-        self.btn_delete_notify = QPushButton("Xóa thông báo")        
+        self.btn_delete_notify = QPushButton("Xóa thông báo")
+        
+        # Áp dụng styling cho buttons
+        ButtonStyleHelper.style_primary_button(self.btn_view_notify)
+        ButtonStyleHelper.style_success_button(self.btn_mark_read)
+        ButtonStyleHelper.style_danger_button(self.btn_delete_notify)
+        
         btn_layout.addWidget(self.btn_view_notify)
         btn_layout.addWidget(self.btn_mark_read)
         btn_layout.addWidget(self.btn_delete_notify)

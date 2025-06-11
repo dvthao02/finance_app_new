@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView
 from PyQt5.QtCore import Qt
+from utils.ui_styles import TableStyleHelper, ButtonStyleHelper, UIStyles
 
 class AdminAuditTab(QWidget):
     def __init__(self, audit_log_manager, parent=None):
@@ -12,13 +13,15 @@ class AdminAuditTab(QWidget):
         layout = QVBoxLayout(self)
         label = QLabel("Lịch sử hoạt động (Audit Log)")
         label.setStyleSheet("font-size:14px;font-weight:bold;margin-bottom:8px;")
+        
         layout.addWidget(label)
+        
         self.audit_table = QTableWidget(0, 2)
         self.audit_table.setHorizontalHeaderLabels(["Thời gian", "Hành động"])
-        self.audit_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.audit_table.setStyleSheet("font-size:14px;")
-        self.audit_table.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.audit_table.setSelectionBehavior(QTableWidget.SelectRows)
+        
+        # Áp dụng styling chung
+        TableStyleHelper.apply_common_table_style(self.audit_table)
+        
         layout.addWidget(self.audit_table)
         self.setLayout(layout)
 

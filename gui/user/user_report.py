@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame,
                             QSpacerItem, QSizePolicy, QScrollArea)
 from PyQt5.QtCore import QDate, Qt
 from PyQt5.QtGui import QFont, QColor, QBrush
+from utils.ui_styles import TableStyleHelper, ButtonStyleHelper, UIStyles
 import datetime
 import json
 from matplotlib.figure import Figure
@@ -133,25 +134,9 @@ class UserReport(QWidget):
         # Initially hide date selectors
         self.date_from.hide()
         self.date_to.hide()
-        
-        # Update button
+          # Update button
         btn_update = QPushButton('🔄 Cập nhật')
-        btn_update.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #8b5cf6, stop:1 #ec4899);
-                color: white;
-                border: none;
-                border-radius: 6px;
-                padding: 10px 25px;
-                font-weight: 600;
-                font-size: 13px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #7c3aed, stop:1 #db2777);
-            }
-        """)
+        ButtonStyleHelper.style_primary_button(btn_update)
         btn_update.clicked.connect(self.update_reports)
         
         filter_layout.addWidget(period_label)
@@ -281,8 +266,7 @@ class UserReport(QWidget):
             font-size: 16px;
             font-weight: 600;
             color: #374151;
-            margin-bottom: 10px;
-        """)
+            margin-bottom: 10px;        """)
         table_layout.addWidget(table_title)
         
         self.category_table = QTableWidget()
@@ -291,27 +275,8 @@ class UserReport(QWidget):
             '🏷️ Danh mục', '💸 Tổng chi', '📊 % Tổng', '📈 Trung bình', '📝 Số giao dịch'
         ])
         
-        self.category_table.setStyleSheet("""
-            QTableWidget {
-                gridline-color: #e2e8f0;
-                background-color: white;
-                alternate-background-color: #f8fafc;
-                selection-background-color: #ddd6fe;
-                border: none;
-            }
-            QTableWidget::item {
-                padding: 8px;
-                border-bottom: 1px solid #e2e8f0;
-            }
-            QHeaderView::section {
-                background: #f1f5f9;
-                color: #374151;
-                padding: 12px;
-                border: none;
-                border-bottom: 2px solid #e2e8f0;
-                font-weight: 600;
-            }
-        """)
+        # Apply global table styling
+        TableStyleHelper.apply_common_table_style(self.category_table)
         
         self.category_table.setAlternatingRowColors(True)
         self.category_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)

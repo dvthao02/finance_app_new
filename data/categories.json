@@ -5,12 +5,12 @@
     "type": "expense",
     "icon": "🍽️",
     "color": "#FF6B6B",
-    "description": "Chi phí ăn uống hàng ngày",
+    "description": "Chi phí ăn uống hàng ngày a",
     "is_active": true,
     "created_at": "2025-01-01T08:00:00Z",
     "user_id": "system",
     "parent_category_id": null,
-    "updated_at": "2025-06-10T22:19:58.426930"
+    "updated_at": "2025-06-11T20:30:13.950467"
   },
   {
     "category_id": "cat_002",

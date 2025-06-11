@@ -1,5 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QComboBox, QDateEdit, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox, QInputDialog
 from PyQt5.QtCore import QDate
+from PyQt5.QtGui import QColor
+from utils.ui_styles import TableStyleHelper, ButtonStyleHelper, UIStyles
 
 class AdminUserTab(QWidget):
     def __init__(self, user_manager, audit_log_manager, parent=None):
@@ -12,12 +14,15 @@ class AdminUserTab(QWidget):
     def init_ui(self):
         layout = QVBoxLayout(self)
         search_layout = QHBoxLayout()
+        
         self.user_search_input = QLineEdit()
         self.user_search_input.setPlaceholderText("Tìm kiếm tên hoặc email...")
         search_layout.addWidget(self.user_search_input)
+        
         self.user_status_filter = QComboBox()
         self.user_status_filter.addItems(["Tất cả", "Hoạt động", "Bị khóa"])
         search_layout.addWidget(self.user_status_filter)
+        
         self.user_from_date = QDateEdit(calendarPopup=True)
         self.user_from_date.setDisplayFormat("dd-MM-yyyy")
         self.user_from_date.setDate(QDate(2000, 1, 1))
@@ -25,6 +30,7 @@ class AdminUserTab(QWidget):
         self.user_from_date.setDateRange(QDate(2000, 1, 1), QDate(2100, 12, 31))
         self.user_from_date.setMinimumWidth(120)
         search_layout.addWidget(self.user_from_date)
+        
         self.user_to_date = QDateEdit(calendarPopup=True)
         self.user_to_date.setDisplayFormat("dd-MM-yyyy")
         self.user_to_date.setDate(QDate.currentDate())
@@ -32,21 +38,46 @@ class AdminUserTab(QWidget):
         self.user_to_date.setDateRange(QDate(2000, 1, 1), QDate(2100, 12, 31))
         self.user_to_date.setMinimumWidth(120)
         search_layout.addWidget(self.user_to_date)
+        
         search_btn = QPushButton("Tìm/Lọc")
         search_btn.clicked.connect(self.search_user)
         search_layout.addWidget(search_btn)
+        
         layout.addLayout(search_layout)
+        
+        # Cải thiện table với styling chung
         self.user_table = QTableWidget(0, 6)
         self.user_table.setHorizontalHeaderLabels(["ID", "Tên hiển thị", "Email", "Ngày đăng ký", "Lần đăng nhập cuối", "Trạng thái"])
-        self.user_table.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.user_table.horizontalHeader().setStretchLastSection(True)
-        self.user_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+          # Áp dụng styling chung cho table
+        TableStyleHelper.apply_common_table_style(self.user_table)
+        TableStyleHelper.setup_table_selection_events(
+            self.user_table, 
+            self.on_selection_changed, 
+            self.on_item_clicked
+        )
+        
+        # Fix display issues - ensure consistent row height
+        self.user_table.verticalHeader().setDefaultSectionSize(35)
+        self.user_table.verticalHeader().setMinimumSectionSize(35)
+        
+        # Ensure all columns are visible and have minimum width
+        header = self.user_table.horizontalHeader()
+        header.setMinimumSectionSize(80)
+        
         layout.addWidget(self.user_table)
+        
         btn_layout = QHBoxLayout()
         self.btn_view_detail = QPushButton("Xem chi tiết")
         self.btn_lock = QPushButton("Khóa tài khoản")
         self.btn_unlock = QPushButton("Mở khóa tài khoản")
         self.btn_reset_pw = QPushButton("Đặt lại mật khẩu")
+        
+        # Áp dụng styling chung cho buttons
+        ButtonStyleHelper.style_primary_button(self.btn_view_detail)
+        ButtonStyleHelper.style_danger_button(self.btn_lock)
+        ButtonStyleHelper.style_success_button(self.btn_unlock)
+        ButtonStyleHelper.style_normal_button(self.btn_reset_pw)
+        
         btn_layout.addWidget(self.btn_view_detail)
         btn_layout.addWidget(self.btn_lock)
         btn_layout.addWidget(self.btn_unlock)
@@ -57,24 +88,125 @@ class AdminUserTab(QWidget):
         self.btn_unlock.clicked.connect(self.unlock_user)
         self.btn_reset_pw.clicked.connect(self.reset_user_password)
         self.user_search_input.returnPressed.connect(self.search_user)
-
+          # Initially disable buttons until selection is made
+        self.btn_view_detail.setEnabled(False)
+        self.btn_lock.setEnabled(False)
+        self.btn_unlock.setEnabled(False)
+        self.btn_reset_pw.setEnabled(False)
+    
     def load_users_table(self):
-        users = self.user_manager.load_users()
-        self.user_table.setRowCount(0)
-        for user in users:
-            row = self.user_table.rowCount()
-            self.user_table.insertRow(row)
-            self.user_table.setItem(row, 0, QTableWidgetItem(user.get('user_id', '')))
-            self.user_table.setItem(row, 1, QTableWidgetItem(user.get('full_name', '')))
-            self.user_table.setItem(row, 2, QTableWidgetItem(user.get('email', '')))
-            created_at = user.get('created_at', '')
-            last_login = user.get('last_login', '')
-            created_at_fmt = self.format_datetime(created_at)
-            last_login_fmt = self.format_datetime(last_login)
-            self.user_table.setItem(row, 3, QTableWidgetItem(created_at_fmt))
-            self.user_table.setItem(row, 4, QTableWidgetItem(last_login_fmt))
-            is_active = user.get('is_active', True)
-            self.user_table.setItem(row, 5, QTableWidgetItem('Hoạt động' if is_active else 'Bị khóa'))
+        """Load users data into table with proper display handling"""
+        try:
+            users = self.user_manager.load_users()
+            self.user_table.setRowCount(0)
+            print(f"Loading {len(users)} users into table...")
+            
+            for i, user in enumerate(users):
+                user_id = user.get('user_id', 'NO_ID')
+                print(f"\nProcessing user {i+1}: {user_id}")
+                
+                try:
+                    row = self.user_table.rowCount()
+                    self.user_table.insertRow(row)
+                    print(f"  Created row {row}")
+                    
+                    # Safely get and set basic user info
+                    full_name = user.get('full_name', '')
+                    email = user.get('email', '')
+                    
+                    print(f"  Setting basic data: {user_id}, {full_name}, {email}")
+                    
+                    # Create items and set them
+                    id_item = QTableWidgetItem(str(user_id))
+                    name_item = QTableWidgetItem(str(full_name))
+                    email_item = QTableWidgetItem(str(email))
+                    
+                    self.user_table.setItem(row, 0, id_item)
+                    self.user_table.setItem(row, 1, name_item) 
+                    self.user_table.setItem(row, 2, email_item)
+                    
+                    # Safely format datetime fields
+                    created_at = user.get('created_at', '')
+                    last_login = user.get('last_login', '')
+                    print(f"  Datetime data - created_at: {created_at}, last_login: {last_login}")
+                    
+                    try:
+                        created_at_fmt = self.format_datetime(created_at)
+                        print(f"  Formatted created_at: {created_at_fmt}")
+                    except Exception as e:
+                        print(f"  ❌ Error formatting created_at for user {user_id}: {e}")
+                        created_at_fmt = str(created_at)
+                    
+                    try:
+                        last_login_fmt = self.format_datetime(last_login)
+                        print(f"  Formatted last_login: {last_login_fmt}")
+                    except Exception as e:
+                        print(f"  ❌ Error formatting last_login for user {user_id}: {e}")
+                        last_login_fmt = str(last_login)
+                    
+                    # Create datetime items
+                    created_item = QTableWidgetItem(created_at_fmt)
+                    login_item = QTableWidgetItem(last_login_fmt)
+                    
+                    self.user_table.setItem(row, 3, created_item)
+                    self.user_table.setItem(row, 4, login_item)
+                    
+                    # Safely get status
+                    is_active = user.get('is_active', True)
+                    status_text = 'Hoạt động' if is_active else 'Bị khóa'
+                    status_item = QTableWidgetItem(status_text)
+                    self.user_table.setItem(row, 5, status_item)
+                    
+                    # Force table to refresh display for this row
+                    self.user_table.resizeRowToContents(row)
+                    
+                    # Ensure all items are properly displayed
+                    for col in range(6):
+                        item = self.user_table.item(row, col)
+                        if item:
+                            # Force item to update its display
+                            item.setData(0, item.text())
+                    
+                    print(f"  ✅ User {user_id} loaded successfully")
+                    
+                except Exception as e:
+                    print(f"  ❌ Error loading user row {user_id}: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    
+                    # Still try to add a basic row to avoid empty table
+                    try:
+                        row = self.user_table.rowCount()
+                        self.user_table.insertRow(row)
+                        self.user_table.setItem(row, 0, QTableWidgetItem(str(user.get('user_id', 'ERROR'))))
+                        self.user_table.setItem(row, 1, QTableWidgetItem('ERROR LOADING DATA'))
+                        self.user_table.setItem(row, 2, QTableWidgetItem(''))
+                        self.user_table.setItem(row, 3, QTableWidgetItem(''))
+                        self.user_table.setItem(row, 4, QTableWidgetItem(''))
+                        self.user_table.setItem(row, 5, QTableWidgetItem('ERROR'))
+                        print(f"  Added error row for user {user_id}")
+                    except:
+                        print(f"  Failed to add error row for user {user_id}")
+                    
+            print(f"✅ Table loading completed. Total rows: {self.user_table.rowCount()}")
+              # Force complete table refresh to fix display issues
+            self.user_table.resizeColumnsToContents()
+            self.user_table.resizeRowsToContents()
+            
+            # Force table repaint with better timing
+            self.user_table.viewport().update()
+            self.user_table.update()
+            self.user_table.repaint()
+            
+            # Additional refresh for stubborn display issues
+            from PyQt5.QtCore import QTimer
+            QTimer.singleShot(100, lambda: self.user_table.viewport().update())
+            QTimer.singleShot(200, lambda: self.user_table.repaint())
+                    
+        except Exception as e:
+            print(f"❌ Critical error loading users table: {e}")
+            import traceback
+            traceback.print_exc()
 
     def search_user(self):
         keyword = self.user_search_input.text().lower()
@@ -210,4 +342,91 @@ class AdminUserTab(QWidget):
             )
             QMessageBox.information(self, 'Cấp lại mật khẩu', f"Mật khẩu mới cho {info}: {new_password}\nĐã gửi thông báo cho người dùng.")
         else:
-            QMessageBox.warning(self, 'Lỗi', result.get('message', 'Không thể đặt lại mật khẩu!'))
+            QMessageBox.warning(self, 'Lỗi', result.get('message', 'Không thể đặt lại mật khẩu!'))    
+    def on_item_clicked(self, item):
+        """Handle item click to ensure selection is visible"""
+        if item:
+            row = item.row()
+            self.user_table.selectRow(row)
+            
+            # Force refresh the selection styling
+            self.user_table.clearSelection()
+            self.user_table.selectRow(row)
+            
+            # Ensure the selection is properly formatted
+            for col in range(self.user_table.columnCount()):
+                cell_item = self.user_table.item(row, col)
+                if cell_item:
+                    # Force item update
+                    cell_item.setSelected(True)
+    def on_item_clicked(self, item):
+        """Handle item click to ensure selection is visible"""
+        if item:
+            row = item.row()
+            self.user_table.selectRow(row)
+            
+            # Force refresh the selection styling
+            self.user_table.clearSelection()
+            self.user_table.selectRow(row)
+            
+            # Ensure the selection is properly formatted
+            for col in range(self.user_table.columnCount()):
+                cell_item = self.user_table.item(row, col)
+                if cell_item:
+                    # Force item update
+                    cell_item.setSelected(True)
+            
+            self.on_selection_changed()
+    
+    def on_selection_changed(self):
+        """Handle table selection changes to provide visual feedback"""
+        current_row = self.user_table.currentRow()
+        has_selection = current_row >= 0
+        
+        # Force refresh table styling to ensure selection is visible
+        if has_selection:
+            # Force repaint of selected row
+            for col in range(self.user_table.columnCount()):
+                item = self.user_table.item(current_row, col)
+                if item:
+                    # Force update display
+                    text = item.text()
+                    item.setText(text)
+                    item.setSelected(True)
+            
+            # Force table update
+            self.user_table.viewport().update()
+        
+        if has_selection:
+            # Enable/disable buttons based on selection
+            try:
+                user_id = self.user_table.item(current_row, 0).text()
+                users = self.user_manager.load_users()
+                user = None
+                for u in users:
+                    if u.get('user_id') == user_id:
+                        user = u
+                        break
+                
+                if user:
+                    self.btn_view_detail.setEnabled(True)
+                    self.btn_lock.setEnabled(user.get('is_active', True))
+                    self.btn_unlock.setEnabled(not user.get('is_active', True))
+                    self.btn_reset_pw.setEnabled(True)
+                else:
+                    self.btn_view_detail.setEnabled(False)
+                    self.btn_lock.setEnabled(False)
+                    self.btn_unlock.setEnabled(False)
+                    self.btn_reset_pw.setEnabled(False)
+            except Exception:
+                # If there's any error, disable all buttons
+                self.btn_view_detail.setEnabled(False)
+                self.btn_lock.setEnabled(False)
+                self.btn_unlock.setEnabled(False)
+                self.btn_reset_pw.setEnabled(False)
+        else:
+            # No selection - disable buttons
+            self.btn_view_detail.setEnabled(False)
+            self.btn_lock.setEnabled(False)
+            self.btn_unlock.setEnabled(False)
+            self.btn_reset_pw.setEnabled(False)

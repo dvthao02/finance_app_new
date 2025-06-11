@@ -1,10 +1,19 @@
 [
   {
-    "id": "notify_001",
+    "id": "notify_002",
     "title": "Mật khẩu của bạn đã được đặt lại",
-    "content": "Mật khẩu mới của bạn là: 11111aA@",
+    "content": "Mật khẩu mới của bạn là: 12345aA@",
     "type": "Cảnh báo",
-    "created_at": "2025-06-11T10:40:01.956847",
-    "user_id": "user_009"
+    "created_at": "2025-06-11T22:56:54.954533",
+    "user_id": "user_001"
+  },
+  {
+    "id": "notify_003",
+    "title": "sadsa",
+    "content": "sadsadsa",
+    "type": "Tin tức",
+    "created_at": "2025-06-11T23:06:57.504893",
+    "user_id": null,
+    "is_read": true
   }
 ]

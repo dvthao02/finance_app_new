@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTableWi
                             QAbstractItemView, QGridLayout, QSpacerItem, QSizePolicy)
 from PyQt5.QtCore import QDate, Qt, pyqtSignal
 from PyQt5.QtGui import QFont, QColor, QBrush, QPixmap, QPainter
+from utils.ui_styles import TableStyleHelper, ButtonStyleHelper, UIStyles
 import datetime
 import json
 
@@ -152,23 +153,9 @@ class UserTransactionHistory(QWidget):
         
         filter_layout.addWidget(date_to_label, 2, 1)
         filter_layout.addWidget(self.date_to, 3, 1)
-        
-        # Clear filter button
+          # Clear filter button
         btn_clear = QPushButton('🗑️ Xóa bộ lọc')
-        btn_clear.setStyleSheet("""
-            QPushButton {
-                background: #ef4444;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                padding: 10px 20px;
-                font-weight: 600;
-                font-size: 13px;
-            }
-            QPushButton:hover {
-                background: #dc2626;
-            }
-        """)
+        ButtonStyleHelper.style_danger_button(btn_clear)
         btn_clear.clicked.connect(self.clear_filters)
         filter_layout.addWidget(btn_clear, 3, 2, 1, 2)
         
@@ -194,24 +181,10 @@ class UserTransactionHistory(QWidget):
         self.summary_label.setStyleSheet("""
             font-weight: 600;
             color: #374151;
-            font-size: 16px;
-        """)
+            font-size: 16px;        """)
         
         btn_export = QPushButton('📤 Xuất Excel')
-        btn_export.setStyleSheet("""
-            QPushButton {
-                background: #10b981;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                padding: 10px 20px;
-                font-weight: 600;
-                font-size: 13px;
-            }
-            QPushButton:hover {
-                background: #059669;
-            }
-        """)
+        ButtonStyleHelper.style_success_button(btn_export)
         btn_export.clicked.connect(self.export_to_excel)
         
         table_header.addWidget(self.summary_label)
@@ -227,29 +200,8 @@ class UserTransactionHistory(QWidget):
             '📅 Ngày', '💰 Loại', '🏷️ Danh mục', '💵 Số tiền', 
             '📝 Ghi chú', '👛 Ví', '⚙️ Thao tác'
         ])
-        
-        # Table styling
-        self.table.setStyleSheet("""
-            QTableWidget {
-                gridline-color: #e2e8f0;
-                background-color: white;
-                alternate-background-color: #f8fafc;
-                selection-background-color: #ddd6fe;
-                border: none;
-            }
-            QTableWidget::item {
-                padding: 8px;
-                border-bottom: 1px solid #e2e8f0;
-            }
-            QHeaderView::section {
-                background: #f1f5f9;
-                color: #374151;
-                padding: 12px;
-                border: none;
-                border-bottom: 2px solid #e2e8f0;
-                font-weight: 600;
-            }
-        """)
+          # Apply global table styling
+        TableStyleHelper.apply_common_table_style(self.table)
         
         # Table properties
         self.table.setAlternatingRowColors(True)
@@ -466,41 +418,16 @@ class UserTransactionHistory(QWidget):
         actions_layout = QHBoxLayout()
         actions_layout.setContentsMargins(5, 2, 5, 2)
         actions_layout.setSpacing(5)
-        
-        # Edit button
+          # Edit button
         btn_edit = QPushButton('✏️')
         btn_edit.setToolTip('Chỉnh sửa giao dịch')
-        btn_edit.setStyleSheet("""
-            QPushButton {
-                background: #3b82f6;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                padding: 5px 8px;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background: #2563eb;
-            }
-        """)
+        ButtonStyleHelper.style_primary_button(btn_edit)
         btn_edit.clicked.connect(lambda: self.edit_transaction_clicked(transaction))
         
         # Delete button
         btn_delete = QPushButton('🗑️')
         btn_delete.setToolTip('Xóa giao dịch')
-        btn_delete.setStyleSheet("""
-            QPushButton {
-                background: #ef4444;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                padding: 5px 8px;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background: #dc2626;
-            }
-        """)
+        ButtonStyleHelper.style_danger_button(btn_delete)
         btn_delete.clicked.connect(lambda: self.delete_transaction_clicked(transaction))
         
         actions_layout.addWidget(btn_edit)

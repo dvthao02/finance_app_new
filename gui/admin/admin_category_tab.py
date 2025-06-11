@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QComb
                            QColorDialog, QFileDialog, QMessageBox, QDialog, QFormLayout, 
                            QDialogButtonBox)
 from PyQt5.QtGui import QIcon, QPixmap
+from utils.ui_styles import TableStyleHelper, ButtonStyleHelper, UIStyles
 import os
 
 class AdminCategoryTab(QWidget):
@@ -14,22 +15,33 @@ class AdminCategoryTab(QWidget):
 
     def init_ui(self):
         layout = QVBoxLayout(self)
+        
+        # Sử dụng styling chung cho table
         self.category_table = QTableWidget(0, 8)
         self.category_table.setHorizontalHeaderLabels([
             "Icon", "Tên danh mục", "Loại", "Màu sắc", "Mô tả", "Trạng thái", "Ngày tạo", "Người tạo"
         ])
-        self.category_table.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.category_table.horizontalHeader().setStretchLastSection(True)
-        self.category_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        
+        # Áp dụng styling chung
+        TableStyleHelper.apply_common_table_style(self.category_table)
+        
         layout.addWidget(self.category_table)
+        
         btn_layout = QHBoxLayout()
         self.btn_add_cat = QPushButton("Thêm danh mục")
         self.btn_edit_cat = QPushButton("Sửa danh mục")
         self.btn_del_cat = QPushButton("Xóa danh mục")
+        
+        # Áp dụng styling chung cho buttons
+        ButtonStyleHelper.style_success_button(self.btn_add_cat)
+        ButtonStyleHelper.style_primary_button(self.btn_edit_cat)
+        ButtonStyleHelper.style_danger_button(self.btn_del_cat)
         btn_layout.addWidget(self.btn_add_cat)
         btn_layout.addWidget(self.btn_edit_cat)
         btn_layout.addWidget(self.btn_del_cat)
+        
         layout.addLayout(btn_layout)
+        
         self.btn_add_cat.clicked.connect(self.add_category_dialog)
         self.btn_edit_cat.clicked.connect(self.edit_category_dialog)
         self.btn_del_cat.clicked.connect(self.delete_category)
