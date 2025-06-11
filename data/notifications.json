@@ -6,13 +6,5 @@
     "type": "Cảnh báo",
     "created_at": "2025-06-11T10:40:01.956847",
     "user_id": "user_009"
-  },
-  {
-    "id": "notify_002",
-    "title": "s",
-    "content": "s",
-    "type": "Tin tức",
-    "created_at": "2025-06-11T11:44:48.394604",
-    "user_id": null
   }
 ]

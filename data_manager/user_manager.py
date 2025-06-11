@@ -22,25 +22,31 @@ logger = logging.getLogger(__name__)
 
 class UserManager:
     def __init__(self, user_file='users.json'):
+       # print('[DEBUG] UserManager __init__ start')
         # Get the directory where the package is installed
         package_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         data_dir = os.path.join(package_dir, 'data')
         # Create data directory if it doesn't exist
         os.makedirs(data_dir, exist_ok=True)
         self.user_file = os.path.join(data_dir, user_file)
+        #print(f'[DEBUG] user_file path: {self.user_file}')
         # Initialize users file if it doesn't exist
         if not os.path.exists(self.user_file):
+            #print(f'[DEBUG] Creating new users file at {self.user_file}')
             self.save_users([])
             
         # Create default admin if no users exist
         users = self.load_users()
+        #print(f'[DEBUG] Loaded users: {users}')
         if not users:
+            #print('[DEBUG] Creating default admin user')
             self.add_user(
                 username="admin",
                 password="Admin@123",
                 full_name="Administrator",
                 role="admin" # Changed from is_admin=True
             )
+        #print('[DEBUG] UserManager __init__ end')
 
     def set_current_user(self, user_id):
         """Thiết lập người dùng hiện tại cho manager.

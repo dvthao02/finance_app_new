@@ -3,8 +3,11 @@ import json
 from PyQt5.QtWidgets import QApplication
 from gui.auth.login_form import LoginForm
 from gui.admin.admin_dashboard import AdminDashboard
+from gui.user.user_dashboard import UserDashboard
 from datetime import datetime
 from utils.file_helper import load_json, save_json
+from data_manager.category_manager import CategoryManager
+from data_manager.transaction_manager import TransactionManager
 
 def main():
     app = QApplication(sys.argv)
@@ -30,38 +33,58 @@ def main():
             login.accept()  # Đóng form login ngay khi đăng nhập thành công
             if user.get('role') == 'admin':
                 try:
-                    #print("[DEBUG] Đang khởi tạo AdminDashboard...")
                     app.admin_dashboard = AdminDashboard()
-                    #print("[DEBUG] Đã tạo AdminDashboard")
-                    app.admin_dashboard.set_current_user(user)  # Gán user hiện tại cho dashboard
-                    #print("[DEBUG] Đã set user cho dashboard")
+                    app.admin_dashboard.set_current_user(user)
                 except Exception as e:
-                    #print(f"Lỗi khi khởi tạo AdminDashboard: {e}")
                     import traceback
                     traceback.print_exc()
                     return
                 def on_logout():
                     log_history(user_id, 'logout')
-                    # Đóng dashboard trước khi show lại login
                     if app.admin_dashboard:
                         app.admin_dashboard.close()
                         app.admin_dashboard = None
                     show_login()
                 app.admin_dashboard.logout_signal.connect(on_logout)
-                #print("[DEBUG] Trước khi show dashboard")
                 app.admin_dashboard.show()
-                #print("[DEBUG] Sau khi gọi show()")
                 app.admin_dashboard.raise_()
-                #print("[DEBUG] Sau khi gọi raise_()")
                 app.admin_dashboard.activateWindow()
-                #print("[DEBUG] Sau khi gọi activateWindow()")
+            elif user.get('role') == 'user':
+                try:
+                    # Khởi tạo managers cho user dashboard
+                    category_manager = CategoryManager()
+                    transaction_manager = TransactionManager()
+                    app.user_dashboard = UserDashboard(
+                        user_manager=login.user_manager,
+                        transaction_manager=transaction_manager,
+                        category_manager=category_manager,
+                        wallet_manager=None
+                    )
+                    # Nếu muốn truyền user hiện tại:
+                    if hasattr(app.user_dashboard, 'set_current_user'):
+                        app.user_dashboard.set_current_user(user)
+                except Exception as e:
+                    import traceback
+                    traceback.print_exc()
+                    return
+                def on_logout_user():
+                    log_history(user_id, 'logout')
+                    if hasattr(app, 'user_dashboard') and app.user_dashboard:
+                        app.user_dashboard.close()
+                        app.user_dashboard = None
+                    show_login()
+                if hasattr(app.user_dashboard, 'logout_signal'):
+                    app.user_dashboard.logout_signal.connect(on_logout_user)
+                app.user_dashboard.show()
+                app.user_dashboard.raise_()
+                app.user_dashboard.activateWindow()
             else:
-                # TODO: mở dashboard user
                 pass
         login.login_success.connect(on_login_success)
         login.exec_()
     show_login()
     app.exec_()
+
 
 if __name__ == "__main__":
     main()
