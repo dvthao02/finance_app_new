@@ -29,8 +29,8 @@ def save_json(file_path, data):
         print(f"Lỗi khi lưu file {file_path}: {e}")
         return False
 
-def generate_id(prefix=None, data_list=None):
-    """Tạo ID tự động dựa trên prefix và danh sách hiện có"""
+def generate_id(prefix=None, data_list=None, id_field=None):
+    """Tạo ID tự động dựa trên prefix, danh sách hiện có và trường id tùy chọn"""
     if data_list is None:
         data_list = []
     if not prefix:
@@ -38,18 +38,26 @@ def generate_id(prefix=None, data_list=None):
     if not data_list:
         return f"{prefix}_001"
     
-    # Lấy số cao nhất hiện có
     max_num = 0
     for item in data_list:
-        # Lấy key đầu tiên có chứa _id
-        id_key = next((key for key in item.keys() if key.endswith('_id')), None)
-        if id_key and item[id_key].startswith(prefix):
+        id_val = None
+        if id_field and id_field in item and str(item[id_field]).startswith(prefix):
+            id_val = item[id_field]
+        else:
+            # Ưu tiên *_id, nếu không có thì kiểm tra 'id' hoặc 'notification_id'
+            id_key = next((key for key in item.keys() if key.endswith('_id')), None)
+            if id_key and item[id_key].startswith(prefix):
+                id_val = item[id_key]
+            elif 'id' in item and str(item['id']).startswith(prefix):
+                id_val = item['id']
+            elif 'notification_id' in item and str(item['notification_id']).startswith(prefix):
+                id_val = item['notification_id']
+        if id_val:
             try:
-                num = int(item[id_key].split('_')[-1])
+                num = int(str(id_val).split('_')[-1])
                 max_num = max(max_num, num)
             except (ValueError, IndexError):
                 continue
-    
     return f"{prefix}_{max_num + 1:03d}"
 
 def get_current_datetime():

@@ -149,11 +149,12 @@
     "name": "Nhà ở",
     "type": "expense",
     "icon": "🏠",
-    "color": "#8E44AD",
+    "color": "#ff55ff",
     "description": "Tiền thuê nhà, sửa chữa nhà",
     "is_active": true,
     "created_at": "2025-01-01T08:00:00Z",
     "user_id": "system",
-    "parent_category_id": null
+    "parent_category_id": null,
+    "updated_at": "2025-06-11T09:55:08.925498"
   }
 ]

@@ -13,14 +13,15 @@ class NotificationManager:
     def get_all_notifications(self):
         return load_json(self.file_path)
 
-    def add_notification(self, title, content, notify_type):
+    def add_notification(self, title, content, notify_type, user_id=None):
         notifications = self.get_all_notifications()
         notification = {
             'id': generate_id('notify', notifications),
             'title': title,
             'content': content,
             'type': notify_type,
-            'created_at': get_current_datetime()
+            'created_at': get_current_datetime(),
+            'user_id': user_id
         }
         notifications.append(notification)
         save_json(self.file_path, notifications)

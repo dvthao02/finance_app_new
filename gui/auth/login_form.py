@@ -1,4 +1,3 @@
-print('[DEBUG] login_form.py loaded')
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox, QWidget, QAction
 )
@@ -8,7 +7,6 @@ import os
 
 try:
     from data_manager.user_manager import UserManager
-    print('[DEBUG] UserManager import OK')
 except Exception as e:
     print('[ERROR] Lỗi import UserManager:', e)
     import traceback
@@ -19,13 +17,10 @@ class LoginForm(QDialog):
     login_success = pyqtSignal(str)
 
     def __init__(self, parent=None):
-        print('[DEBUG] LoginForm __init__ start')
         super().__init__(parent)
-        print('[DEBUG] super().__init__ done')
         
         try:
             self.user_manager = UserManager()
-            print('[DEBUG] UserManager created')
         except Exception as e:
             print('[ERROR] Lỗi khi khởi tạo UserManager:', e)
             import traceback
@@ -33,15 +28,11 @@ class LoginForm(QDialog):
             raise
             
         self.init_ui()
-        print('[DEBUG] init_ui done')   
     def init_ui(self):
-        print('[DEBUG] LoginForm init_ui start')
         self.setWindowTitle("Đăng nhập tài khoản")
         try:
             icon_path = self.get_asset_path("app_icon.png")
-            print(f'[DEBUG] Icon path: {icon_path}')
             self.setWindowIcon(QIcon(icon_path))
-            print('[DEBUG] Icon set successfully')
         except Exception as e:
             print(f'[ERROR] Could not set icon: {e}')
         self.setFixedSize(400, 450)
@@ -125,7 +116,6 @@ class LoginForm(QDialog):
             self.toggle_password_action.setToolTip("Hiện/Ẩn mật khẩu")
             self.toggle_password_action.triggered.connect(self.toggle_password_visibility)
             self.password_input.addAction(self.toggle_password_action, QLineEdit.TrailingPosition)
-            print('[DEBUG] Password toggle action added')
         except Exception as e:
             print(f'[ERROR] Could not add password toggle: {e}')
 
@@ -182,10 +172,8 @@ class LoginForm(QDialog):
         card_layout.addWidget(self.register_button)
 
         self.main_layout.addWidget(login_card)
-        print('[DEBUG] LoginForm init_ui end')
 
     def handle_login(self):
-        print('[DEBUG] handle_login called')
         identifier = self.id_input.text().strip()
         password = self.password_input.text()
         
@@ -195,11 +183,9 @@ class LoginForm(QDialog):
             
         try:
             result = self.user_manager.authenticate_user(identifier, password)
-            print(f'[DEBUG] Authentication result: {result}')
             
             if result.get("status") == "success":
                 user = result["user"]
-                print(f'[DEBUG] Login successful for user: {user.get("user_id")}')
                 self.login_success.emit(user["user_id"])
                 self.accept()
             else:

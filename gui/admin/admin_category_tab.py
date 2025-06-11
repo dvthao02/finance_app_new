@@ -34,6 +34,9 @@ class AdminCategoryTab(QWidget):
         self.btn_edit_cat.clicked.connect(self.edit_category_dialog)
         self.btn_del_cat.clicked.connect(self.delete_category)
 
+        # Nếu có ô tìm kiếm, ví dụ: self.category_search_input
+        # self.category_search_input.returnPressed.connect(self.filter_categories)
+
     def load_categories_table(self):
         categories = self.category_manager.load_categories()
         self.category_table.setRowCount(0)
@@ -56,8 +59,23 @@ class AdminCategoryTab(QWidget):
                 self.category_table.setItem(row, 3, QTableWidgetItem(cat.get('color', '')))
                 self.category_table.setItem(row, 4, QTableWidgetItem(cat.get('description', '')))
                 self.category_table.setItem(row, 5, QTableWidgetItem('Hoạt động' if cat.get('is_active', True) else 'Ẩn'))
-                self.category_table.setItem(row, 6, QTableWidgetItem(cat.get('created_at', '')))
-                self.category_table.setItem(row, 7, QTableWidgetItem('Hệ thống'))    
+                created_at_fmt = self.format_datetime(cat.get('created_at', ''))
+                self.category_table.setItem(row, 6, QTableWidgetItem(created_at_fmt))
+                self.category_table.setItem(row, 7, QTableWidgetItem('Hệ thống'))
+
+    def format_datetime(self, dt_str):
+        from datetime import datetime
+        try:
+            if not dt_str:
+                return ''
+            if 'T' in dt_str:
+                dt = datetime.fromisoformat(dt_str.split('.')[0])
+            else:
+                dt = datetime.strptime(dt_str, "%Y-%m-%d")
+            return dt.strftime("%d-%m-%Y %H:%M:%S")
+        except Exception:
+            return dt_str
+
     def add_category_dialog(self):
         from PyQt5.QtWidgets import QDialog, QFormLayout, QLineEdit, QComboBox, QTextEdit, QDialogButtonBox, QColorDialog, QPushButton, QHBoxLayout, QFileDialog
         dialog = QDialog(self)
@@ -276,12 +294,11 @@ class AdminCategoryTab(QWidget):
             if category:
                 try:
                     # Use the category_id to delete
-                    self.category_manager.delete_category(
+                    result = self.category_manager.delete_category(
                         category.get('category_id'),
                         'system',  # current_user_id
                         True       # is_admin           
                     )
-                    
                     if result:
                         QMessageBox.information(self, "Thành công", "Đã xóa danh mục thành công!")
                         self.refresh_table_with_loading()

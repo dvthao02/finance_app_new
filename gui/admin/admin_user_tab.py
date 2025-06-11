@@ -56,6 +56,7 @@ class AdminUserTab(QWidget):
         self.btn_lock.clicked.connect(self.lock_user)
         self.btn_unlock.clicked.connect(self.unlock_user)
         self.btn_reset_pw.clicked.connect(self.reset_user_password)
+        self.user_search_input.returnPressed.connect(self.search_user)
 
     def load_users_table(self):
         users = self.user_manager.load_users()
@@ -185,13 +186,28 @@ class AdminUserTab(QWidget):
         user = self.get_selected_user()
         if not user:
             return
-        import random, string
-        new_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
-        user['password'] = new_password
-        users = self.user_manager.load_users()
-        for u in users:
-            if u.get('user_id') == user['user_id']:
-                u['password'] = new_password
-        self.user_manager.save_users(users)
-        self.audit_log_manager.add_log(user['user_id'], f'Cấp lại mật khẩu mới: {new_password}')
-        QMessageBox.information(self, 'Cấp lại mật khẩu', f"Mật khẩu mới cho {user.get('email','')}: {new_password}")
+        from PyQt5.QtWidgets import QInputDialog
+        from utils.file_helper import is_strong_password
+        from data_manager.notification_manager import NotificationManager
+        # Hỏi admin nhập mật khẩu mới
+        new_password, ok = QInputDialog.getText(self, 'Đặt lại mật khẩu', f'Nhập mật khẩu mới cho {user.get("email") or user.get("username") or user.get("user_id")}:')
+        if not ok or not new_password:
+            return
+        if not is_strong_password(new_password):
+            QMessageBox.warning(self, 'Lỗi', 'Mật khẩu yếu. Phải gồm chữ hoa, thường, số và ký tự đặc biệt, ít nhất 8 ký tự.')
+            return
+        result = self.user_manager.admin_reset_password(user['user_id'], new_password)
+        if result.get('status') == 'success':
+            self.audit_log_manager.add_log(user['user_id'], f'Cấp lại mật khẩu mới (admin): {new_password}')
+            info = user.get('email') or user.get('username') or user.get('user_id')
+            # Gửi notification cho user
+            notify_manager = NotificationManager()
+            notify_manager.add_notification(
+                title='Mật khẩu của bạn đã được đặt lại',
+                content=f'Mật khẩu mới của bạn là: {new_password}',
+                notify_type='Cảnh báo',
+                user_id=user['user_id']
+            )
+            QMessageBox.information(self, 'Cấp lại mật khẩu', f"Mật khẩu mới cho {info}: {new_password}\nĐã gửi thông báo cho người dùng.")
+        else:
+            QMessageBox.warning(self, 'Lỗi', result.get('message', 'Không thể đặt lại mật khẩu!'))

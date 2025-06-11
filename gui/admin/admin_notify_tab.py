@@ -39,26 +39,45 @@ class AdminNotifyTab(QWidget):
         self.btn_view_notify.clicked.connect(self.view_notification_detail)
         self.btn_mark_read.clicked.connect(self.mark_notification_read)
         self.btn_delete_notify.clicked.connect(self.delete_notification)
+        self.notify_title.returnPressed.connect(self.send_notification)
 
-    def load_notifications_table(self):
+    def load_notifications_table(self, current_user_id=None):
         notifications = self.notification_manager.get_all_notifications()
-        self.notify_table.setRowCount(0)
+        filtered = []
         for n in notifications:
+            if not n.get('user_id') or (current_user_id and n.get('user_id') == current_user_id):
+                filtered.append(n)
+        self.notify_table.setRowCount(0)
+        for n in filtered:
             row = self.notify_table.rowCount()
             self.notify_table.insertRow(row)
             title = n.get('title', '')
             content = n.get('message', n.get('content', ''))
             notify_type = n.get('type', '')
             created_at = n.get('created_at', '')
+            created_at_fmt = self.format_datetime(created_at)
             priority = n.get('priority', '')
             is_read = n.get('is_read', False)
             status = 'Đã đọc' if is_read else 'Chưa đọc'
             self.notify_table.setItem(row, 0, QTableWidgetItem(title))
             self.notify_table.setItem(row, 1, QTableWidgetItem(content))
             self.notify_table.setItem(row, 2, QTableWidgetItem(notify_type))
-            self.notify_table.setItem(row, 3, QTableWidgetItem(created_at))
+            self.notify_table.setItem(row, 3, QTableWidgetItem(created_at_fmt))
             self.notify_table.setItem(row, 4, QTableWidgetItem(priority))
             self.notify_table.setItem(row, 5, QTableWidgetItem(status))
+
+    def format_datetime(self, dt_str):
+        from datetime import datetime
+        try:
+            if not dt_str:
+                return ''
+            if 'T' in dt_str:
+                dt = datetime.fromisoformat(dt_str.split('.')[0])
+            else:
+                dt = datetime.strptime(dt_str, "%Y-%m-%d")
+            return dt.strftime("%d-%m-%Y %H:%M:%S")
+        except Exception:
+            return dt_str
 
     def clear_form(self):
         """Clear all input fields"""
