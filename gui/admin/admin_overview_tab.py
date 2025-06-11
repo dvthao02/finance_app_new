@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QGroupBox, QLabel, QTableWidget, QTableWidgetItem, QFrame, QSizePolicy
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QGroupBox, QLabel, QTableWidget, QTableWidgetItem, QFrame, QSizePolicy, QHeaderView
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 
@@ -64,6 +64,9 @@ class AdminOverviewTab(QWidget):
         self.recent_table.setStyleSheet("font-size:14px;")
         self.recent_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.recent_table.setMinimumHeight(180)
+        self.recent_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.recent_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.recent_table.setSelectionBehavior(QTableWidget.SelectRows)
         
         users_layout.addWidget(self.recent_table)
         layout.addWidget(users_group)

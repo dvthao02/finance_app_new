@@ -1,3 +1,12 @@
 [
- 
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-11T11:47:45.993450"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-11T11:50:19.350242"
+  }
 ]

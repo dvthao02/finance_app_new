@@ -1,5 +1,4 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView
-from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 
 class AdminAuditTab(QWidget):
@@ -12,18 +11,14 @@ class AdminAuditTab(QWidget):
     def init_ui(self):
         layout = QVBoxLayout(self)
         label = QLabel("Lịch sử hoạt động (Audit Log)")
-        label.setFont(QFont("Segoe UI", 12, QFont.Bold))
+        label.setStyleSheet("font-size:14px;font-weight:bold;margin-bottom:8px;")
         layout.addWidget(label)
         self.audit_table = QTableWidget(0, 2)
         self.audit_table.setHorizontalHeaderLabels(["Thời gian", "Hành động"])
         self.audit_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.audit_table.horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
-        self.audit_table.setAlternatingRowColors(True)
-        self.audit_table.setStyleSheet("QTableWidget {border:1px solid #ccc;} QHeaderView::section {background:#f5f5f5; font-weight:bold;}")
+        self.audit_table.setStyleSheet("font-size:14px;")
         self.audit_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.audit_table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.audit_table.setMinimumHeight(350)
-        self.audit_table.setFont(QFont("Segoe UI", 10))
         layout.addWidget(self.audit_table)
         self.setLayout(layout)
 
