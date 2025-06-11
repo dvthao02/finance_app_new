@@ -372,5 +372,20 @@
     "user_id": "user_001",
     "action": "login",
     "timestamp": "2025-06-10T22:29:10.972650"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-11T09:25:50.077982"
+  },
+  {
+    "user_id": "user_007",
+    "action": "Khóa tài khoản: Thích",
+    "timestamp": "2025-06-11T09:26:09.546093"
+  },
+  {
+    "user_id": "user_007",
+    "action": "Mở khóa tài khoản",
+    "timestamp": "2025-06-11T09:26:15.561116"
   }
 ]
