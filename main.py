@@ -29,8 +29,17 @@ def main():
             log_history(user_id, 'login')
             login.accept()  # Đóng form login ngay khi đăng nhập thành công
             if user.get('role') == 'admin':
-                app.admin_dashboard = AdminDashboard()
-                app.admin_dashboard.set_current_user(user)  # Gán user hiện tại cho dashboard
+                try:
+                    #print("[DEBUG] Đang khởi tạo AdminDashboard...")
+                    app.admin_dashboard = AdminDashboard()
+                    #print("[DEBUG] Đã tạo AdminDashboard")
+                    app.admin_dashboard.set_current_user(user)  # Gán user hiện tại cho dashboard
+                    #print("[DEBUG] Đã set user cho dashboard")
+                except Exception as e:
+                    #print(f"Lỗi khi khởi tạo AdminDashboard: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    return
                 def on_logout():
                     log_history(user_id, 'logout')
                     # Đóng dashboard trước khi show lại login
@@ -39,9 +48,13 @@ def main():
                         app.admin_dashboard = None
                     show_login()
                 app.admin_dashboard.logout_signal.connect(on_logout)
+                #print("[DEBUG] Trước khi show dashboard")
                 app.admin_dashboard.show()
+                #print("[DEBUG] Sau khi gọi show()")
                 app.admin_dashboard.raise_()
+                #print("[DEBUG] Sau khi gọi raise_()")
                 app.admin_dashboard.activateWindow()
+                #print("[DEBUG] Sau khi gọi activateWindow()")
             else:
                 # TODO: mở dashboard user
                 pass

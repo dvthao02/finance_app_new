@@ -21,7 +21,6 @@ class AdminDashboard(QMainWindow):
         self.setWindowTitle("Admin Dashboard")
         self.setMinimumSize(1100, 700)
         self.current_user = None
-        # Khởi tạo data_manager trước khi init_ui
         self.user_manager = UserManager()
         self.category_manager = CategoryManager()
         self.notification_manager = NotificationManager()
@@ -59,7 +58,6 @@ class AdminDashboard(QMainWindow):
         self.tabs.addTab(self.notify_tab, "Thông báo Hệ thống")
         self.audit_tab = AdminAuditTab(self.audit_log_manager)
         self.tabs.addTab(self.audit_tab, "Nhật ký Hệ thống")
-        # Thêm tab Profile
         self.profile_tab = AdminProfileTab()
         self.tabs.addTab(self.profile_tab, "Hồ sơ cá nhân")
         self.tabs.currentChanged.connect(self.on_tab_changed)
