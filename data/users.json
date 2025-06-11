@@ -5,15 +5,15 @@
     "password": "$2b$12$jWLaMt3ggfMSYAVTwFcozeZFGSY7PFZUc4E4cVM1iBb2an3IYk22i",
     "full_name": "Nguyễn Văn A",
     "email": "admin@gmail.com",
-    "phone": "+84987654321",
+    "phone": "0987654321",
     "role": "admin",
     "is_active": true,
     "created_at": "2025-05-01T10:00:00Z",
-    "updated_at": "2025-06-11T16:56:23.457453",
+    "updated_at": "2025-06-11T17:14:38.672779",
     "avatar": null,
     "date_of_birth": "1990-01-01",
     "address": "123 Admin Street, Hanoi",
-    "last_login": "2025-06-11T17:02:01.212098",
+    "last_login": "2025-06-11T17:14:08.454032",
     "last_activity": "2025-06-10T09:45:00Z",
     "gender": "Nam"
   },
@@ -31,7 +31,7 @@
     "avatar": null,
     "date_of_birth": "1995-05-15",
     "address": "456 User Ave, Ho Chi Minh City",
-    "last_login": "2025-06-11T17:02:17.753158",
+    "last_login": "2025-06-11T17:13:46.842639",
     "last_activity": "2025-06-10T09:45:00Z",
     "gender": "Nam"
   }

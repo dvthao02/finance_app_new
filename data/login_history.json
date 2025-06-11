@@ -18,5 +18,20 @@
     "user_id": "user_002",
     "action": "login",
     "timestamp": "2025-06-11T17:02:17.776044"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-11T17:11:32.798252"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-11T17:13:46.854862"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-11T17:14:08.465426"
   }
 ]
