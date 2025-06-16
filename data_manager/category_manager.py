@@ -131,21 +131,23 @@ class CategoryManager:
             return True
         except Exception as e:
             logger.error(f"Error saving categories: {str(e)}")
-            return False
-
+            return False    
+        
     def get_all_categories(self, user_id=None, category_type=None, active_only=True):
         """Lấy tất cả categories"""
         try:
-            if user_id is None:
-                user_id = self.current_user_id
-                
-            if user_id is None:
-                logger.warning("No user ID provided for get_all_categories")
-                return []
-                
             # Tải lại categories từ file để đảm bảo dữ liệu mới nhất
             self.categories = self.load_categories()
             
+            # Nếu không cung cấp user_id, trả về tất cả categories bao gồm cả hệ thống
+            if user_id is None:
+                if hasattr(self, 'current_user_id') and self.current_user_id:
+                    user_id = self.current_user_id
+                else:
+                    # Trả về tất cả categories khi không có user_id 
+                    # (cần cho hiển thị biểu đồ/thống kê)
+                    return self.categories
+                
             # Lấy categories hệ thống
             system_categories = [cat for cat in self.categories 
                               if cat.get('user_id') == "system"]

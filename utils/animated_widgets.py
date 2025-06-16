@@ -1,3 +1,28 @@
+"""
+Animated Widgets Utilities
+===========================
+
+Module chứa các widget có hiệu ứng animation để tăng trải nghiệm người dùng.
+Các widget này có thể được sử dụng trong bất kỳ phần nào của ứng dụng.
+
+Các widget chính:
+- AnimatedNumberLabel: Label hiển thị số với hiệu ứng đếm
+- AnimatedStatCard: Thẻ thống kê với animation
+- SlideInWidget: Widget trượt vào từ bên trái
+- FadeInWidget: Widget với hiệu ứng fade in
+- StaggeredAnimationGroup: Nhóm animation chạy lần lượt
+
+Cách sử dụng:
+    from utils.animated_widgets import AnimatedNumberLabel, AnimatedStatCard
+    
+    # Tạo label số có animation
+    label = AnimatedNumberLabel()
+    label.set_target_value(1000000)  # Sẽ đếm từ 0 lên 1,000,000
+    
+    # Tạo stat card
+    card = AnimatedStatCard("Thu nhập", 500000, "Tháng này", "#10b981", "📈")
+"""
+
 from PyQt5.QtWidgets import QLabel, QFrame, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt5.QtCore import Qt, QPropertyAnimation, QRect, QEasingCurve, QTimer, pyqtSignal, QSequentialAnimationGroup
 from PyQt5.QtGui import QFont, QColor, QPalette
@@ -63,15 +88,15 @@ class AnimatedStatCard(QFrame):
         self.setStyleSheet("""
             QFrame {
                 background: white;
-                border-radius: 16px;
-                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                border: none;
             }
         """)
-        self.setFixedHeight(120)
+        self.setFixedHeight(110)  # Giảm chiều cao xuống một chút
         
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 16, 20, 16)
-        layout.setSpacing(8)
+        layout.setContentsMargins(15, 12, 15, 12)  # Giảm contentMargins
+        layout.setSpacing(5)  # Giảm spacing
         
         # Header với title và trend
         header_layout = QHBoxLayout()

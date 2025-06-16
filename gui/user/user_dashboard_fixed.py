@@ -53,8 +53,9 @@ class UserDashboard(BaseDashboard):
     
     def setup_user_content(self):
         """Setup user-specific content in the stacked widget"""
-        try:            # Import user tabs
-            from gui.user.user_overview_tab import UserOverviewTab
+        try:
+            # Import user tabs
+            from gui.user.user_overview_tab_fixed import UserOverviewTab
             from gui.user.user_transaction_form_tab import UserTransactionForm
             from gui.user.user_transaction_history_tab import UserTransactionHistory
             from gui.user.user_report_tab import UserReport
@@ -68,10 +69,14 @@ class UserDashboard(BaseDashboard):
             self.overview_tab = UserOverviewTab(self.user_manager, self.transaction_manager, self.category_manager, self.wallet_manager)
             self.transaction_form = UserTransactionForm(self.user_manager, self.transaction_manager, self.category_manager, self.wallet_manager)
             self.transaction_history = UserTransactionHistory(self.user_manager, self.transaction_manager, self.category_manager, self.wallet_manager)
-            self.report_tab = UserReport(self.user_manager, self.transaction_manager, self.category_manager)            # Get user_id from current_user
-            user_id = getattr(self.user_manager, 'current_user', {}).get('user_id', None)
+            self.report_tab = UserReport(self.user_manager, self.transaction_manager, self.category_manager)
+            
+            user_id = getattr(self.user_manager, 'current_user', {}).get('id', None)
+            if not user_id and hasattr(self.user_manager, 'current_user') and self.user_manager.current_user:
+                user_id = self.user_manager.current_user.get('user_id')
             
             print(f"DEBUG: Using user_id={user_id} for tabs")
+            
             self.budget_tab = UserBudget(self.user_manager, self.transaction_manager, self.category_manager, self.wallet_manager)
             self.category_tab = UserCategoryTab(self.category_manager, user_id, reload_callback=self.reload_categories)
             self.notifications_tab = NotificationCenter(self.user_manager)
@@ -159,12 +164,14 @@ class UserDashboard(BaseDashboard):
     def show_profile(self):
         """Show profile tab"""
         self.switch_tab(8)  # Profile tab is now at index 8 (9th item in the list)
+    
     def set_current_user(self, user):
         """Set current user"""
         super().set_current_user(user)
         self.user_manager.current_user = user
-          # Set current_user_id in both managers
-        user_id = user.get('user_id')
+        
+        # Set current_user_id in both managers
+        user_id = user.get('id') or user.get('user_id')
         if user_id:
             if hasattr(self.user_manager, 'current_user_id'):
                 self.user_manager.current_user_id = user_id

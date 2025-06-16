@@ -463,7 +463,7 @@ class BaseDashboard(QWidget):
         """Hiển thị thông điệp chào mừng - chức năng này sẽ được các lớp con triển khai"""
         if self.current_user:
             try:
-                from gui.user.user_notifications import show_welcome_message
+                from gui.user.user_notifications_tab import show_welcome_message
                 show_welcome_message(self.current_user, self)
             except Exception as e:
                 print(f"Error showing welcome toast: {e}")

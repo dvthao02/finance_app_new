@@ -643,5 +643,370 @@
     "user_id": "user_001",
     "action": "login",
     "timestamp": "2025-06-16T10:51:41.274635"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T11:45:56.903889"
+  },
+  {
+    "user_id": "user_004",
+    "action": "login",
+    "timestamp": "2025-06-16T11:52:29.706544"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T11:54:21.282763"
+  },
+  {
+    "user_id": "user_001",
+    "action": "logout",
+    "timestamp": "2025-06-16T11:55:13.315340"
+  },
+  {
+    "user_id": "user_004",
+    "action": "login",
+    "timestamp": "2025-06-16T11:55:18.621715"
+  },
+  {
+    "user_id": "user_004",
+    "action": "login",
+    "timestamp": "2025-06-16T12:01:46.443069"
+  },
+  {
+    "user_id": "user_004",
+    "action": "login",
+    "timestamp": "2025-06-16T12:04:33.780665"
+  },
+  {
+    "user_id": "user_004",
+    "action": "logout",
+    "timestamp": "2025-06-16T12:05:42.674986"
+  },
+  {
+    "user_id": "user_004",
+    "action": "login",
+    "timestamp": "2025-06-16T12:09:16.620812"
+  },
+  {
+    "user_id": "user_004",
+    "action": "login",
+    "timestamp": "2025-06-16T13:44:31.251267"
+  },
+  {
+    "user_id": "user_004",
+    "action": "login",
+    "timestamp": "2025-06-16T13:46:19.684927"
+  },
+  {
+    "user_id": "user_004",
+    "action": "logout",
+    "timestamp": "2025-06-16T13:46:30.268485"
+  },
+  {
+    "user_id": "user_004",
+    "action": "login",
+    "timestamp": "2025-06-16T13:47:24.828947"
+  },
+  {
+    "user_id": "user_004",
+    "action": "login",
+    "timestamp": "2025-06-16T13:52:31.656658"
+  },
+  {
+    "user_id": "user_004",
+    "action": "login",
+    "timestamp": "2025-06-16T16:15:45.612263"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T16:19:43.189632"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T16:20:55.919825"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T16:27:35.438254"
+  },
+  {
+    "user_id": "user_002",
+    "action": "logout",
+    "timestamp": "2025-06-16T16:27:59.127264"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T16:35:44.539524"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T17:01:07.082831"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T17:17:12.235328"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T17:22:53.521658"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T17:34:30.142244"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T17:38:33.984818"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T17:46:59.980406"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T17:54:16.502218"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T18:06:18.682454"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T18:14:50.075233"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T18:17:22.234911"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T18:22:04.446334"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T18:28:08.183555"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T18:35:46.877426"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T18:40:45.565038"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T18:49:00.872704"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T18:51:31.016954"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T18:52:27.851279"
+  },
+  {
+    "user_id": "user_002",
+    "action": "logout",
+    "timestamp": "2025-06-16T18:52:50.311938"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T18:55:02.429526"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T18:59:00.804127"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T19:04:23.700334"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T19:07:40.712819"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T19:15:18.199704"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T19:21:00.117432"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T19:25:31.505699"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T19:29:54.076291"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T19:36:23.509992"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T19:37:06.602395"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T19:44:46.958330"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T20:27:45.380158"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T20:55:48.998349"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T21:11:42.149251"
+  },
+  {
+    "user_id": "user_002",
+    "action": "logout",
+    "timestamp": "2025-06-16T21:12:07.443773"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T21:12:15.778867"
+  },
+  {
+    "user_id": "user_004",
+    "action": "Khóa tài khoản: like",
+    "timestamp": "2025-06-16T21:12:29.538927"
+  },
+  {
+    "user_id": "user_001",
+    "action": "logout",
+    "timestamp": "2025-06-16T21:12:48.343938"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T21:12:54.606957"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T21:15:48.403370"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T21:55:07.146986"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T21:57:11.517288"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T22:06:52.100522"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T22:21:17.146394"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T22:25:50.176482"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T22:27:01.608528"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T22:28:17.804437"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T22:33:00.631553"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T22:39:36.505045"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T22:55:11.788821"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T23:02:12.815730"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T23:08:20.318392"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T23:09:16.721084"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T23:10:04.532131"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T23:10:27.900655"
   }
 ]

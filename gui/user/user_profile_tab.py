@@ -26,7 +26,6 @@ class UserProfile(QWidget):
     def init_ui(self):
         self.setWindowTitle('👤 Thông tin cá nhân')
         # No fixed size for a tab, allow it to resize with the window
-        # self.setModal(True) - Not needed for a tab
         
         # Main layout
         layout = QVBoxLayout()
@@ -301,8 +300,9 @@ class UserProfile(QWidget):
         
         self.setLayout(layout)
         
-        # Set dialog style
-        self.setStyleSheet("""            QDialog {
+        # Set style for the widget
+        self.setStyleSheet("""
+            QWidget {
                 background-color: #f1f5f9;
             }
         """)

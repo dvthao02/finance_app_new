@@ -1,3 +1,29 @@
+"""
+Quick Actions Utilities
+========================
+
+Module chứa các widget để tạo menu hành động nhanh (Quick Actions).
+Bao gồm Floating Action Button và menu popup với các hành động thông dụng.
+
+Các widget chính:
+- FloatingActionButton: Nút floating với hiệu ứng gradient và shadow
+- QuickActionItem: Item trong menu hành động
+- QuickActionsMenu: Menu popup chứa các hành động
+- QuickActionsWidget: Widget chính kết hợp FAB và menu
+
+Cách sử dụng:
+    from utils.quick_actions import QuickActionsWidget, add_quick_actions_to_widget
+    
+    # Thêm quick actions vào widget
+    quick_actions = add_quick_actions_to_widget(parent_widget)
+    
+    # Kết nối signals
+    quick_actions.add_income_requested.connect(handle_add_income)
+    quick_actions.add_expense_requested.connect(handle_add_expense)
+    quick_actions.view_report_requested.connect(handle_view_report)
+    quick_actions.view_budget_requested.connect(handle_view_budget)
+"""
+
 from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QLabel, QFrame
 from PyQt5.QtCore import Qt, QPropertyAnimation, QRect, QEasingCurve, pyqtSignal, QTimer
 from PyQt5.QtGui import QFont, QIcon, QPainter, QColor, QBrush, QPen
