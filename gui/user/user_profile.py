@@ -451,37 +451,4 @@ class UserProfile(QWidget):
         
         if reply == QMessageBox.Yes:
             self.logout_requested.emit()
-
-    def choose_avatar(self):
-        """Chọn ảnh đại diện từ file hệ thống"""
-        file_path, _ = QFileDialog.getOpenFileName(self, "Chọn ảnh đại diện", "", "Image Files (*.png *.jpg *.jpeg *.bmp)")
-        
-        if file_path:
-            # Hiển thị ảnh đại diện đã chọn
-            pixmap = QPixmap(file_path)
-            if not pixmap.isNull():
-                self.avatar_path = file_path  # Lưu đường dẫn ảnh để cập nhật sau
-                # Hiển thị ảnh tròn
-                size = min(pixmap.width(), pixmap.height())
-                pixmap = pixmap.scaled(80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                self.avatar_label.setPixmap(pixmap)
-                self.avatar_label.setText("")  # Xóa chữ cái đầu
-                
-                # Thông báo người dùng nhấn lưu để cập nhật
-                QMessageBox.information(self, "Thông báo", "Đã chọn ảnh đại diện mới. Nhấn 'Lưu thay đổi' để cập nhật.")
-
-    def load_avatar(self, path):
-        """Tải ảnh đại diện từ đường dẫn"""
-        if path and os.path.exists(path):
-            pixmap = QPixmap(path)
-            if not pixmap.isNull():
-                pixmap = pixmap.scaled(80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                self.avatar_label.setPixmap(pixmap)
-                self.avatar_label.setText("")  # Xóa chữ cái đầu
-                return True
-        return False
-
-    def cancel_changes(self):
-        """Cancel any changes and reload user data"""
-        self.load_user_data()
-        QMessageBox.information(self, 'Thông báo', 'Đã hủy các thay đổi.')
+            self.accept()
