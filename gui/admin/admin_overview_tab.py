@@ -31,7 +31,7 @@ class AdminOverviewTab(QWidget):
     def init_ui(self):
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setSpacing(8)
-        # --- Hàng trên cùng: Biểu đồ + 2 box thống kê ---
+        # --- Hàng trên cùng: Biểu đồ + 2 ô thống kê ---
         top_row = QHBoxLayout()
         top_row.setSpacing(8)
         # Biểu đồ bên trái (chiếm 2 phần)
@@ -42,36 +42,36 @@ class AdminOverviewTab(QWidget):
             from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
             from matplotlib.figure import Figure
             chart_vbox = QVBoxLayout()
-            # Thêm label ngày tháng filter
+            # Thêm nhãn ngày tháng lọc
             self.chart_date_label = QLabel()
-            self.chart_date_label.setStyleSheet("font-size: 11px; color: #1976D2; font-weight: bold; margin-bottom: 2px;")
+            self.chart_date_label.setStyleSheet("font-size: 12px; color: #1e293b; font-weight: bold; margin-bottom: 4px;") # Đã thay đổi style
             chart_vbox.addWidget(self.chart_date_label)
-            # Thêm filter thời gian
+            # Thêm bộ lọc thời gian
             filter_layout = QHBoxLayout()
-            filter_layout.setSpacing(6)
+            filter_layout.setSpacing(8) # Tăng khoảng cách
             filter_label = QLabel("Lọc thời gian:")
-            filter_label.setStyleSheet("font-size: 11px; font-weight: bold;")
+            filter_label.setStyleSheet("font-size: 12px; font-weight: bold; color: #1e293b;") # Đã thay đổi style
             self.chart_time_filter = QComboBox()
             self.chart_time_filter.addItems(["Tháng này", "Tháng trước", "7 ngày gần nhất", "30 ngày gần nhất"])
             self.chart_time_filter.setCurrentIndex(0)
-            self.chart_time_filter.setFixedWidth(140)
+            self.chart_time_filter.setFixedWidth(150) # Tăng chiều rộng
+            self.chart_time_filter.setStyleSheet("font-size: 12px;") # Thêm kích thước font
             filter_layout.addWidget(filter_label)
             filter_layout.addWidget(self.chart_time_filter)
             filter_layout.addStretch(1)
             chart_vbox.addLayout(filter_layout)
             self.chart_group = QGroupBox()
             chart_layout = QVBoxLayout(self.chart_group)
-            chart_layout.setContentsMargins(8, 24, 8, 8)  # tăng margin top để không đè tiêu đề
-            self.figure = Figure(figsize=(3.2,2.5))
+            chart_layout.setContentsMargins(10, 30, 10, 10)  # Điều chỉnh lề
+            self.figure = Figure(figsize=(4,3)) # Tăng kích thước biểu đồ
             self.canvas = FigureCanvas(self.figure)
             chart_layout.addWidget(self.canvas)
             self.chart_group.setStyleSheet("margin-top:4px;margin-bottom:4px;")
-            self.chart_group.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             chart_vbox.addWidget(self.chart_group)
             top_row.addLayout(chart_vbox, 2)
             self.chart_time_filter.currentIndexChanged.connect(self.load_dashboard_stats)
         except Exception as e:
-            print(f'[ERROR] Lỗi khi khởi tạo chart: {e}')
+            print(f'[LỖI] Lỗi khi khởi tạo biểu đồ: {e}') # Đã dịch
             traceback.print_exc()
             chart_placeholder = QLabel("Biểu đồ thống kê (Cần cài đặt matplotlib để hiển thị)")
             chart_placeholder.setStyleSheet("""
@@ -84,7 +84,7 @@ class AdminOverviewTab(QWidget):
             """)
             chart_placeholder.setAlignment(Qt.AlignCenter)
             top_row.addWidget(chart_placeholder, 2)
-        # Box thống kê người dùng
+        # Ô thống kê người dùng
         user_stats = QGroupBox("Thống kê người dùng")
         user_stats.setStyleSheet("QGroupBox { font-size: 12px; font-weight: bold; }")
         user_stats_layout = QVBoxLayout(user_stats)
@@ -97,7 +97,7 @@ class AdminOverviewTab(QWidget):
         user_stats_layout.addStretch(1)
         user_stats.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         top_row.addWidget(user_stats, 1)
-        # Box thống kê giao dịch
+        # Ô thống kê giao dịch
         trans_stats = QGroupBox("Thống kê giao dịch")
         trans_stats.setStyleSheet("QGroupBox { font-size: 12px; font-weight: bold; }")
         trans_stats_layout = QVBoxLayout(trans_stats)
@@ -112,14 +112,14 @@ class AdminOverviewTab(QWidget):
         
         self.main_layout.addLayout(top_row)
         
-        # --- Bảng recent users bên dưới ---
+        # --- Bảng người dùng gần đây bên dưới ---
         users_group = QGroupBox("Người dùng đăng ký gần đây")
         users_layout = QVBoxLayout(users_group)
         
         self.recent_table = QTableWidget(0, 3)
         self.recent_table.setHorizontalHeaderLabels(["ID", "Tên", "Ngày đăng ký"])
         
-        # Áp dụng styling chung
+        # Áp dụng style chung
         TableStyleHelper.apply_common_table_style(self.recent_table)
         
         self.recent_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -143,7 +143,7 @@ class AdminOverviewTab(QWidget):
             font_label = QFont("Segoe UI", 9, QFont.Bold)
         for lbl in [self.lbl_total_users, self.lbl_new_users, self.lbl_total_transactions, self.lbl_today_transactions]:
             lbl.setFont(font_big)
-        # Responsive: nếu chiều rộng nhỏ, xếp dọc các box thống kê
+        # Responsive: nếu chiều rộng nhỏ, xếp dọc các ô thống kê
         if self.width() < 900:
             if hasattr(self, 'stats_row'):
                 # Xóa các widget khỏi layout cũ
@@ -188,13 +188,13 @@ class AdminOverviewTab(QWidget):
                 chart_from = now - timedelta(days=29)
                 chart_from = chart_from.replace(hour=0, minute=0, second=0, microsecond=0)
                 chart_to = now
-            else:
+            else: # Mặc định là tháng này
                 chart_from = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
                 chart_to = now
-            # Hiển thị label ngày tháng filter
+            # Hiển thị nhãn ngày tháng lọc
             if hasattr(self, 'chart_date_label'):
                 self.chart_date_label.setText(f"Khoảng thời gian: {chart_from.strftime('%d-%m-%Y')} đến {chart_to.strftime('%d-%m-%Y')}")
-            # Lọc user theo thời gian
+            # Lọc người dùng theo thời gian
             def in_range(dt_str):
                 try:
                     dt = datetime.fromisoformat(dt_str.split('T')[0])
@@ -208,7 +208,7 @@ class AdminOverviewTab(QWidget):
             self.lbl_new_users.setText(str(len(new_users)))
             self.lbl_total_transactions.setText(str(len(transactions)))
             self.lbl_today_transactions.setText(str(len(today_transactions)))
-            # Load recent users table
+            # Tải bảng người dùng gần đây
             recent = sorted(users, key=lambda u: u.get('created_at', ''), reverse=True)[:5]
             self.recent_table.setRowCount(0)
             for u in recent:
@@ -229,34 +229,42 @@ class AdminOverviewTab(QWidget):
                 count_by_day = Counter(days)
                 x = sorted(count_by_day.keys())
                 y = [count_by_day[d] for d in x]
-                if len(x) <= 7:
-                    wedges, texts, autotexts = ax.pie(y, labels=[f"Ngày {d}" for d in x], autopct='%1.1f%%', startangle=90, colors=['#1976D2','#43A047','#F9A825','#D32F2F','#6A1B9A','#B71C1C','#E1F5FE'], textprops={'fontsize': 11})
-                    ax.set_title('Tỉ lệ người dùng mới theo ngày', fontsize=11, fontweight='bold', pad=12, loc='center')
-                    ax.legend(wedges, [f"Ngày {d}" for d in x], title="Chú thích", loc="best", bbox_to_anchor=(1, 0.5), fontsize=10)
-                else:
-                    bars = ax.bar(x, y, color='#1976D2', label='Số user mới')
-                    ax.set_title('Người dùng mới theo ngày', fontsize=11, fontweight='bold', pad=12, loc='center')
-                    ax.set_xlabel('Ngày', fontsize=10)
-                    ax.set_ylabel('Số lượng', fontsize=10)
-                    ax.grid(axis='y', linestyle='--', alpha=0.5)
-                    ax.legend([bars], ['Số user mới'], loc='best', fontsize=10)
-                self.figure.tight_layout(rect=[0, 0, 1, 1])
+                if not x or not y: # Kiểm tra xem có dữ liệu để hiển thị không
+                    ax.text(0.5, 0.5, 'Không có dữ liệu cho khoảng thời gian này.', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes, fontsize=12, color='gray')
+                    ax.set_xticks([])
+                    ax.set_yticks([])
+                    ax.set_title('Thống kê người dùng mới', fontsize=13, fontweight='bold', pad=15, loc='center') # Đã điều chỉnh tiêu đề
+                elif len(x) <= 7: # Nếu ít hơn hoặc bằng 7 ngày, dùng biểu đồ tròn
+                    wedges, texts, autotexts = ax.pie(y, labels=[f"Ngày {d}" for d in x], autopct='%1.1f%%', startangle=90, colors=['#2563eb','#60a5fa','#93c5fd','#bfdbfe','#dbeafe','#eff6ff','#f0f9ff'], textprops={'fontsize': 10, 'color':'#1e293b'}) # Đã điều chỉnh textprops và màu sắc
+                    ax.set_title('Tỉ lệ người dùng mới theo ngày', fontsize=13, fontweight='bold', pad=15, loc='center') # Đã điều chỉnh tiêu đề và padding
+                    # Đã điều chỉnh chú giải để nằm ở giữa và bên dưới biểu đồ
+                    ax.legend(wedges, [f"Ngày {d} ({count_by_day[d]})" for d in x], title="Chú thích", 
+                              loc='lower center', bbox_to_anchor=(0.5, -0.20), 
+                              fontsize=9, title_fontsize='10', ncol=max(1, len(wedges)))
+                else: # Nếu nhiều hơn 7 ngày, dùng biểu đồ cột
+                    bars = ax.bar(x, y, color='#60a5fa', label='Số user mới')
+                    ax.set_title('Số lượng người dùng mới theo ngày', fontsize=13, fontweight='bold', pad=15, loc='center') # Đã điều chỉnh tiêu đề và padding
+                    ax.set_xlabel('Ngày trong tháng', fontsize=11, color='#334155') # Đã điều chỉnh nhãn
+                    ax.set_ylabel('Số lượng người dùng', fontsize=11, color='#334155') # Đã điều chỉnh nhãn
+                    ax.tick_params(axis='x', labelsize=9, colors='#475569') # Đã điều chỉnh tham số tick
+                    ax.tick_params(axis='y', labelsize=9, colors='#475569') # Đã điều chỉnh tham số tick
+                    ax.grid(axis='y', linestyle='--', alpha=0.6)
+                    ax.legend([bars], ['Số user mới'], loc='upper right', fontsize=9) # Đã điều chỉnh chú giải
+                # self.figure.tight_layout(rect=[0, 0.05, 0.95, 0.95]) # Đã điều chỉnh layout
+                self.figure.tight_layout(pad=1.5) # Điều chỉnh layout để có không gian cho chú giải bên dưới
                 self.canvas.draw_idle()
-                self.canvas.flush_events()
-                self.canvas.updateGeometry()
-                self.updateGeometry()
         except Exception as e:
-            print(f"Error loading dashboard stats: {e}")
+            print(f"Lỗi khi tải dữ liệu thống kê: {e}") # Đã dịch
 
     def format_datetime(self, dt_str):
         from datetime import datetime
         try:
             if not dt_str:
                 return ''
-            if 'T' in dt_str:
+            if 'T' in dt_str: # Xử lý định dạng ISO kèm 'T'
                 dt = datetime.fromisoformat(dt_str.split('.')[0])
-            else:
+            else: # Xử lý định dạng YYYY-MM-DD
                 dt = datetime.strptime(dt_str, "%Y-%m-%d")
             return dt.strftime("%d-%m-%Y %H:%M:%S")
-        except Exception:
+        except Exception: # Nếu lỗi, trả về chuỗi gốc
             return dt_str

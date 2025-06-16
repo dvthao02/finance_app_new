@@ -247,14 +247,11 @@ class AdminUserTab(QWidget):
 
     def format_datetime(self, dt_str):
         from datetime import datetime
+        from utils.file_helper import format_datetime_display
         try:
             if not dt_str:
                 return ''
-            if 'T' in dt_str:
-                dt = datetime.fromisoformat(dt_str.split('.')[0])
-            else:
-                dt = datetime.strptime(dt_str, "%Y-%m-%d")
-            return dt.strftime("%d-%m-%Y %H:%M:%S")
+            return format_datetime_display(dt_str)
         except Exception:
             return dt_str
 
@@ -274,9 +271,13 @@ class AdminUserTab(QWidget):
         user = self.get_selected_user()
         if not user:
             return
-        info = f"ID: {user.get('user_id','')}\nTên: {user.get('full_name','')}\nEmail: {user.get('email','')}\nNgày đăng ký: {user.get('created_at','')}\nLần đăng nhập cuối: {user.get('last_login','')}\nTrạng thái: {'Hoạt động' if user.get('is_active', True) else 'Bị khóa'}\nĐịa chỉ IP đăng ký: {user.get('register_ip','N/A')}"
+        
+        created_at_fmt = self.format_datetime(user.get('created_at',''))
+        last_login_fmt = self.format_datetime(user.get('last_login',''))
+        
+        info = f"ID: {user.get('user_id','')}\nTên: {user.get('full_name','')}\nEmail: {user.get('email','')}\nNgày đăng ký: {created_at_fmt}\nLần đăng nhập cuối: {last_login_fmt}\nTrạng thái: {'Hoạt động' if user.get('is_active', True) else 'Bị khóa'}\nĐịa chỉ IP đăng ký: {user.get('register_ip','N/A')}"
         QMessageBox.information(self, 'Chi tiết người dùng', info)
-
+            
     def lock_user(self):
         user = self.get_selected_user()
         if not user:

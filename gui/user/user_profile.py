@@ -18,6 +18,7 @@ class UserProfile(QDialog):
         super().__init__(parent)
         self.user_manager = user_manager
         self.current_user = getattr(user_manager, 'current_user', {})
+        self.avatar_path = None  # Thêm biến lưu đường dẫn avatar mới
         self.init_ui()
         self.load_user_data()
 
@@ -59,6 +60,24 @@ class UserProfile(QDialog):
             }
         """)
         
+        # Thêm nút chọn ảnh đại diện
+        self.btn_avatar = QPushButton("📷 Chọn ảnh")
+        self.btn_avatar.setStyleSheet("""
+            QPushButton {
+                background-color: rgba(255, 255, 255, 0.2);
+                border: none;
+                border-radius: 15px;
+                color: white;
+                padding: 8px 15px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 0.3);
+            }
+        """)
+        self.btn_avatar.clicked.connect(self.choose_avatar)
+        
         # User name
         self.header_name = QLabel()
         self.header_name.setStyleSheet("""
@@ -85,6 +104,7 @@ class UserProfile(QDialog):
         self.header_role.setAlignment(Qt.AlignCenter)
         
         header_layout.addWidget(self.avatar_label, alignment=Qt.AlignCenter)
+        header_layout.addWidget(self.btn_avatar, alignment=Qt.AlignCenter)
         header_layout.addWidget(self.header_name)
         header_layout.addWidget(self.header_role)
         
@@ -281,12 +301,11 @@ class UserProfile(QDialog):
         self.setLayout(layout)
         
         # Set dialog style
-        self.setStyleSheet("""
-            QDialog {
+        self.setStyleSheet("""            QDialog {
                 background-color: #f1f5f9;
             }
         """)
-
+        
     def load_user_data(self):
         """Load dữ liệu user vào form"""
         if not self.current_user:
@@ -299,9 +318,12 @@ class UserProfile(QDialog):
         self.header_name.setText(user_name)
         self.header_role.setText(f'🎯 {user_role}')
         
-        # Avatar với chữ cái đầu
-        initials = ''.join([word[0].upper() for word in user_name.split()[:2]])
-        self.avatar_label.setText(initials)
+        # Thử tải avatar từ đường dẫn
+        avatar_path = self.current_user.get('avatar')
+        if not self.load_avatar(avatar_path):
+            # Nếu không có ảnh hoặc không tải được, hiển thị chữ cái đầu
+            initials = ''.join([word[0].upper() for word in user_name.split()[:2]])
+            self.avatar_label.setText(initials)
         
         # Form fields
         self.name_input.setText(self.current_user.get('name', ''))
@@ -326,8 +348,10 @@ class UserProfile(QDialog):
             self.gender_combo.setCurrentIndex(index)
         
         # Address
-        self.address_input.setPlainText(self.current_user.get('address', ''))
-
+        self.address_input.setPlainText(self.current_user.get('address', ''))        # Avatar
+        avatar_path = self.current_user.get('avatar')
+        self.load_avatar(avatar_path)
+        
     def save_profile(self):
         """Lưu thông tin profile"""
         try:
@@ -343,6 +367,17 @@ class UserProfile(QDialog):
                 QMessageBox.warning(self, '⚠️ Lỗi', 'Vui lòng nhập email!')
                 return
             
+            # Xử lý avatar nếu có
+            avatar_path = None
+            if self.avatar_path:
+                # Sao chép avatar vào thư mục assets
+                user_id = self.current_user.get('id')
+                if user_id:
+                    from utils.file_helper import copy_avatar_to_assets
+                    avatar_path = copy_avatar_to_assets(self.avatar_path, user_id)
+                    if not avatar_path:
+                        QMessageBox.warning(self, "Cảnh báo", "Không thể sao chép ảnh đại diện vào thư mục assets. Sẽ giữ nguyên ảnh hiện tại.")
+            
             # Update user data
             updated_user = self.current_user.copy()
             updated_user.update({
@@ -355,8 +390,14 @@ class UserProfile(QDialog):
                 'updated_at': datetime.datetime.now().isoformat()
             })
             
+            # Cập nhật avatar nếu có
+            if avatar_path:
+                updated_user['avatar'] = avatar_path
+                
             # Load all users
-            with open('data/users.json', 'r', encoding='utf-8') as f:
+            package_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            users_file_path = os.path.join(package_dir, 'data', 'users.json')
+            with open(users_file_path, 'r', encoding='utf-8') as f:
                 all_users = json.load(f)
             
             # Update user in list
@@ -367,13 +408,16 @@ class UserProfile(QDialog):
                     break
             
             # Save to file
-            with open('data/users.json', 'w', encoding='utf-8') as f:
+            with open(users_file_path, 'w', encoding='utf-8') as f:
                 json.dump(all_users, f, ensure_ascii=False, indent=2)
             
             # Update user manager
             self.user_manager.current_user = updated_user
             if hasattr(self.user_manager, 'users'):
                 self.user_manager.users = all_users
+            
+            # Reset avatar path sau khi đã lưu
+            self.avatar_path = None
             
             QMessageBox.information(self, '✅ Thành công', 
                                   'Đã cập nhật thông tin cá nhân thành công!')
@@ -407,3 +451,32 @@ class UserProfile(QDialog):
         if reply == QMessageBox.Yes:
             self.logout_requested.emit()
             self.accept()
+
+    def choose_avatar(self):
+        """Chọn ảnh đại diện từ file hệ thống"""
+        file_path, _ = QFileDialog.getOpenFileName(self, "Chọn ảnh đại diện", "", "Image Files (*.png *.jpg *.jpeg *.bmp)")
+        
+        if file_path:
+            # Hiển thị ảnh đại diện đã chọn
+            pixmap = QPixmap(file_path)
+            if not pixmap.isNull():
+                self.avatar_path = file_path  # Lưu đường dẫn ảnh để cập nhật sau
+                # Hiển thị ảnh tròn
+                size = min(pixmap.width(), pixmap.height())
+                pixmap = pixmap.scaled(80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                self.avatar_label.setPixmap(pixmap)
+                self.avatar_label.setText("")  # Xóa chữ cái đầu
+                
+                # Thông báo người dùng nhấn lưu để cập nhật
+                QMessageBox.information(self, "Thông báo", "Đã chọn ảnh đại diện mới. Nhấn 'Lưu thay đổi' để cập nhật.")
+
+    def load_avatar(self, path):
+        """Tải ảnh đại diện từ đường dẫn"""
+        if path and os.path.exists(path):
+            pixmap = QPixmap(path)
+            if not pixmap.isNull():
+                pixmap = pixmap.scaled(80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                self.avatar_label.setPixmap(pixmap)
+                self.avatar_label.setText("")  # Xóa chữ cái đầu
+                return True
+        return False

@@ -359,9 +359,8 @@ class UserManager:
                         raise ValueError("Số điện thoại đã được sử dụng.")
                     user_to_update['phone'] = phone_to_check
                     user_data_changed = True
-            
-            # Update other allowed fields, including role if provided
-            allowed_fields = ['full_name', 'date_of_birth', 'address', 'is_active', 'role'] # Added 'role'
+              # Update other allowed fields, including role if provided
+            allowed_fields = ['full_name', 'date_of_birth', 'address', 'is_active', 'role', 'avatar'] # Added 'role' and 'avatar'
             for field in allowed_fields:
                 if field in kwargs:
                     if user_to_update.get(field) != kwargs[field]:

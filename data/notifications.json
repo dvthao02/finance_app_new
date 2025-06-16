@@ -1,19 +1,26 @@
 [
   {
-    "id": "notify_002",
+    "id": "notify_004",
     "title": "Mật khẩu của bạn đã được đặt lại",
     "content": "Mật khẩu mới của bạn là: 12345aA@",
     "type": "Cảnh báo",
-    "created_at": "2025-06-11T22:56:54.954533",
-    "user_id": "user_001"
+    "created_at": "2025-06-16T09:08:34.739323",
+    "user_id": "user_003"
   },
   {
-    "id": "notify_003",
-    "title": "sadsa",
-    "content": "sadsadsa",
-    "type": "Tin tức",
-    "created_at": "2025-06-11T23:06:57.504893",
-    "user_id": null,
-    "is_read": true
+    "id": "notify_005",
+    "title": "Mật khẩu của bạn đã được đặt lại",
+    "content": "Mật khẩu mới của bạn là: 12345aA@",
+    "type": "Cảnh báo",
+    "created_at": "2025-06-16T09:09:23.946425",
+    "user_id": "user_003"
+  },
+  {
+    "id": "notify_006",
+    "title": "Mật khẩu của bạn đã được đặt lại",
+    "content": "Mật khẩu mới của bạn là: 12345aA@",
+    "type": "Cảnh báo",
+    "created_at": "2025-06-16T09:24:38.876031",
+    "user_id": "user_003"
   }
 ]
