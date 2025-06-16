@@ -55,13 +55,7 @@ class AdminProfileTab(QWidget):
         btns.addSpacing(10)
         btns.addWidget(btn_change_pw)
         btns.addStretch(1)
-        # Nút đăng xuất dưới cùng bên phải
-        btn_logout = QPushButton("Đăng xuất")
-        btn_logout.setMinimumWidth(90)
-        btn_logout.clicked.connect(self.handle_logout)
-        logout_layout = QHBoxLayout()
-        logout_layout.addStretch(1)
-        logout_layout.addWidget(btn_logout)
+        
         # Layout tổng hợp
         top_layout = QHBoxLayout()
         # Căn giữa avatar theo chiều dọc
@@ -77,7 +71,6 @@ class AdminProfileTab(QWidget):
         main_layout.addLayout(btns)
         main_layout.addSpacing(5)
         main_layout.addStretch(1)
-        main_layout.addLayout(logout_layout)
         self.setLayout(main_layout)
 
     def set_user(self, user):
@@ -97,8 +90,7 @@ class AdminProfileTab(QWidget):
         self.txt_role.setText(user.get('role', ''))
         self.input_name.setText(user.get('full_name', ''))
         self.input_email.setText(user.get('email', ''))
-        self.input_phone.setText(user.get('phone', ''))
-        # Ngày sinh: ISO -> dd-MM-yyyy
+        self.input_phone.setText(user.get('phone', ''))        # Ngày sinh: ISO -> dd-MM-yyyy
         dob = user.get('date_of_birth', '')
         try:
             if dob:
@@ -111,21 +103,27 @@ class AdminProfileTab(QWidget):
         self.input_address.setText(user.get('address', ''))
         self.input_avatar.setText(user.get('avatar', ''))
         self.load_avatar(user.get('avatar', ''))
-
+        
     def choose_avatar(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Chọn ảnh đại diện", "", "Image Files (*.png *.jpg *.jpeg *.bmp)")
         if file_path:
+            # Nếu người dùng chọn ảnh, lưu đường dẫn và hiển thị preview
             self.input_avatar.setText(file_path)
             self.load_avatar(file_path)
-
+            QMessageBox.information(self, "Thông báo", "Đã chọn ảnh đại diện mới. Nhấn 'Cập nhật thông tin' để lưu thay đổi.")
+            
     def load_avatar(self, path):
         if path and os.path.exists(path):
             pixmap = QPixmap(path)
             if not pixmap.isNull():
                 self.avatar_label.setPixmap(pixmap.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation))
                 return
+        
+        # Nếu không có ảnh hoặc ảnh không hợp lệ
         self.avatar_label.setPixmap(QPixmap())
-
+        self.avatar_label.setText("No\nImage")
+        self.avatar_label.setStyleSheet("border:1px solid #ccc; border-radius:50px; background:#f5f5f5; color:#999;")
+        
     def update_profile(self):
         if not self.user:
             return
@@ -135,6 +133,7 @@ class AdminProfileTab(QWidget):
         dob = self.input_dob.date().toString("yyyy-MM-dd")
         address = self.input_address.text().strip()
         avatar = self.input_avatar.text().strip()
+        
         # Validate
         if not name:
             QMessageBox.warning(self, "Lỗi", "Tên hiển thị không được để trống!")
@@ -145,9 +144,29 @@ class AdminProfileTab(QWidget):
         if phone and not is_valid_phone(phone):
             QMessageBox.warning(self, "Lỗi", "Số điện thoại không hợp lệ!")
             return
-        # Cập nhật qua UserManager
+            
+        # Kiểm tra ảnh đại diện
+        if avatar and not os.path.exists(avatar):
+            QMessageBox.warning(self, "Lỗi", f"Không tìm thấy tệp ảnh: {avatar}")
+            return
+            
+        # Sao chép avatar vào thư mục assets nếu đường dẫn khác với avatar hiện tại
+        current_avatar = self.user.get('avatar', '')
+        if avatar and avatar != current_avatar:
+            from utils.file_helper import copy_avatar_to_assets
+            user_id = self.user.get('user_id', '')
+            new_avatar_path = copy_avatar_to_assets(avatar, user_id)
+            
+            if new_avatar_path:
+                avatar = new_avatar_path  # Cập nhật đường dẫn avatar thành đường dẫn mới trong assets
+            else:
+                QMessageBox.warning(self, "Cảnh báo", "Không thể sao chép ảnh đại diện vào thư mục assets. Sử dụng đường dẫn gốc.")
+          # Cập nhật qua UserManager
         um = UserManager()
         try:
+            # Kiểm tra xem ảnh đại diện có thay đổi không
+            avatar_changed = avatar and avatar != self.user.get('avatar', '')
+            
             ok = um.update_user(
                 self.user.get('user_id'),
                 full_name=name,
@@ -157,8 +176,14 @@ class AdminProfileTab(QWidget):
                 address=address,
                 avatar=avatar
             )
+            
             if ok:
-                QMessageBox.information(self, "Thành công", "Đã cập nhật thông tin cá nhân!")
+                # Thông báo phù hợp với việc có cập nhật ảnh hay không
+                if avatar_changed:
+                    QMessageBox.information(self, "Thành công", "Đã cập nhật thông tin cá nhân và ảnh đại diện!")
+                else:
+                    QMessageBox.information(self, "Thành công", "Đã cập nhật thông tin cá nhân!")
+                
                 # Reload lại user từ file để đồng bộ
                 users = um.load_users()
                 for u in users:
@@ -166,7 +191,7 @@ class AdminProfileTab(QWidget):
                         self.set_user(u)
                         break
             else:
-                QMessageBox.warning(self, "Lỗi", "Không có thay đổi hoặc cập nhật thất bại!")
+                QMessageBox.warning(self, "Thông báo", "Không có thay đổi hoặc cập nhật thất bại!")
         except Exception as e:
             QMessageBox.critical(self, "Lỗi", f"Lỗi: {str(e)}")
 
@@ -238,11 +263,3 @@ class AdminProfileTab(QWidget):
         btn_ok.clicked.connect(do_change)
         btn_cancel.clicked.connect(dialog.reject)
         dialog.exec_()
-
-    def handle_logout(self):
-        parent = self.parent()
-        while parent is not None:
-            if hasattr(parent, 'logout_signal'):
-                parent.logout_signal.emit()
-                break
-            parent = parent.parent()

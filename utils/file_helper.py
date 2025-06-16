@@ -41,16 +41,16 @@ def generate_id(prefix=None, data_list=None, id_field=None):
     max_num = 0
     for item in data_list:
         id_val = None
-        if id_field and id_field in item and str(item[id_field]).startswith(prefix):
+        if id_field and id_field in item and item[id_field] is not None and str(item[id_field]).startswith(prefix):
             id_val = item[id_field]
         else:
             # Ưu tiên *_id, nếu không có thì kiểm tra 'id' hoặc 'notification_id'
             id_key = next((key for key in item.keys() if key.endswith('_id')), None)
-            if id_key and item[id_key].startswith(prefix):
+            if id_key and item.get(id_key) is not None and str(item[id_key]).startswith(prefix):
                 id_val = item[id_key]
-            elif 'id' in item and str(item['id']).startswith(prefix):
+            elif 'id' in item and item.get('id') is not None and str(item['id']).startswith(prefix):
                 id_val = item['id']
-            elif 'notification_id' in item and str(item['notification_id']).startswith(prefix):
+            elif 'notification_id' in item and item.get('notification_id') is not None and str(item['notification_id']).startswith(prefix):
                 id_val = item['notification_id']
         if id_val:
             try:
@@ -63,6 +63,57 @@ def generate_id(prefix=None, data_list=None, id_field=None):
 def get_current_datetime():
     """Lấy thời gian hiện tại theo format ISO"""
     return datetime.now().isoformat()
+
+def format_datetime_display(datetime_str, show_time=True):
+    """
+    Chuyển đổi chuỗi datetime sang định dạng dd-mm-yyyy hh:mm:ss hoặc dd-mm-yyyy
+    
+    Args:
+        datetime_str: Chuỗi datetime theo định dạng ISO hoặc YYYY-MM-DD
+        show_time: Hiển thị giờ phút giây hay không
+    
+    Returns:
+        Chuỗi datetime đã định dạng
+    """
+    try:
+        if not datetime_str:
+            return ""
+        
+        dt = None
+        # Xử lý chuỗi ISO với T
+        if 'T' in datetime_str:
+            # Xử lý trường hợp có phần thập phân giây
+            clean_dt = datetime_str.split('.')[0] if '.' in datetime_str else datetime_str
+            dt = datetime.fromisoformat(clean_dt)
+        # Xử lý chuỗi ngày đơn giản YYYY-MM-DD
+        else:
+            dt = datetime.strptime(datetime_str, "%Y-%m-%d")
+            
+        # Định dạng kết quả
+        if show_time:
+            return dt.strftime("%d-%m-%Y %H:%M:%S")
+        else:
+            return dt.strftime("%d-%m-%Y")
+    except Exception as e:
+        # Trả về nguyên chuỗi nếu xảy ra lỗi
+        print(f"Lỗi định dạng datetime: {e}")
+        return datetime_str
+
+def get_formatted_current_datetime(show_time=True):
+    """
+    Lấy thời gian hiện tại với định dạng hiển thị
+    
+    Args:
+        show_time: Hiển thị giờ phút giây hay không
+    
+    Returns:
+        Chuỗi datetime đã định dạng dd-mm-yyyy hh:mm:ss hoặc dd-mm-yyyy
+    """
+    now = datetime.now()
+    if show_time:
+        return now.strftime("%d-%m-%Y %H:%M:%S")
+    else:
+        return now.strftime("%d-%m-%Y")
 
 def validate_date_format(date_string):
     """Kiểm tra format ngày tháng YYYY-MM-DD"""
@@ -111,5 +162,48 @@ def is_strong_password(password):
         re.search(r'\d', password) and
         re.search(r'[^\w\s]', password) # [^a-zA-Z0-9\s]
     )
+
+def copy_avatar_to_assets(source_path, user_id):
+    """
+    Sao chép ảnh đại diện vào thư mục assets và trả về đường dẫn mới.
+    
+    Args:
+        source_path (str): Đường dẫn đến file ảnh gốc.
+        user_id (str): ID của người dùng để đặt tên file đích.
+        
+    Returns:
+        str: Đường dẫn mới đến file ảnh trong thư mục assets hoặc None nếu thất bại.
+    """
+    import shutil
+    try:
+        if not source_path or not os.path.exists(source_path):
+            print(f"[DEBUG] Không tìm thấy file nguồn: {source_path}")
+            return None
+            
+        # Lấy extension của file gốc
+        _, extension = os.path.splitext(source_path)
+        if not extension:
+            extension = '.png'  # Mặc định nếu không có extension
+            
+        # Tạo tên file đích: avatar_user_001.jpg
+        filename = f"avatar_{user_id}{extension}"
+        
+        # Đường dẫn đến thư mục assets
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        assets_dir = os.path.join(base_dir, 'assets')
+        os.makedirs(assets_dir, exist_ok=True)
+        
+        # Đường dẫn đầy đủ đến file đích
+        dest_path = os.path.join(assets_dir, filename)
+        
+        # Sao chép file
+        print(f"[DEBUG] Đang sao chép từ {source_path} -> {dest_path}")
+        shutil.copy2(source_path, dest_path)
+        print(f"[DEBUG] Đã sao chép ảnh thành công")
+        
+        return dest_path
+    except Exception as e:
+        print(f"Lỗi khi sao chép avatar: {e}")
+        return None
 
 # --- End of new validation functions ---

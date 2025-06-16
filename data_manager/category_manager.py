@@ -4,7 +4,7 @@ import os
 import json
 import logging
 from datetime import datetime
-from utils.file_helper import load_json, save_json, generate_id, get_current_datetime
+from utils.file_helper import load_json, save_json, generate_id, get_current_datetime, format_datetime_display
 from data_manager.user_manager import UserManager
 
 # Set up logging
@@ -429,3 +429,11 @@ class CategoryManager:
         if is_admin:
             return self.categories
         return [c for c in self.categories if c['user_id'] == user_id or c['user_id'] is None]
+
+    def format_datetime(self, dt_str):
+        """Định dạng datetime cho hiển thị"""
+        try:
+            return format_datetime_display(dt_str)
+        except Exception as e:
+            logger.error(f"Error formatting datetime {dt_str}: {e}")
+            return dt_str

@@ -428,5 +428,220 @@
     "user_id": "user_002",
     "action": "login",
     "timestamp": "2025-06-12T00:50:48.143865"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-12T01:34:37.812747"
+  },
+  {
+    "user_id": "user_002",
+    "action": "logout",
+    "timestamp": "2025-06-12T01:35:34.518405"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-12T11:39:45.235490"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-14T13:35:53.378820"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T08:07:45.107059"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T08:13:01.557521"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T08:39:53.917504"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T08:49:09.365905"
+  },
+  {
+    "user_id": "user_003",
+    "action": "Cấp lại mật khẩu mới (admin): 12345aA@",
+    "timestamp": "2025-06-16T08:50:19.985092"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T09:02:19.401645"
+  },
+  {
+    "user_id": "user_002",
+    "action": "logout",
+    "timestamp": "2025-06-16T09:03:39.919492"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T09:03:46.091678"
+  },
+  {
+    "user_id": "user_003",
+    "action": "Khóa tài khoản: I Like it",
+    "timestamp": "2025-06-16T09:04:27.601045"
+  },
+  {
+    "user_id": "user_003",
+    "action": "Mở khóa tài khoản",
+    "timestamp": "2025-06-16T09:04:32.587857"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T09:05:36.901277"
+  },
+  {
+    "user_id": "user_003",
+    "action": "Cấp lại mật khẩu mới (admin): 02072002aA@",
+    "timestamp": "2025-06-16T09:05:50.513611"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T09:08:25.239136"
+  },
+  {
+    "user_id": "user_003",
+    "action": "Cấp lại mật khẩu mới (admin): 12345aA@",
+    "timestamp": "2025-06-16T09:08:34.736500"
+  },
+  {
+    "user_id": "user_003",
+    "action": "Cấp lại mật khẩu mới (admin): 12345aA@",
+    "timestamp": "2025-06-16T09:09:23.944870"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T09:12:07.550758"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T09:24:22.419466"
+  },
+  {
+    "user_id": "user_003",
+    "action": "Cấp lại mật khẩu mới (admin): 12345aA@",
+    "timestamp": "2025-06-16T09:24:38.873121"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T09:30:24.829992"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T09:33:31.492730"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T09:37:33.384969"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T09:39:36.443024"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T09:40:31.847883"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T09:41:27.613900"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T09:45:38.793910"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T09:57:41.258492"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T10:09:58.906414"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T10:11:36.420830"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T10:12:51.758667"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T10:20:16.341867"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T10:33:12.567049"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T10:35:40.246987"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T10:36:29.958613"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T10:42:41.841970"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-16T10:49:53.619971"
+  },
+  {
+    "user_id": "user_002",
+    "action": "logout",
+    "timestamp": "2025-06-16T10:50:04.551582"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T10:50:10.433971"
+  },
+  {
+    "user_id": "user_001",
+    "action": "logout",
+    "timestamp": "2025-06-16T10:50:35.415156"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-16T10:51:41.274635"
   }
 ]

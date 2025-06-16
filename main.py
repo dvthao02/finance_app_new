@@ -11,7 +11,7 @@ from data_manager.transaction_manager import TransactionManager
 
 def main():
     app = QApplication(sys.argv)
-    app.admin_dashboard = None  # Giữ tham chiếu admin_dashboard
+    app.admin_dashboard = None  # Giữ tham chiếu đến admin_dashboard
     def log_history(user_id, action):
         try:
             history = load_json('data/login_history.json')
@@ -30,7 +30,7 @@ def main():
             user = login.user_manager.get_user_by_id(user_id)
             print(f"Đăng nhập thành công! Vai trò: {user.get('role')} | User ID: {user_id}")
             log_history(user_id, 'login')
-            login.accept()  # Đóng form login ngay khi đăng nhập thành công
+            login.accept()  # Đóng form đăng nhập ngay khi đăng nhập thành công
             if user.get('role') == 'admin':
                 try:
                     app.admin_dashboard = AdminDashboard()
@@ -51,7 +51,7 @@ def main():
                 app.admin_dashboard.activateWindow()
             elif user.get('role') == 'user':
                 try:
-                    # Khởi tạo managers cho user dashboard
+                    # Khởi tạo các manager cho user dashboard
                     category_manager = CategoryManager()
                     transaction_manager = TransactionManager()
                     app.user_dashboard = UserDashboard(
@@ -60,7 +60,7 @@ def main():
                         category_manager=category_manager,
                         wallet_manager=None
                     )
-                    # Nếu muốn truyền user hiện tại:
+                    # Nếu muốn truyền người dùng hiện tại:
                     if hasattr(app.user_dashboard, 'set_current_user'):
                         app.user_dashboard.set_current_user(user)
                 except Exception as e:
@@ -79,7 +79,7 @@ def main():
                 app.user_dashboard.raise_()
                 app.user_dashboard.activateWindow()
             else:
-                pass
+                pass # Bỏ qua nếu vai trò không xác định
         login.login_success.connect(on_login_success)
         login.exec_()
     show_login()

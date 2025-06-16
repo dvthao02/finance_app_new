@@ -16,12 +16,12 @@ class BaseDashboard(QWidget):
         self.init_ui()
     
     def init_ui(self):
-        """Initialize the base UI structure"""
+        """Khởi tạo cấu trúc UI cơ sở""" # Đã dịch
         self.setWindowTitle(self.get_dashboard_title())
         self.setMinimumSize(1350, 850)
-          # Set comprehensive default styling for better harmony
+          # Đặt style mặc định toàn diện để hài hòa hơn
         self.setStyleSheet("""
-            /* Global default styles - Increased font sizes */
+            /* Kiểu mặc định toàn cục - Tăng kích thước font */
             QWidget { 
                 background-color: #f8fafc; 
                 font-family: 'Segoe UI', sans-serif;
@@ -29,13 +29,13 @@ class BaseDashboard(QWidget):
                 color: #1e293b;
             }
             
-            /* Label styles */
+            /* Kiểu Label */
             QLabel {
                 color: #334155;
                 font-size: 16px;
             }
             
-            /* Button styles */
+            /* Kiểu Button */
             QPushButton {
                 font-size: 16px;
                 font-weight: 500;
@@ -54,7 +54,7 @@ class BaseDashboard(QWidget):
                 background: #f3f4f6;
             }
             
-            /* Input styles */
+            /* Kiểu Input */
             QLineEdit, QComboBox {
                 font-size: 16px;
                 padding: 10px 14px;
@@ -68,7 +68,7 @@ class BaseDashboard(QWidget):
                 border-color: #3b82f6;
             }
             
-            /* Table styles */
+            /* Kiểu Table */
             QTableWidget {
                 font-size: 16px;
                 gridline-color: #f1f5f9;
@@ -91,7 +91,7 @@ class BaseDashboard(QWidget):
                 color: #6b7280;
             }
             
-            /* Frame styles */
+            /* Kiểu Frame */
             QFrame {
                 border-radius: 8px;
             }
@@ -101,24 +101,24 @@ class BaseDashboard(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Header
+        # Tiêu đề
         header = self.create_header()
         main_layout.addWidget(header)
         
-        # Body với sidebar và content
+        # Phần thân với sidebar và nội dung
         body_layout = QHBoxLayout()
         body_layout.setContentsMargins(0, 0, 0, 0)
         body_layout.setSpacing(0)
 
-        # Sidebar
+        # Thanh bên
         sidebar = self.create_sidebar()
         body_layout.addWidget(sidebar)
 
-        # Main content area
+        # Khu vực nội dung chính
         self.content_stack = QStackedWidget()
         self.content_stack.setMinimumWidth(800)
         self.content_stack.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-          # Add content stack to body layout
+          # Thêm content_stack vào body_layout
         body_layout.addWidget(self.content_stack)
         main_layout.addLayout(body_layout)
 
@@ -126,7 +126,7 @@ class BaseDashboard(QWidget):
         header = QFrame()
         header.setFixedHeight(70)
         
-        # FORCE BLUE BACKGROUND - đảm bảo chắc chắn có màu xanh
+        # ÉP BUỘC NỀN MÀU XANH - đảm bảo chắc chắn có màu xanh
         header.setAutoFillBackground(True)
         header.setStyleSheet("""
             QFrame {
@@ -141,7 +141,7 @@ class BaseDashboard(QWidget):
         layout.setContentsMargins(24, 0, 24, 0)
         layout.setSpacing(20)
         
-        # Logo và tên app
+        # Logo và tên ứng dụng
         logo_layout = QHBoxLayout()
         logo_layout.setSpacing(12)
         
@@ -169,33 +169,9 @@ class BaseDashboard(QWidget):
         layout.addLayout(logo_layout)
         layout.addStretch()
         
-        # Search box
-        search = QLineEdit()
-        search.setPlaceholderText('Tìm kiếm...')
-        search.setFixedWidth(280)
-        search.setFixedHeight(38)
-        search.setStyleSheet("""
-            QLineEdit {
-                background: rgba(255,255,255,0.95) !important;
-                border: 1px solid rgba(255,255,255,0.2);
-                border-radius: 19px;
-                padding: 0 16px;
-                font-size: 14px;
-                color: #374151 !important;
-            }
-            QLineEdit:focus {
-                background: white !important;
-                border-color: rgba(255,255,255,0.4);
-            }
-            QLineEdit::placeholder {
-                color: #9ca3af;
-            }
-        """)        
-        layout.addWidget(search)
-        
         layout.addStretch()
         
-        # Notification bell
+        # Chuông thông báo
         self.notification_btn = QPushButton('🔔')
         self.notification_btn.setFont(QFont('Segoe UI', 16))
         self.notification_btn.setFixedSize(44, 44)
@@ -219,7 +195,7 @@ class BaseDashboard(QWidget):
         """)
         layout.addWidget(self.notification_btn)
         
-        # User info (clickable)
+        # Thông tin người dùng (có thể nhấp chuột)
         user_name = self.current_user.get('full_name', 'User') if self.current_user else 'User'
         self.user_button = QPushButton(f'👤  {user_name}')
         self.user_button.setFont(QFont('Segoe UI', 13, QFont.Medium))
@@ -263,7 +239,7 @@ class BaseDashboard(QWidget):
         layout.setContentsMargins(0, 24, 0, 24)
         layout.setSpacing(6)
         
-        # Menu items
+        # Mục menu
         self.sidebar_buttons = []
         nav_items = self.get_navigation_items()
         
@@ -274,7 +250,7 @@ class BaseDashboard(QWidget):
             btn.setCursor(Qt.PointingHandCursor)
             btn.setCheckable(True)
             
-            if i == 0:  # First item active by default
+            if i == 0:  # Mục đầu tiên được chọn mặc định
                 btn.setStyleSheet("""
                     QPushButton {
                         text-align: left;
@@ -320,7 +296,7 @@ class BaseDashboard(QWidget):
         
         layout.addStretch()
         
-        # Logout button at bottom
+        # Nút đăng xuất ở dưới cùng
         logout_btn = QPushButton('🚪  Đăng xuất')
         logout_btn.setFont(QFont('Segoe UI', 15, QFont.Medium))
         logout_btn.setFixedHeight(50)
@@ -350,9 +326,9 @@ class BaseDashboard(QWidget):
         return sidebar
 
     def switch_tab(self, index):
-        """Switch to a different tab with smooth transition"""
+        """Chuyển đổi sang tab khác với hiệu ứng mượt mà"""
         print(f"DEBUG: Switching to tab index {index}")
-          # Update button states with visual feedback
+          # Cập nhật trạng thái nút với phản hồi hình ảnh
         for i, btn in enumerate(self.sidebar_buttons):
             if i == index:
                 btn.setStyleSheet("""
@@ -392,7 +368,7 @@ class BaseDashboard(QWidget):
                 """)
                 btn.setChecked(False)
         
-        # Switch content with error checking
+        # Chuyển đổi nội dung với kiểm tra lỗi
                 # Switch content with error checking
         if self.content_stack and 0 <= index < self.content_stack.count():
             self.content_stack.setCurrentIndex(index)
@@ -411,13 +387,13 @@ class BaseDashboard(QWidget):
             print(f"DEBUG: Cannot switch to tab {index} - stack count: {self.content_stack.count() if self.content_stack else 'None'}")
     
     def get_asset_path(self, filename):
-        """Get the full path to an asset file"""
-        # Get the directory where the script is located
+        """Lấy đường dẫn đầy đủ tới tệp tin tài sản"""
+        # Lấy thư mục nơi kịch bản đang được thực thi
         current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         return os.path.join(current_dir, 'assets', filename)
     
     def add_content_widget(self, widget):
-        """Add a widget to the content stack"""
+        """Thêm một widget vào ngăn xếp nội dung"""
         print(f"DEBUG: add_content_widget called, content_stack: {self.content_stack}")
         print(f"DEBUG: content_stack type: {type(self.content_stack)}")
         print(f"DEBUG: content_stack is not None: {self.content_stack is not None}")
@@ -428,63 +404,63 @@ class BaseDashboard(QWidget):
             print("ERROR: content_stack is None in add_content_widget!")
     
     def set_current_user(self, user):
-        """Set the current user and update UI"""
+        """Đặt người dùng hiện tại và cập nhật UI"""
         self.current_user = user
         self.update_user_info()
-        # Update header to show user info
+        # Cập nhật tiêu đề để hiển thị thông tin người dùng
         self.update_header()
-        # Show welcome toast after a short delay
+        # Hiển thị thông báo chào mừng sau một khoảng thời gian ngắn
         QTimer.singleShot(1500, self.show_welcome_toast)
     
     def update_header(self):
-        """Update header with current user info"""
-        # Find and update the header
+        """Cập nhật tiêu đề với thông tin người dùng hiện tại"""
+        # Tìm và cập nhật tiêu đề
         main_layout = self.layout()
         if main_layout and main_layout.count() > 0:
-            # Remove old header
+            # Xóa tiêu đề cũ
             old_header = main_layout.itemAt(0).widget()
             if old_header:
                 old_header.setParent(None)
             
-            # Create new header with user info
+            # Tạo tiêu đề mới với thông tin người dùng
             new_header = self.create_header()
             main_layout.insertWidget(0, new_header)
     
     def update_user_info(self):
-        """Update user information in the header"""
-        # This will be implemented by child classes if needed
+        """Cập nhật thông tin người dùng trong tiêu đề"""
+        # Chức năng này sẽ được các lớp con triển khai nếu cần thiết
         pass
     
     def handle_logout(self):
-        """Handle logout action"""
+        """Xử lý hành động đăng xuất"""
         self.logout_signal.emit()
     
     def show_profile(self):
-        """Show profile tab - to be implemented by child classes"""
-        # For admin dashboard, switch to profile tab
+        """Hiển thị tab hồ sơ - chức năng này sẽ được các lớp con triển khai"""
+        # Đối với bảng điều khiển quản trị viên, chuyển sang tab hồ sơ
         if hasattr(self, 'switch_tab'):
-            profile_tab_index = 5  # Profile tab is usually at index 5
+            profile_tab_index = 5  # Tab hồ sơ thường ở chỉ mục 5
             self.switch_tab(profile_tab_index)
         else:
-            print("Profile functionality not implemented for this dashboard")
+            print("Chức năng hồ sơ chưa được triển khai cho bảng điều khiển này")
     
     def on_tab_changed(self, index):
-        """Called when tab is changed - to be implemented by child classes"""
+        """Được gọi khi tab được thay đổi - chức năng này sẽ được các lớp con triển khai"""
         pass
     
-    # Abstract methods to be implemented by child classes
+    # Các phương thức trừu tượng để được các lớp con triển khai
     def get_dashboard_title(self):
-        """Return the dashboard title"""
+        """Trả về tiêu đề bảng điều khiển"""
         return "Dashboard"
     
     def get_navigation_items(self):
-        """Return list of (text, icon_name) tuples for navigation"""
+        """Trả về danh sách các bộ (văn bản, tên biểu tượng) cho điều hướng"""
         return [
             ("Trang chủ", "app_icon.png"),
         ]
     
     def show_welcome_toast(self):
-        """Show welcome message - to be implemented by child classes"""
+        """Hiển thị thông điệp chào mừng - chức năng này sẽ được các lớp con triển khai"""
         if self.current_user:
             try:
                 from gui.user.user_notifications import show_welcome_message
