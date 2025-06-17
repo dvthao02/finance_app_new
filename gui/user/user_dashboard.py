@@ -11,27 +11,30 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import datetime
 import json
+from data_manager.budget_manager import BudgetManager
+from data_manager.notification_manager import NotificationManager
 
 class UserDashboard(BaseDashboard):
     
-    def __init__(self, user_manager, transaction_manager, category_manager, wallet_manager, parent=None):
+    def __init__(self, user_manager, transaction_manager, category_manager, wallet_manager, notification_manager, parent=None):
+        super().__init__(parent) # Call superclass constructor first
+
+        # Store manager instances
         self.user_manager = user_manager
         self.transaction_manager = transaction_manager
         self.category_manager = category_manager
-        self.wallet_manager = wallet_manager
-        
-        # Ensure current_user_id is set properly in all managers
-        if hasattr(self.user_manager, 'current_user') and self.user_manager.current_user:
-            user_id = self.user_manager.current_user.get('id') or self.user_manager.current_user.get('user_id')
-            if user_id:
-                if hasattr(self.user_manager, 'current_user_id'):
-                    self.user_manager.current_user_id = user_id
-                if hasattr(self.category_manager, 'current_user_id'):
-                    self.category_manager.current_user_id = user_id
-                print(f"DEBUG: Setting user_id to {user_id} in UserDashboard")
-                
-        super().__init__(parent)  # This will call BaseDashboard.__init__ which calls init_ui()
-        self.setup_user_content()  # Add user-specific content after base UI is ready
+        self.wallet_manager = wallet_manager # Might be None
+        self.budget_manager = BudgetManager() # Own instance
+        self.notification_manager = notification_manager # Passed instance
+
+        # BaseDashboard.init_ui() should have been called by super().__init__()
+        # self.current_user will be set by set_current_user()
+        # self.setup_user_content() will be called by set_current_user()
+        # Ensure content_stack exists (usually created in BaseDashboard.init_ui)
+        if not hasattr(self, 'content_stack'):
+            print("WARN: UserDashboard.__init__ - self.content_stack not found after super().__init__().")
+            # If BaseDashboard is supposed to create it, this is an issue.
+            # For now, we assume BaseDashboard's init_ui (called via super) creates self.content_stack.
         
     def get_dashboard_title(self):
         """Return the dashboard title"""
@@ -53,7 +56,8 @@ class UserDashboard(BaseDashboard):
     
     def setup_user_content(self):
         """Setup user-specific content in the stacked widget"""
-        try:            # Import user tabs
+        try:
+            # Import user tabs
             from gui.user.user_overview_tab import UserOverviewTab
             from gui.user.user_transaction_form_tab import UserTransactionForm
             from gui.user.user_transaction_history_tab import UserTransactionHistory
@@ -64,30 +68,57 @@ class UserDashboard(BaseDashboard):
             from gui.user.user_settings_tab import UserSettings
             from gui.user.user_profile_tab import UserProfile
             
+            user_id = None
+            # self.current_user should be set by set_current_user via super().set_current_user()
+            if hasattr(self, 'current_user') and self.current_user:
+                user_id = self.current_user.get('id') or self.current_user.get('user_id')
+            
+            if not user_id:
+                print("ERROR: UserDashboard.setup_user_content - user_id is not available. Cannot create tabs.")
+                # Clear existing widgets if any, to prevent using old data
+                if hasattr(self, 'content_stack'):
+                    while self.content_stack.count():
+                        widget = self.content_stack.widget(0)
+                        self.content_stack.removeWidget(widget)
+                        widget.deleteLater()
+                return
+
+            print(f"DEBUG: UserDashboard.setup_user_content using user_id={user_id} for tabs")
+            
             # Create tabs
-            self.overview_tab = UserOverviewTab(self.user_manager, self.transaction_manager, self.category_manager, self.wallet_manager)
+            self.overview_tab = UserOverviewTab(
+                user_manager=self.user_manager, 
+                transaction_manager=self.transaction_manager, 
+                category_manager=self.category_manager, 
+                wallet_manager=self.wallet_manager, 
+                budget_manager=self.budget_manager, # Pass the instance from UserDashboard
+                notification_manager=self.notification_manager # Pass the instance from UserDashboard
+            )
             self.transaction_form = UserTransactionForm(self.user_manager, self.transaction_manager, self.category_manager, self.wallet_manager)
             self.transaction_history = UserTransactionHistory(self.user_manager, self.transaction_manager, self.category_manager, self.wallet_manager)
-            self.report_tab = UserReport(self.user_manager, self.transaction_manager, self.category_manager)            # Get user_id from current_user
-            user_id = getattr(self.user_manager, 'current_user', {}).get('user_id', None)
-            
-            print(f"DEBUG: Using user_id={user_id} for tabs")
-            self.budget_tab = UserBudget(self.user_manager, self.transaction_manager, self.category_manager, self.wallet_manager)
+            self.report_tab = UserReport(self.user_manager, self.transaction_manager, self.category_manager)
+            self.budget_tab = UserBudget(self.user_manager, self.transaction_manager, self.category_manager, self.wallet_manager, self.budget_manager)
             self.category_tab = UserCategoryTab(self.category_manager, user_id, reload_callback=self.reload_categories)
-            self.notifications_tab = NotificationCenter(self.user_manager)
+            self.notifications_tab = NotificationCenter(self.user_manager, self.notification_manager) # Pass notification_manager
             self.settings_tab = UserSettings(self.user_manager, self.wallet_manager, self.category_manager)
             self.profile_tab = UserProfile(self.user_manager)
             
+            # Clear existing widgets
+            while self.content_stack.count():
+                widget = self.content_stack.widget(0)
+                self.content_stack.removeWidget(widget)
+                widget.deleteLater()
+            
             # Add tabs to content stack
-            self.add_content_widget(self.overview_tab)
-            self.add_content_widget(self.transaction_form)
-            self.add_content_widget(self.transaction_history)
-            self.add_content_widget(self.report_tab)
-            self.add_content_widget(self.budget_tab)
-            self.add_content_widget(self.category_tab)
-            self.add_content_widget(self.notifications_tab)
-            self.add_content_widget(self.settings_tab)
-            self.add_content_widget(self.profile_tab)
+            self.content_stack.addWidget(self.overview_tab)
+            self.content_stack.addWidget(self.transaction_form)
+            self.content_stack.addWidget(self.transaction_history)
+            self.content_stack.addWidget(self.report_tab)
+            self.content_stack.addWidget(self.budget_tab)
+            self.content_stack.addWidget(self.category_tab)
+            self.content_stack.addWidget(self.notifications_tab)
+            self.content_stack.addWidget(self.settings_tab)
+            self.content_stack.addWidget(self.profile_tab)
             
             print(f"DEBUG: User dashboard setup complete, {self.content_stack.count()} tabs added")
             
@@ -101,24 +132,36 @@ class UserDashboard(BaseDashboard):
     
     def on_tab_changed(self, index):
         """Called when tab is changed"""
-        # Refresh data for specific tabs
         try:
-            if index == 0:  # Overview tab
-                self.overview_tab.update_dashboard()
-            elif index == 2:  # Transaction history
-                if hasattr(self.transaction_history, 'reload_data'):
-                    self.transaction_history.reload_data()
-            elif index == 3:  # Report tab
-                if hasattr(self.report_tab, 'reload_data'):
-                    self.report_tab.reload_data()
-            elif index == 6:  # Notifications tab
-                if hasattr(self.notifications_tab, 'load_notifications'):
-                    self.notifications_tab.load_notifications()
-            elif index == 8:  # Profile tab
-                if hasattr(self.profile_tab, 'load_user_data'):
-                    self.profile_tab.load_user_data()
+            if not hasattr(self, 'content_stack') or self.content_stack.count() == 0:
+                print("DEBUG: Content stack not initialized")
+                return
+                
+            print(f"DEBUG: Switching to tab index {index}")
+            if 0 <= index < self.content_stack.count():
+                self.content_stack.setCurrentIndex(index)
+                
+                # Refresh data for specific tabs
+                if index == 0:  # Overview tab
+                    self.overview_tab.update_dashboard()
+                elif index == 2:  # Transaction history
+                    if hasattr(self.transaction_history, 'reload_data'):
+                        self.transaction_history.reload_data()
+                elif index == 3:  # Report tab
+                    if hasattr(self.report_tab, 'reload_data'):
+                        self.report_tab.reload_data()
+                elif index == 6:  # Notifications tab
+                    if hasattr(self.notifications_tab, 'load_notifications'):
+                        self.notifications_tab.load_notifications()
+                elif index == 8:  # Profile tab
+                    if hasattr(self.profile_tab, 'load_user_data'):
+                        self.profile_tab.load_user_data()
+            else:
+                print(f"DEBUG: Invalid tab index {index}")
         except Exception as e:
             print(f"Error in on_tab_changed: {e}")
+            import traceback
+            traceback.print_exc()
     
     def reload_categories(self):
         """Callback to reload category in other tabs when there are changes"""
@@ -160,19 +203,47 @@ class UserDashboard(BaseDashboard):
         """Show profile tab"""
         self.switch_tab(8)  # Profile tab is now at index 8 (9th item in the list)
     def set_current_user(self, user):
-        """Set current user"""
-        super().set_current_user(user)
-        self.user_manager.current_user = user
-          # Set current_user_id in both managers
-        user_id = user.get('user_id')
+        """Set current user, update managers, and setup UI content"""
+        super().set_current_user(user) # This should set self.current_user in BaseDashboard
+
+        # Ensure user_manager also has the current user object if it's designed to hold it
+        if hasattr(self.user_manager, 'current_user'):
+            self.user_manager.current_user = user
+        
+        user_id = None
+        if self.current_user: # Access self.current_user set by BaseDashboard
+            user_id = self.current_user.get('id') or self.current_user.get('user_id')
+        
         if user_id:
-            if hasattr(self.user_manager, 'current_user_id'):
-                self.user_manager.current_user_id = user_id
-            if hasattr(self.category_manager, 'current_user_id'):
-                self.category_manager.current_user_id = user_id
-            print(f"DEBUG: Setting user_id to {user_id} in set_current_user")
+            # Consistently set current_user_id in all relevant managers
+            managers_to_update = [
+                self.user_manager, self.category_manager, self.transaction_manager,
+                self.budget_manager, self.notification_manager
+            ]
+            if self.wallet_manager: # If wallet_manager is ever not None
+                managers_to_update.append(self.wallet_manager)
+
+            for manager in managers_to_update:
+                if manager: # Ensure manager is not None
+                    if hasattr(manager, 'current_user_id'):
+                        manager.current_user_id = user_id
+                    elif hasattr(manager, 'set_current_user_id'): # If it has a setter method
+                        manager.set_current_user_id(user_id)
+
+            print(f"DEBUG: UserDashboard.set_current_user - user_id set to {user_id} in managers")
             
-        self.update_dashboard()
+            # Now that user_id is set and managers are updated, setup/refresh content
+            self.setup_user_content() 
+        else:
+            print("DEBUG: UserDashboard.set_current_user - user_id not found in user object. Clearing content.")
+            # Clear or show placeholder in content_stack if user becomes None or invalid
+            if hasattr(self, 'content_stack'):
+                 while self.content_stack.count():
+                    widget = self.content_stack.widget(0)
+                    self.content_stack.removeWidget(widget)
+                    widget.deleteLater()
+            
+        self.update_dashboard() # General refresh, should use the new user context
         # Show welcome toast after a short delay
         QTimer.singleShot(1000, self.show_welcome_toast)
     

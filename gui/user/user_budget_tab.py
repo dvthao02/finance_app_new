@@ -11,12 +11,13 @@ class UserBudget(QWidget):
     
     budget_updated = pyqtSignal(dict)  # Signal khi cập nhật ngân sách
     
-    def __init__(self, user_manager, transaction_manager, category_manager, wallet_manager, parent=None):
+    def __init__(self, user_manager, transaction_manager, category_manager, wallet_manager, budget_manager, parent=None):
         super().__init__(parent)
         self.user_manager = user_manager
         self.transaction_manager = transaction_manager
         self.category_manager = category_manager
         self.wallet_manager = wallet_manager
+        self.budget_manager = budget_manager # Thêm dòng này
         self.budgets = []
         self.init_ui()
         

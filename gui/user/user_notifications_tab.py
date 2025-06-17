@@ -75,9 +75,10 @@ class ToastNotification(QWidget):
 class NotificationCenter(QWidget):
     """Notification center for viewing all notifications"""
     
-    def __init__(self, user_manager, parent=None):
+    def __init__(self, user_manager, notification_manager, parent=None): # Thêm notification_manager
         super().__init__(parent)
         self.user_manager = user_manager
+        self.notification_manager = notification_manager # Lưu notification_manager
         self.init_ui()
         self.load_notifications()
         

@@ -186,6 +186,7 @@ class LoginForm(QDialog):
             
             if result.get("status") == "success":
                 user = result["user"]
+                self.user_manager.set_current_user(user["user_id"])
                 self.login_success.emit(user["user_id"])
                 self.accept()
             else:
