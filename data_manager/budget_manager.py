@@ -205,9 +205,12 @@ class BudgetManager:
                         content = (f"Bạn đã chi tiêu {spent_total:,.0f}đ cho hạng mục '{category_name}', "
                                    f"vượt quá {overspent_by:,.0f}đ so với ngân sách {limit:,.0f}đ "
                                    f"cho tháng {month}/{year}.")
-                        # Sửa lại truyền tham số đúng cho NotificationManager
+                        # Gọi đúng thứ tự positional arguments theo NotificationManager: title, content, notify_type, user_id
                         self.notification_manager.add_notification(
-                            user_id, title, content, "warning"
+                            user_id=user_id,
+                            title=title,
+                            content=content,
+                            notify_type="warning"
                         )
                         logger.info(f"BudgetManager: Over budget notification sent for user {user_id} ({user_name}), category {category_name}.")
                     else:

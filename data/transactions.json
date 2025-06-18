@@ -9,6 +9,27 @@
     "created_at": "2025-06-17T17:59:01.113674",
     "updated_at": "2025-06-17T17:59:01.113680",
     "transaction_id": "txn_001"
+  },
+  {
+    "user_id": "user_002",
+    "description": "a",
+    "amount": 110000.0,
+    "category_id": "cat_004",
+    "date": "2025-06-18T00:00:00",
+    "type": "expense",
+    "transaction_id": "txn_002",
+    "updated_at": "2025-06-18T09:04:08.192785",
+    "created_at": "2025-06-18T08:46:07.032136"
+  },
+  {
+    "user_id": "user_002",
+    "description": "T",
+    "amount": 20000.0,
+    "category_id": "cat_004",
+    "date": "2025-06-18T00:00:00",
+    "type": "expense",
+    "created_at": "2025-06-18T09:31:02.948850",
+    "updated_at": "2025-06-18T09:31:02.948860",
+    "transaction_id": "txn_003"
   }
- 
 ]

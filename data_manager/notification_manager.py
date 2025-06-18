@@ -50,3 +50,23 @@ class NotificationManager(QObject): # Inherit from QObject
         new_list = [n for n in notifications if n.get('notification_id') != notification_id and n.get('id') != notification_id]
         save_json(self.file_path, new_list)
         return len(new_list) < len(notifications)
+
+    def get_user_notifications(self, user_id):
+        """Lấy tất cả thông báo của user"""
+        return [n for n in self.get_all_notifications() if n.get('user_id') == user_id]
+
+    def get_unread_count(self, user_id):
+        """Đếm số lượng thông báo chưa đọc của user"""
+        return sum(1 for n in self.get_user_notifications(user_id) if not n.get('is_read', False))
+
+    def mark_all_as_read(self, user_id):
+        """Đánh dấu tất cả thông báo của user là đã đọc"""
+        notifications = self.get_all_notifications()
+        changed = False
+        for n in notifications:
+            if n.get('user_id') == user_id and not n.get('is_read', False):
+                n['is_read'] = True
+                changed = True
+        if changed:
+            save_json(self.file_path, notifications)
+        return changed

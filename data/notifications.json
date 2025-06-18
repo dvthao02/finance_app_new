@@ -1,3 +1,18 @@
 [
- 
+  {
+    "id": "notify_001",
+    "title": "Cảnh báo vượt ngân sách",
+    "content": "Bạn đã chi tiêu 110,000đ cho hạng mục 'Di chuyển', vượt quá 10,000đ so với ngân sách 100,000đ cho tháng 6/2025.",
+    "type": "warning",
+    "created_at": "2025-06-18T09:04:09.309781",
+    "user_id": "user_002"
+  },
+  {
+    "id": "notify_002",
+    "title": "Cảnh báo vượt ngân sách",
+    "content": "Bạn đã chi tiêu 130,000đ cho hạng mục 'Di chuyển', vượt quá 30,000đ so với ngân sách 100,000đ cho tháng 6/2025.",
+    "type": "warning",
+    "created_at": "2025-06-18T09:31:03.819301",
+    "user_id": "user_002"
+  }
 ]

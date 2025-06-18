@@ -196,29 +196,40 @@ class BaseDashboard(QWidget):
         layout.addWidget(self.notification_btn)
         
         # Thông tin người dùng (có thể nhấp chuột)
-        user_name = self.current_user.get('full_name', 'User') if self.current_user else 'User'
-        self.user_button = QPushButton(f'👤  {user_name}')
+        user_name = self.current_user.get('full_name', self.current_user.get('name', 'User')) if self.current_user else 'User'
+        # Lấy avatar qua UserManager để đảm bảo đúng logic
+        from data_manager.user_manager import UserManager
+        user_manager = UserManager()
+        user_avatar = user_manager.get_user_avatar(self.current_user.get('username')) if self.current_user else 'assets/avatar_user_001.jpg'
+        self.user_button = QPushButton(f'  {user_name}')
         self.user_button.setFont(QFont('Segoe UI', 13, QFont.Medium))
         self.user_button.setStyleSheet("""
             QPushButton {
-                color: white !important;
-                background: rgba(255,255,255,0.15) !important;
-                border: 1px solid rgba(255,255,255,0.2);
-                border-radius: 22px;
-                padding: 8px 18px;
-                text-align: left;
+                padding: 6px 16px;
+                border-radius: 18px;
+                background: #e0f2fe;
+                color: #0f172a;
                 font-weight: 500;
-                min-width: 120px;
+                text-align: left;
             }
-            QPushButton:hover {
-                background: rgba(255,255,255,0.25) !important;
-                border-color: rgba(255,255,255,0.3);
-                color: white !important;
-            }
-            QPushButton:pressed {
-                background: rgba(255,255,255,0.1) !important;
-                color: white !important;
-            }        """)
+        """)
+        # Set avatar icon (bo tròn)
+        from PyQt5.QtGui import QIcon, QPixmap, QPainterPath, QPainter
+        def get_rounded_avatar(path, size=32):
+            pixmap = QPixmap(path).scaled(size, size, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+            rounded = QPixmap(size, size)
+            rounded.fill(Qt.transparent)
+            painter = QPainter(rounded)
+            painter.setRenderHint(QPainter.Antialiasing)
+            path = QPainterPath()
+            path.addEllipse(0, 0, size, size)
+            painter.setClipPath(path)
+            painter.drawPixmap(0, 0, pixmap)
+            painter.end()
+            return rounded
+        avatar_icon = QIcon(get_rounded_avatar(user_avatar, 32))
+        self.user_button.setIcon(avatar_icon)
+        self.user_button.setIconSize(QSize(32, 32))
         self.user_button.clicked.connect(self.show_profile)
         layout.addWidget(self.user_button)
         
@@ -467,3 +478,50 @@ class BaseDashboard(QWidget):
                 show_welcome_message(self.current_user, self)
             except Exception as e:
                 print(f"Error showing welcome toast: {e}")
+    
+    # --- Hiển thị số lượng thông báo chưa đọc ---
+        from data_manager.notification_manager import NotificationManager
+        self.notification_manager = NotificationManager()
+        unread_count = 0
+        if self.current_user:
+            unread_count = self.notification_manager.get_unread_count(self.current_user.get('user_id'))
+        if unread_count > 0:
+            self.notification_btn.setText(f'🔔 {unread_count}')
+        else:
+            self.notification_btn.setText('🔔')
+        self.notification_btn.clicked.connect(self.show_user_notifications)
+        # ---
+    
+    def show_user_notifications(self):
+        """Hiển thị danh sách thông báo của user khi bấm chuông"""
+        if not self.current_user:
+            return
+        user_id = self.current_user.get('user_id')
+        notifications = self.notification_manager.get_user_notifications(user_id)
+        if not notifications:
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox.information(self, 'Thông báo', 'Bạn không có thông báo nào!')
+            return
+        # Đánh dấu tất cả là đã đọc
+        self.notification_manager.mark_all_as_read(user_id)
+        # Hiển thị danh sách thông báo (dạng popup đơn giản)
+        from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QScrollArea, QWidget
+        dialog = QDialog(self)
+        dialog.setWindowTitle('Thông báo của bạn')
+        dialog.setMinimumWidth(420)
+        layout = QVBoxLayout(dialog)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        content = QWidget()
+        vbox = QVBoxLayout(content)
+        for n in sorted(notifications, key=lambda x: x.get('created_at', ''), reverse=True):
+            label = QLabel(f"<b>{n.get('title')}</b><br>{n.get('content')}<br><span style='color:gray;font-size:12px'>{n.get('created_at')}</span>")
+            label.setWordWrap(True)
+            vbox.addWidget(label)
+        content.setLayout(vbox)
+        scroll.setWidget(content)
+        layout.addWidget(scroll)
+        dialog.setLayout(layout)
+        dialog.exec_()
+        # Sau khi đóng popup, cập nhật lại số lượng trên nút chuông
+        self.notification_btn.setText('🔔')

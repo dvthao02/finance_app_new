@@ -525,9 +525,15 @@ class UserManager:
 
     def get_user_avatar(self, username):
         user = self.find_user_by_username(username)
+        default_avatar = os.path.join('assets', 'avatar_user_001.jpg')
         if user:
-            return user.get('avatar', None)
-        raise ValueError("Không tìm thấy người dùng để lấy ảnh đại diện.")
+            avatar = user.get('avatar')
+            # Nếu avatar là None, rỗng hoặc file không tồn tại thì trả về avatar mặc định
+            if avatar and os.path.exists(avatar):
+                return avatar
+            elif avatar and os.path.exists(os.path.join(os.getcwd(), avatar)):
+                return os.path.join(os.getcwd(), avatar)
+        return default_avatar
 
     def set_user_avatar(self, username, avatar_path):
         users = self.load_users()
