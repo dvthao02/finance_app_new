@@ -1,13 +1,19 @@
 # Copy nội dung từ user_report.py sang user_report_tab.py
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame, 
-                            QTabWidget, QPushButton, QComboBox, QDateEdit)
-from PyQt5.QtGui import QFont, QColor
-from PyQt5.QtCore import Qt, QDate
+                            QTabWidget, QPushButton, QComboBox, QDateEdit, QFileDialog,
+                            QCheckBox, QGroupBox, QMessageBox, QDialog, QRadioButton)
+from PyQt5.QtGui import QFont, QColor, QIcon, QPixmap
+from PyQt5.QtCore import Qt, QDate, pyqtSignal
+from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 import datetime
+import os
+import tempfile
 
 class UserReport(QWidget):
     
@@ -23,31 +29,29 @@ class UserReport(QWidget):
         
     def init_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(30, 30, 30, 30)
-        layout.setSpacing(20)
-        
-        # Header
+        layout.setContentsMargins(30, 20, 30, 20)
+        layout.setSpacing(15)
+        # Header nhỏ gọn
         header_frame = QFrame()
+        header_frame.setFixedHeight(70)
         header_frame.setStyleSheet("""
             QFrame {
-                background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, 
-                    stop: 0 #6366f1, stop: 1 #8b5cf6);
-                border-radius: 12px;
-                padding: 20px;
+                background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #6366f1, stop: 1 #8b5cf6);
+                border-radius: 10px;
+                padding: 0 20px;
             }
         """)
         header_layout = QVBoxLayout(header_frame)
-        
+        header_layout.setContentsMargins(0, 10, 0, 10)
+        header_layout.setSpacing(0)
         title_label = QLabel("Báo cáo tài chính")
-        title_label.setFont(QFont('Segoe UI', 24, QFont.Bold))
+        title_label.setFont(QFont('Segoe UI', 18, QFont.Bold))
         title_label.setStyleSheet("color: white; margin: 0;")
         header_layout.addWidget(title_label)
-        
         subtitle_label = QLabel("Phân tích chi tiết về tình hình tài chính của bạn")
-        subtitle_label.setFont(QFont('Segoe UI', 14))
+        subtitle_label.setFont(QFont('Segoe UI', 11))
         subtitle_label.setStyleSheet("color: rgba(255,255,255,0.9); margin: 0;")
         header_layout.addWidget(subtitle_label)
-        
         layout.addWidget(header_frame)
         
         # Filter controls
@@ -125,7 +129,43 @@ class UserReport(QWidget):
         date_layout.addWidget(date_selector)
         filter_layout.addLayout(date_layout)
         
+        # Transaction type filter
+        type_layout = QVBoxLayout()
+        type_label = QLabel("Loại giao dịch")
+        type_label.setFont(QFont('Segoe UI', 12))
+        type_layout.addWidget(type_label)
+        
+        type_combo = QComboBox()
+        type_combo.setFont(QFont('Segoe UI', 12))
+        type_combo.addItem("Tất cả")
+        type_combo.addItem("Thu nhập")
+        type_combo.addItem("Chi tiêu")
+        type_combo.setStyleSheet("""
+            QComboBox {
+                border: 1px solid #d1d5db;
+                border-radius: 8px;
+                padding: 8px 12px;
+                background: #f9fafb;
+            }
+            QComboBox::drop-down {
+                subcontrol-origin: padding;
+                subcontrol-position: top right;
+                width: 25px;
+                border-left-width: 1px;
+                border-left-color: #d1d5db;
+                border-left-style: solid;
+                border-top-right-radius: 8px;
+                border-bottom-right-radius: 8px;
+            }
+        """)
+        type_layout.addWidget(type_combo)
+        filter_layout.addLayout(type_layout)
+        
         filter_layout.addStretch()
+        
+        # Button container for report actions
+        action_layout = QHBoxLayout()
+        action_layout.setSpacing(10)
         
         # Generate report button
         generate_btn = QPushButton("Tạo báo cáo")
@@ -145,7 +185,29 @@ class UserReport(QWidget):
             }
         """)
         generate_btn.clicked.connect(self.generate_report)
-        filter_layout.addWidget(generate_btn)
+        action_layout.addWidget(generate_btn)
+        
+        # Export button
+        export_btn = QPushButton("Xuất báo cáo")
+        export_btn.setFont(QFont('Segoe UI', 12))
+        export_btn.setStyleSheet("""
+            QPushButton {
+                background: #10b981;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 16px;
+                margin-top: 22px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: #059669;
+            }
+        """)
+        export_btn.clicked.connect(self.show_export_options)
+        action_layout.addWidget(export_btn)
+        
+        filter_layout.addLayout(action_layout)
         
         layout.addWidget(filter_frame)
         
@@ -188,21 +250,35 @@ class UserReport(QWidget):
         overview_layout = QVBoxLayout(overview_tab)
         overview_layout.setContentsMargins(20, 20, 20, 20)
         
-        # Summary cards
-        summary_layout = QHBoxLayout()
-        summary_layout.setSpacing(20)
+        # Split layout for main content and insights
+        overview_split = QHBoxLayout()
         
-        self.income_card = self.create_summary_card("Thu nhập", "0đ", "#10b981")
-        self.expense_card = self.create_summary_card("Chi tiêu", "0đ", "#ef4444")
-        self.balance_card = self.create_summary_card("Chênh lệch", "0đ", "#3b82f6")
-        self.savings_rate_card = self.create_summary_card("Tỷ lệ tiết kiệm", "0%", "#8b5cf6")
+        # Main overview content (left side)
+        main_overview = QVBoxLayout()
+        main_overview.setSpacing(15)
+          # Summary cards - 2 main cards for Income and Expense
+        summary_layout = QHBoxLayout()
+        summary_layout.setSpacing(30)
+        
+        self.income_card = self.create_main_summary_card("💰 Tổng Thu Nhập", "0đ", "#10b981", "#dcfce7")
+        self.expense_card = self.create_main_summary_card("💸 Tổng Chi Tiêu", "0đ", "#ef4444", "#fef2f2")
         
         summary_layout.addWidget(self.income_card)
         summary_layout.addWidget(self.expense_card)
-        summary_layout.addWidget(self.balance_card)
-        summary_layout.addWidget(self.savings_rate_card)
         
-        overview_layout.addLayout(summary_layout)
+        main_overview.addLayout(summary_layout)
+        
+        # Secondary metrics row - Balance and Savings Rate
+        secondary_layout = QHBoxLayout()
+        secondary_layout.setSpacing(20)
+        
+        self.balance_card = self.create_secondary_card("📊 Chênh Lệch", "0đ", "#3b82f6")
+        self.savings_rate_card = self.create_secondary_card("🎯 Tỷ Lệ Tiết Kiệm", "0%", "#8b5cf6")
+        
+        secondary_layout.addWidget(self.balance_card)
+        secondary_layout.addWidget(self.savings_rate_card)
+        
+        main_overview.addLayout(secondary_layout)
         
         # Income vs Expense chart
         income_expense_frame = QFrame()
@@ -226,7 +302,51 @@ class UserReport(QWidget):
         self.income_expense_canvas = FigureCanvas(figure1)
         income_expense_layout.addWidget(self.income_expense_canvas)
         
-        overview_layout.addWidget(income_expense_frame)
+        main_overview.addWidget(income_expense_frame)
+        
+        # Add main overview to left side (70%)
+        overview_split.addLayout(main_overview, 70)
+        
+        # Financial insights panel (right side, 30%)
+        insights_frame = QFrame()
+        insights_frame.setStyleSheet("""
+            QFrame {
+                background: #f8fafc;
+                border-radius: 12px;
+                border: 1px solid #e2e8f0;
+                padding: 15px;
+            }        """)
+        
+        insights_layout = QVBoxLayout(insights_frame)
+        insights_layout.setContentsMargins(10, 10, 10, 10)
+        insights_layout.setSpacing(15)
+        
+        insights_title = QLabel("💡 Gợi ý tài chính")
+        insights_title.setFont(QFont('Segoe UI', 16, QFont.Bold))
+        insights_title.setStyleSheet("color: #334155;")
+        insights_layout.addWidget(insights_title)
+        
+        # Create a scroll area for insights
+        self.insights_scroll_area = QWidget()
+        self.insights_scroll_layout = QVBoxLayout(self.insights_scroll_area)
+        self.insights_scroll_layout.setContentsMargins(0, 0, 0, 0)
+        self.insights_scroll_layout.setSpacing(10)
+        
+        # Add scroll area to main layout
+        insights_layout.addWidget(self.insights_scroll_area)
+        
+        # Placeholder for insights (will be populated in update_financial_insights)
+        insights_layout.addStretch()
+        
+        # Save reference to insights components
+        self.insights_frame = insights_frame
+        self.insights_layout = self.insights_scroll_layout
+        
+        # Add insights to right side (30%)
+        overview_split.addWidget(insights_frame, 30)
+        
+        # Add split layout to overview
+        overview_layout.addLayout(overview_split)
         
         tab_widget.addTab(overview_tab, "Tổng quan")
         
@@ -319,21 +439,59 @@ class UserReport(QWidget):
         # Store references to widgets and figures
         self.date_selector = date_selector
         self.period_combo = period_combo
+        self.type_combo = type_combo  # Thêm reference cho type_combo
         self.tab_widget = tab_widget
         self.figure1 = figure1
         self.figure2 = figure2
         self.figure3 = figure3
         self.figure4 = figure4
         
-    def create_summary_card(self, title, value, color):
+    def create_main_summary_card(self, title, value, color, bg_color):
+        """Create large summary cards for income and expense"""
+        card = QFrame()
+        card.setStyleSheet(f"""
+            QFrame {{
+                background: {bg_color};
+                border-radius: 16px;
+                border: 2px solid {color};
+                padding: 25px;
+                min-height: 120px;
+            }}
+            QFrame:hover {{
+                border-color: {color};
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            }}
+        """)
+        
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
+        
+        title_label = QLabel(title)
+        title_label.setFont(QFont('Segoe UI', 16, QFont.Bold))
+        title_label.setStyleSheet(f"color: {color}; margin: 0;")
+        layout.addWidget(title_label)
+        
+        value_label = QLabel(value)
+        value_label.setFont(QFont('Segoe UI', 32, QFont.Bold))
+        value_label.setStyleSheet(f"color: {color}; margin: 0;")
+        layout.addWidget(value_label)
+        
+        # Store value label for updates
+        card.value_label = value_label
+        
+        return card
+        
+    def create_secondary_card(self, title, value, color):
+        """Create smaller cards for balance and savings rate"""
         card = QFrame()
         card.setStyleSheet(f"""
             QFrame {{
                 background: white;
                 border-radius: 12px;
                 border: 1px solid #e2e8f0;
-                padding: 20px;
-                min-height: 100px;
+                padding: 15px;
+                min-height: 80px;
             }}
             QFrame:hover {{
                 border-color: {color};
@@ -343,15 +501,15 @@ class UserReport(QWidget):
         
         layout = QVBoxLayout(card)
         layout.setContentsMargins(15, 15, 15, 15)
-        layout.setSpacing(10)
+        layout.setSpacing(8)
         
         title_label = QLabel(title)
-        title_label.setFont(QFont('Segoe UI', 14))
+        title_label.setFont(QFont('Segoe UI', 12, QFont.Bold))
         title_label.setStyleSheet("color: #64748b; margin: 0;")
         layout.addWidget(title_label)
         
         value_label = QLabel(value)
-        value_label.setFont(QFont('Segoe UI', 22, QFont.Bold))
+        value_label.setFont(QFont('Segoe UI', 20, QFont.Bold))
         value_label.setStyleSheet(f"color: {color}; margin: 0;")
         layout.addWidget(value_label)
         
@@ -359,6 +517,10 @@ class UserReport(QWidget):
         card.value_label = value_label
         
         return card
+        
+    def create_summary_card(self, title, value, color):
+        """Legacy function - kept for compatibility"""
+        return self.create_secondary_card(title, value, color)
         
     def on_date_changed(self, date):
         """Handle date change"""
@@ -381,9 +543,21 @@ class UserReport(QWidget):
         """Generate report based on selected period and date"""
         try:
             start_date, end_date = self.get_date_range()
+            # Lấy user_id hiện tại
+            user = self.user_manager.get_current_user()
+            user_id = user.get('id') or user.get('user_id') if user else None
             
-            # Get transactions within range
-            transactions = self.transaction_manager.get_transactions_in_range(start_date, end_date)
+            # Get transactions within range, chỉ lấy của user hiện tại
+            all_transactions = self.transaction_manager.get_transactions_in_range(start_date, end_date, user_id=user_id)
+            
+            # Áp dụng filter theo loại giao dịch
+            transaction_type_index = self.type_combo.currentIndex()
+            if transaction_type_index == 1:  # Thu nhập
+                transactions = [t for t in all_transactions if t.get('type') == 'income']
+            elif transaction_type_index == 2:  # Chi tiêu
+                transactions = [t for t in all_transactions if t.get('type') == 'expense']
+            else:  # Tất cả
+                transactions = all_transactions
             
             # Update summary
             self.update_summary(transactions)
@@ -444,109 +618,381 @@ class UserReport(QWidget):
             savings_rate = (balance / income_total) * 100
         else:
             savings_rate = 0
-            
-        # Update cards
+              # Update cards
         self.income_card.value_label.setText(f"{income_total:,.0f}đ")
         self.expense_card.value_label.setText(f"{expense_total:,.0f}đ")
         self.balance_card.value_label.setText(f"{balance:,.0f}đ")
         
-        # Color balance based on value
+        # Update balance card color and style based on value
         if balance >= 0:
-            self.balance_card.value_label.setStyleSheet("color: #10b981; font-size: 22px; font-weight: bold;")
+            self.balance_card.setStyleSheet("""
+                QFrame {
+                    background: white;
+                    border-radius: 12px;
+                    border: 1px solid #10b981;
+                    padding: 15px;
+                    min-height: 80px;
+                }
+                QFrame:hover {
+                    border-color: #10b981;
+                    box-shadow: 0 4px 12px rgba(16,185,129,0.2);
+                }
+            """)
+            self.balance_card.value_label.setStyleSheet("color: #10b981; margin: 0; font-size: 20px; font-weight: bold;")
         else:
-            self.balance_card.value_label.setStyleSheet("color: #ef4444; font-size: 22px; font-weight: bold;")
+            self.balance_card.setStyleSheet("""
+                QFrame {
+                    background: white;
+                    border-radius: 12px;
+                    border: 1px solid #ef4444;
+                    padding: 15px;
+                    min-height: 80px;
+                }
+                QFrame:hover {
+                    border-color: #ef4444;
+                    box-shadow: 0 4px 12px rgba(239,68,68,0.2);
+                }
+            """)
+            self.balance_card.value_label.setStyleSheet("color: #ef4444; margin: 0; font-size: 20px; font-weight: bold;")
             
         self.savings_rate_card.value_label.setText(f"{savings_rate:.1f}%")
+          # Add financial insights based on data
+        self.update_financial_insights(income_total, expense_total, balance, savings_rate)
+    
+    def update_financial_insights(self, income_total, expense_total, balance, savings_rate):
+        """Show smart financial insights based on the current data"""
+        # Clear existing insights
+        for i in reversed(range(self.insights_layout.count())):
+            child = self.insights_layout.itemAt(i)
+            if child.widget():
+                child.widget().setParent(None)
+
+        insights = []
         
-    def update_income_expense_chart(self, transactions):
-        """Update income vs expense bar chart"""
+        # Analyze data and create insights
+        if balance < 0:
+            insights.append({
+                "icon": "⚠️",
+                "title": "Chi tiêu vượt mức",
+                "message": f"Bạn đã chi tiêu vượt quá thu nhập {-balance:,.0f}đ trong kỳ này. Cần cân nhắc cắt giảm chi tiêu không cần thiết.",
+                "bg_color": "#fef2f2",
+                "border_color": "#ef4444",
+                "text_color": "#991b1b"
+            })
+        elif balance > 0 and savings_rate < 10 and income_total > 0:
+            insights.append({
+                "icon": "💡",
+                "title": "Cơ hội tiết kiệm",
+                "message": f"Tỷ lệ tiết kiệm hiện tại ({savings_rate:.1f}%) thấp hơn mức khuyến nghị (20%). Hãy thử tăng tiết kiệm thêm {(income_total * 0.2 - balance):,.0f}đ.",
+                "bg_color": "#fffbeb", 
+                "border_color": "#f59e0b",
+                "text_color": "#92400e"
+            })
+        elif savings_rate >= 20:
+            insights.append({
+                "icon": "🎉",
+                "title": "Xuất sắc!",
+                "message": f"Tỷ lệ tiết kiệm {savings_rate:.1f}% của bạn rất tốt! Hãy duy trì thói quen này và cân nhắc đầu tư để tăng thu nhập thụ động.",
+                "bg_color": "#f0fdf4",
+                "border_color": "#22c55e", 
+                "text_color": "#166534"
+            })
+
+        # Spending pattern analysis
+        if expense_total > income_total * 0.8 and income_total > 0:
+            insights.append({
+                "icon": "📊",
+                "title": "Chi tiêu cao",
+                "message": f"Chi tiêu chiếm {(expense_total/income_total)*100:.1f}% thu nhập. Hãy xem xét cắt giảm các khoản chi không thiết yếu.",
+                "bg_color": "#fef3c7",
+                "border_color": "#f59e0b",
+                "text_color": "#92400e"
+            })
+
+        # Budget recommendation
+        if income_total > 0:
+            recommended_expense = income_total * 0.8
+            if expense_total < recommended_expense:
+                potential_savings = recommended_expense - expense_total
+                insights.append({
+                    "icon": "💰",
+                    "title": "Tiềm năng tiết kiệm",
+                    "message": f"Bạn có thể tiết kiệm thêm {potential_savings:,.0f}đ nữa mà vẫn duy trì mức chi tiêu hợp lý (80% thu nhập).",
+                    "bg_color": "#dbeafe",
+                    "border_color": "#3b82f6",
+                    "text_color": "#1e40af"
+                })
+
+        if not insights:
+            insights.append({
+                "icon": "ℹ️",
+                "title": "Không có dữ liệu",
+                "message": "Không có đủ dữ liệu giao dịch để phân tích hoặc tình hình tài chính của bạn đang ổn định.",
+                "bg_color": "#f8fafc",
+                "border_color": "#64748b",
+                "text_color": "#475569"
+            })
+        
+        # Create insight widgets
+        for insight in insights:
+            insight_widget = self.create_insight_widget(
+                insight["icon"], insight["title"], insight["message"],
+                insight["bg_color"], insight["border_color"], insight["text_color"]
+            )
+            self.insights_layout.addWidget(insight_widget)
+        
+        # Add stretch to push insights to the top
+        self.insights_layout.addStretch()
+
+    def create_insight_widget(self, icon, title, message, bg_color, border_color, text_color):
+        """Create a styled insight card widget"""
+        widget = QFrame()
+        widget.setStyleSheet(f"""
+            QFrame {{
+                background-color: {bg_color};
+                border: 1px solid {border_color};
+                border-left: 4px solid {border_color};
+                border-radius: 8px;
+                padding: 12px;
+                margin: 2px;
+            }}
+            QFrame:hover {{
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }}
+        """)
+        
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(6)
+        
+        # Header with icon and title
+        header_layout = QHBoxLayout()
+        header_layout.setSpacing(8)
+        
+        icon_label = QLabel(icon)
+        icon_label.setFont(QFont('Segoe UI', 16))
+        icon_label.setFixedSize(24, 24)
+        header_layout.addWidget(icon_label)
+        
+        title_label = QLabel(title)
+        title_label.setFont(QFont('Segoe UI', 12, QFont.Bold))
+        title_label.setStyleSheet(f"color: {text_color}; border: none; background: transparent;")
+        header_layout.addWidget(title_label)
+        
+        header_layout.addStretch()
+        layout.addLayout(header_layout)
+        
+        # Message
+        message_label = QLabel(message)
+        message_label.setFont(QFont('Segoe UI', 10))
+        message_label.setStyleSheet(f"color: {text_color}; border: none; background: transparent; line-height: 1.4;")
+        message_label.setWordWrap(True)
+        layout.addWidget(message_label)
+        
+        return widget
+
+    def show_export_options(self):
+        """Show dialog with export options"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Xuất báo cáo")
+        dialog.setFixedWidth(400)
+        dialog.setStyleSheet("background-color: white;")
+        
+        layout = QVBoxLayout(dialog)
+        layout.setSpacing(15)
+        
+        # Header
+        header = QLabel("Xuất báo cáo tài chính")
+        header.setStyleSheet("font-size: 18px; font-weight: bold;")
+        header.setAlignment(Qt.AlignCenter)
+        layout.addWidget(header)
+        
+        # Format options
+        format_group = QGroupBox("Định dạng")
+        format_layout = QVBoxLayout(format_group)
+        
+        pdf_radio = QRadioButton("PDF (Tài liệu)")
+        pdf_radio.setChecked(True)
+        format_layout.addWidget(pdf_radio)
+        
+        image_radio = QRadioButton("PNG (Ảnh)")
+        format_layout.addWidget(image_radio)
+        
+        layout.addWidget(format_group)
+        
+        # Content options
+        content_group = QGroupBox("Nội dung")
+        content_layout = QVBoxLayout(content_group)
+        
+        full_radio = QRadioButton("Toàn bộ báo cáo")
+        full_radio.setChecked(True)
+        content_layout.addWidget(full_radio)
+        
+        current_tab_radio = QRadioButton("Tab hiện tại")
+        content_layout.addWidget(current_tab_radio)
+        
+        layout.addWidget(content_group)
+        
+        # Buttons
+        button_layout = QHBoxLayout()
+        
+        cancel_btn = QPushButton("Hủy")
+        cancel_btn.clicked.connect(dialog.reject)
+        button_layout.addWidget(cancel_btn)
+        
+        export_btn = QPushButton("Xuất")
+        export_btn.setStyleSheet("background-color: #10b981; color: white;")
+        export_btn.clicked.connect(lambda: self.export_report(
+            pdf=pdf_radio.isChecked(),
+            full_report=full_radio.isChecked()
+        ) or dialog.accept())
+        button_layout.addWidget(export_btn)
+        
+        layout.addLayout(button_layout)
+        
+        dialog.exec_()
+    
+    def export_report(self, pdf=True, full_report=True):
+        """Export the report to PDF or PNG"""
         try:
-            # Clear the figure
-            self.figure1.clear()
-            ax = self.figure1.add_subplot(111)
-            
-            # Get income and expense by category
-            income_by_category = {}
-            expense_by_category = {}
-            
-            for t in transactions:
-                if t.get('type') == 'income':
-                    category = t.get('category', 'Khác')
-                    income_by_category[category] = income_by_category.get(category, 0) + t.get('amount', 0)
-                else:
-                    category = t.get('category', 'Khác')
-                    expense_by_category[category] = expense_by_category.get(category, 0) + t.get('amount', 0)
-            
-            # Sort categories by amount
-            income_categories = sorted(income_by_category.items(), key=lambda x: x[1], reverse=True)
-            expense_categories = sorted(expense_by_category.items(), key=lambda x: x[1], reverse=True)
-            
-            # Limit to top 5 categories
-            income_categories = income_categories[:5]
-            expense_categories = expense_categories[:5]
-            
-            # Prepare data
-            income_labels = [cat[0] for cat in income_categories]
-            income_values = [cat[1] for cat in income_categories]
-            
-            expense_labels = [cat[0] for cat in expense_categories]
-            expense_values = [cat[1] for cat in expense_categories]
-            
-            # Bar positions
-            bar_width = 0.35
-            index = range(max(len(income_labels), len(expense_labels)))
-            
-            # Plot bars
-            income_bars = ax.bar([i - bar_width/2 for i in index[:len(income_labels)]], 
-                              income_values, bar_width, label='Thu nhập', color='#10b981')
-                              
-            expense_bars = ax.bar([i + bar_width/2 for i in index[:len(expense_labels)]], 
-                               expense_values, bar_width, label='Chi tiêu', color='#ef4444')
-            
-            # Add labels
-            all_labels = []
-            for i in range(max(len(income_labels), len(expense_labels))):
-                if i < len(income_labels):
-                    in_label = income_labels[i]
-                else:
-                    in_label = ""
+            if pdf:
+                file_path, _ = QFileDialog.getSaveFileName(
+                    self, "Lưu báo cáo PDF", "", "PDF Files (*.pdf)")
+                
+                if not file_path:
+                    return
+                
+                if not file_path.endswith(".pdf"):
+                    file_path += ".pdf"
+                
+                with PdfPages(file_path) as pdf_pages:
+                    # Get date range for title
+                    start_date, end_date = self.get_date_range()
+                    period_text = self.get_period_text(start_date, end_date)
                     
-                if i < len(expense_labels):
-                    ex_label = expense_labels[i]
-                else:
-                    ex_label = ""
+                    # Create figure for summary
+                    fig, ax = plt.subplots(figsize=(8, 6))
+                    ax.axis('off')
                     
-                all_labels.append(f"{in_label}/{ex_label}" if in_label != ex_label else in_label)
-            
-            ax.set_xticks(index)
-            ax.set_xticklabels(all_labels, rotation=45, ha='right')
-            
-            # Format y-axis as currency
-            import matplotlib.ticker as ticker
-            formatter = ticker.FuncFormatter(lambda x, p: format(int(x), ',') + 'đ')
-            ax.yaxis.set_major_formatter(formatter)
-            
-            # Add value labels on bars
-            def add_labels(bars):
-                for bar in bars:
-                    height = bar.get_height()
-                    ax.text(bar.get_x() + bar.get_width()/2., height + 0.1,
-                         f'{height:,.0f}đ', ha='center', va='bottom', rotation=90,
-                         fontsize=8)
-            
-            add_labels(income_bars)
-            add_labels(expense_bars)
-            
-            ax.legend()
-            ax.set_ylabel('Số tiền (VNĐ)')
-            ax.set_title('Thu nhập và chi tiêu theo danh mục')
-            
-            self.figure1.tight_layout()
-            self.income_expense_canvas.draw()
-            
+                    # Add title and summary
+                    ax.text(0.5, 0.95, f"Báo cáo tài chính - {period_text}", 
+                           fontsize=16, ha='center', weight='bold')
+                    
+                    # Get data from summary cards
+                    income = self.income_card.value_label.text()
+                    expense = self.expense_card.value_label.text()
+                    balance = self.balance_card.value_label.text()
+                    savings = self.savings_rate_card.value_label.text()
+                    
+                    # Add summary text
+                    summary_text = f"""
+                    Thu nhập: {income}
+                    Chi tiêu: {expense}
+                    Chênh lệch: {balance}
+                    Tỷ lệ tiết kiệm: {savings}
+                    """
+                    
+                    ax.text(0.5, 0.8, summary_text, fontsize=12, ha='center')
+                    
+                    # Save the summary page
+                    pdf_pages.savefig(fig)
+                    plt.close(fig)
+                    
+                    if full_report:
+                        # Export all charts from each tab
+                        # Income vs Expense chart
+                        pdf_pages.savefig(self.figure1.figure)
+                        
+                        # Trend chart
+                        pdf_pages.savefig(self.figure2.figure)
+                        
+                        # Category charts
+                        pdf_pages.savefig(self.figure3.figure)
+                        pdf_pages.savefig(self.figure4.figure)
+                    else:
+                        # Only export current tab
+                        current_tab = self.tab_widget.currentIndex()
+                        if current_tab == 0:  # Overview
+                            pdf_pages.savefig(self.figure1.figure)
+                        elif current_tab == 1:  # Trend
+                            pdf_pages.savefig(self.figure2.figure)
+                        elif current_tab == 2:  # Category
+                            pdf_pages.savefig(self.figure3.figure)
+                            pdf_pages.savefig(self.figure4.figure)
+                
+                QMessageBox.information(self, "Xuất báo cáo", 
+                                      f"Báo cáo đã được xuất thành công đến:\n{file_path}")
+            else:
+                # Export as PNG
+                file_path, _ = QFileDialog.getSaveFileName(
+                    self, "Lưu ảnh báo cáo", "", "PNG Files (*.png)")
+                
+                if not file_path:
+                    return
+                
+                if not file_path.endswith(".png"):
+                    file_path += ".png"
+                
+                # Determine which figure to export based on current tab
+                current_tab = self.tab_widget.currentIndex()
+                figure_to_save = None
+                
+                if current_tab == 0:  # Overview
+                    figure_to_save = self.figure1.figure
+                elif current_tab == 1:  # Trend
+                    figure_to_save = self.figure2.figure
+                elif current_tab == 2:  # Category analysis
+                    # Ask which chart to export
+                    chart_dialog = QDialog(self)
+                    chart_dialog.setWindowTitle("Chọn biểu đồ")
+                    chart_dialog.setFixedWidth(300)
+                    chart_layout = QVBoxLayout(chart_dialog)
+                    
+                    income_radio = QRadioButton("Thu nhập theo danh mục")
+                    income_radio.setChecked(True)
+                    chart_layout.addWidget(income_radio)
+                    
+                    expense_radio = QRadioButton("Chi tiêu theo danh mục")
+                    chart_layout.addWidget(expense_radio)
+                    
+                    button_layout = QHBoxLayout()
+                    cancel_btn = QPushButton("Hủy")
+                    cancel_btn.clicked.connect(chart_dialog.reject)
+                    button_layout.addWidget(cancel_btn)
+                    
+                    ok_btn = QPushButton("OK")
+                    ok_btn.clicked.connect(chart_dialog.accept)
+                    button_layout.addWidget(ok_btn)
+                    
+                    chart_layout.addLayout(button_layout)
+                    
+                    result = chart_dialog.exec_()
+                    if result:
+                        if income_radio.isChecked():
+                            figure_to_save = self.figure3.figure
+                        else:
+                            figure_to_save = self.figure4.figure
+                    else:
+                        return
+                
+                if figure_to_save:
+                    figure_to_save.savefig(file_path, format='png', dpi=300, bbox_inches='tight')
+                    QMessageBox.information(self, "Xuất báo cáo", 
+                                          f"Ảnh báo cáo đã được lưu thành công đến:\n{file_path}")
+        
         except Exception as e:
-            print(f"Error updating income expense chart: {e}")
-            
+            QMessageBox.critical(self, "Lỗi xuất báo cáo", f"Không thể xuất báo cáo: {str(e)}")
+    
+    def get_period_text(self, start_date, end_date):
+        """Get text description of period for report title"""
+        if self.selected_period == "month":
+            return f"Tháng {start_date.month}/{start_date.year}"
+        elif self.selected_period == "quarter":
+            quarter = (start_date.month - 1) // 3 + 1
+            return f"Quý {quarter}/{start_date.year}"
+        else:
+            return f"Năm {start_date.year}"
+    
     def update_trend_chart(self, start_date, end_date):
         """Update trend line chart"""
         try:
@@ -584,6 +1030,15 @@ class UserReport(QWidget):
             income_values = []
             expense_values = []
             
+            # Lấy user_id hiện tại
+            user = self.user_manager.get_current_user()
+            user_id = user.get('id') or user.get('user_id') if user else None
+            
+            # Kiểm tra loại giao dịch đang được chọn
+            transaction_type_index = self.type_combo.currentIndex()
+            show_income = transaction_type_index in [0, 1]  # Tất cả hoặc Thu nhập
+            show_expense = transaction_type_index in [0, 2]  # Tất cả hoặc Chi tiêu
+            
             for i, period_start in enumerate(periods):
                 # Determine period end
                 if i < len(periods) - 1:
@@ -592,25 +1047,38 @@ class UserReport(QWidget):
                     period_end = end_date
                 
                 # Get transactions for this period
-                transactions = self.transaction_manager.get_transactions_in_range(period_start, period_end)
+                period_transactions = self.transaction_manager.get_transactions_in_range(period_start, period_end, user_id=user_id)
                 
-                income_total = sum(t.get('amount', 0) for t in transactions if t.get('type') == 'income')
-                expense_total = sum(t.get('amount', 0) for t in transactions if t.get('type') == 'expense')
+                if show_income:
+                    income_total = sum(t.get('amount', 0) for t in period_transactions if t.get('type') == 'income')
+                    income_values.append(income_total)
                 
-                income_values.append(income_total)
-                expense_values.append(expense_total)
+                if show_expense:
+                    expense_total = sum(t.get('amount', 0) for t in period_transactions if t.get('type') == 'expense')
+                    expense_values.append(expense_total)
             
-            # Plot the data
-            ax.plot(period_labels, income_values, label='Thu nhập', color='#10b981', marker='o')
-            ax.plot(period_labels, expense_values, label='Chi tiêu', color='#ef4444', marker='o')
+            # Plot the data based on selected transaction type
+            if show_income:
+                ax.plot(period_labels, income_values, label='Thu nhập', color='#10b981', marker='o')
             
-            # Plot balance as area between curves
-            ax.fill_between(period_labels, income_values, expense_values, color='#bfdbfe', alpha=0.3)
+            if show_expense:
+                ax.plot(period_labels, expense_values, label='Chi tiêu', color='#ef4444', marker='o')
+            
+            # Plot balance as area between curves only if showing both
+            if show_income and show_expense:
+                ax.fill_between(period_labels, income_values, expense_values, color='#bfdbfe', alpha=0.3)
             
             # Format and label
             ax.set_xlabel('Thời gian')
             ax.set_ylabel('Số tiền (VNĐ)')
-            ax.set_title('Xu hướng thu nhập và chi tiêu theo thời gian')
+            
+            # Set title based on selected transaction type
+            if transaction_type_index == 0:
+                ax.set_title('Xu hướng thu nhập và chi tiêu theo thời gian')
+            elif transaction_type_index == 1:
+                ax.set_title('Xu hướng thu nhập theo thời gian')
+            else:
+                ax.set_title('Xu hướng chi tiêu theo thời gian')
             
             if self.selected_period in ["quarter", "year"]:
                 ax.tick_params(axis='x', rotation=45)
@@ -628,32 +1096,47 @@ class UserReport(QWidget):
             
         except Exception as e:
             print(f"Error updating trend chart: {e}")
-            
+    
     def update_category_charts(self, transactions):
         """Update category pie charts"""
         try:
+            # Kiểm tra loại giao dịch đang được chọn
+            transaction_type_index = self.type_combo.currentIndex()
+            show_income = transaction_type_index in [0, 1]  # Tất cả hoặc Thu nhập
+            show_expense = transaction_type_index in [0, 2]  # Tất cả hoặc Chi tiêu
+            
             # Income by category
             self.figure3.clear()
             ax1 = self.figure3.add_subplot(111)
             
-            income_by_category = {}
-            for t in transactions:
-                if t.get('type') == 'income':
-                    category = t.get('category', 'Khác')
-                    income_by_category[category] = income_by_category.get(category, 0) + t.get('amount', 0)
-            
-            if income_by_category:
-                labels = list(income_by_category.keys())
-                values = list(income_by_category.values())
+            if show_income:
+                income_by_category = {}
+                for t in transactions:
+                    if t.get('type') == 'income':
+                        category_id = t.get('category_id', 'unknown')
+                        # Lấy tên danh mục nếu có
+                        if category_id != 'unknown':
+                            category = self.category_manager.get_category_by_id(category_id)
+                            category_name = category.get('name', 'Khác') if category else 'Khác'
+                        else:
+                            category_name = 'Khác'
+                        income_by_category[category_name] = income_by_category.get(category_name, 0) + t.get('amount', 0)
                 
-                # Define colorful palette
-                colors = ['#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#eab308', '#06b6d4']
-                
-                ax1.pie(values, labels=labels, autopct='%1.1f%%', shadow=False, startangle=90, colors=colors)
-                ax1.axis('equal')
-                ax1.set_title('Thu nhập theo danh mục')
+                if income_by_category:
+                    labels = list(income_by_category.keys())
+                    values = list(income_by_category.values())
+                    
+                    # Define colorful palette
+                    colors = ['#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#eab308', '#06b6d4']
+                    
+                    ax1.pie(values, labels=labels, autopct='%1.1f%%', shadow=False, startangle=90, colors=colors)
+                    ax1.axis('equal')
+                    ax1.set_title('Thu nhập theo danh mục')
+                else:
+                    ax1.text(0.5, 0.5, 'Không có dữ liệu thu nhập trong giai đoạn này', 
+                          ha='center', va='center', fontsize=12)
             else:
-                ax1.text(0.5, 0.5, 'Không có dữ liệu thu nhập trong giai đoạn này', 
+                ax1.text(0.5, 0.5, 'Đã lọc: không hiển thị thu nhập', 
                       ha='center', va='center', fontsize=12)
             
             self.income_cat_canvas.draw()
@@ -662,31 +1145,37 @@ class UserReport(QWidget):
             self.figure4.clear()
             ax2 = self.figure4.add_subplot(111)
             
-            expense_by_category = {}
-            for t in transactions:
-                if t.get('type') == 'expense':
-                    category = t.get('category', 'Khác')
-                    expense_by_category[category] = expense_by_category.get(category, 0) + t.get('amount', 0)
-            
-            if expense_by_category:
-                labels = list(expense_by_category.keys())
-                values = list(expense_by_category.values())
+            if show_expense:
+                expense_by_category = {}
+                for t in transactions:
+                    if t.get('type') == 'expense':
+                        category_id = t.get('category_id', 'unknown')
+                        # Lấy tên danh mục nếu có
+                        if category_id != 'unknown':
+                            category = self.category_manager.get_category_by_id(category_id)
+                            category_name = category.get('name', 'Khác') if category else 'Khác'
+                        else:
+                            category_name = 'Khác'
+                        expense_by_category[category_name] = expense_by_category.get(category_name, 0) + t.get('amount', 0)
                 
-                # Define colorful palette
-                colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#06b6d4', '#8b5cf6', '#ec4899']
-                
-                ax2.pie(values, labels=labels, autopct='%1.1f%%', shadow=False, startangle=90, colors=colors)
-                ax2.axis('equal')
-                ax2.set_title('Chi tiêu theo danh mục')
+                if expense_by_category:
+                    labels = list(expense_by_category.keys())
+                    values = list(expense_by_category.values())
+                    
+                    # Define colorful palette
+                    colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#06b6d4', '#8b5cf6', '#ec4899']
+                    
+                    ax2.pie(values, labels=labels, autopct='%1.1f%%', shadow=False, startangle=90, colors=colors)
+                    ax2.axis('equal')
+                    ax2.set_title('Chi tiêu theo danh mục')
+                else:
+                    ax2.text(0.5, 0.5, 'Không có dữ liệu chi tiêu trong giai đoạn này', 
+                          ha='center', va='center', fontsize=12)
             else:
-                ax2.text(0.5, 0.5, 'Không có dữ liệu chi tiêu trong giai đoạn này', 
+                ax2.text(0.5, 0.5, 'Đã lọc: không hiển thị chi tiêu', 
                       ha='center', va='center', fontsize=12)
             
             self.expense_cat_canvas.draw()
             
         except Exception as e:
             print(f"Error updating category charts: {e}")
-            
-    def reload_data(self):
-        """Reload all data and regenerate report"""
-        self.generate_report()

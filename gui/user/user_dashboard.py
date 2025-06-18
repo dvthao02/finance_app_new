@@ -68,13 +68,12 @@ class UserDashboard(BaseDashboard):
     def setup_user_content(self):
         """Setup user-specific content in the stacked widget"""
         try:
-            # Import user tabs
             from gui.user.user_overview_tab import UserOverviewTab
-            # UserTransactionTab is already imported at the top of the file
-            from gui.user.user_budget_tab import UserBudgetTab # Corrected import
-            from gui.user.user_category_tab import UserCategoryTab # Ensure this is imported
-            from gui.user.user_report_tab import UserReport # Ensure this is imported
-            from gui.user.user_notifications_tab import NotificationCenter
+            from gui.user.user_transaction_tab import UserTransactionTab 
+            from gui.user.user_budget_tab import UserBudgetTab
+            from gui.user.user_category_tab import UserCategoryTab
+            from gui.user.user_report_tab import UserReport
+            from gui.user.user_notifications_tab import NotificationCenter 
             from gui.user.user_settings_tab import UserSettings
             from gui.user.user_profile_tab import UserProfileTab
             

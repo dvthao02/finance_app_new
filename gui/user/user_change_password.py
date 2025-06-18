@@ -1,83 +1,60 @@
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
-                            QLineEdit, QFrame, QMessageBox)
+                            QLineEdit, QFrame, QMessageBox, QAction)
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
-import datetime
-import json
+from PyQt5.QtGui import QIcon
 import hashlib
+import os
 
 class ChangePasswordDialog(QDialog):
     """
-    Dialog đổi mật khẩu cho user
+    Dialog đổi mật khẩu cho user với giao diện nền trắng, tối giản, có nút ẩn/hiện mật khẩu.
     """
-    
     def __init__(self, user_manager, parent=None):
         super().__init__(parent)
         self.user_manager = user_manager
         self.current_user = getattr(user_manager, 'current_user', {})
+        self.show_pwd = False
+        self.show_new_pwd = False
+        self.show_confirm_pwd = False
         self.init_ui()
 
     def init_ui(self):
         self.setWindowTitle('🔑 Đổi mật khẩu')
-        self.setFixedSize(400, 300)
+        self.setFixedSize(400, 340)
         self.setModal(True)
-        
-        # Main layout
-        layout = QVBoxLayout()
+        self.setStyleSheet("QDialog { background-color: white; }")
+
+        layout = QVBoxLayout(self)
         layout.setSpacing(20)
         layout.setContentsMargins(30, 30, 30, 30)
-        
+
         # Header
         header_label = QLabel('🔑 Đổi mật khẩu')
-        header_label.setStyleSheet("""
-            QLabel {
-                color: #374151;
-                font-size: 20px;
-                font-weight: bold;
-                margin-bottom: 10px;
-            }
-        """)
+        header_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #374151; margin-bottom: 10px;")
         header_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(header_label)
-        
+
         # Form
         form_frame = QFrame()
-        form_frame.setStyleSheet("""
-            QFrame {
-                background-color: white;
-                border-radius: 12px;
-                border: 1px solid #e2e8f0;
-                padding: 25px;
-            }
-        """)
-        
-        form_layout = QVBoxLayout()
+        form_frame.setStyleSheet("QFrame { background-color: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 25px; }")
+        form_layout = QVBoxLayout(form_frame)
         form_layout.setSpacing(15)
-        
-        # Input style
+
         input_style = """
             QLineEdit {
                 padding: 12px 15px;
-                border: 2px solid #e2e8f0;
+                border: 1.5px solid #e2e8f0;
                 border-radius: 8px;
                 font-size: 14px;
                 background-color: #f8fafc;
             }
             QLineEdit:focus {
-                border-color: #667eea;
+                border-color: #1976D2;
                 background-color: white;
             }
         """
-        
-        label_style = """
-            QLabel {
-                color: #374151;
-                font-weight: 600;
-                font-size: 14px;
-                margin-bottom: 5px;
-            }
-        """
-        
+        label_style = "color: #374151; font-weight: 600; font-size: 14px; margin-bottom: 5px;"
+
         # Current password
         current_pwd_label = QLabel('🔒 Mật khẩu hiện tại:')
         current_pwd_label.setStyleSheet(label_style)
@@ -85,7 +62,13 @@ class ChangePasswordDialog(QDialog):
         self.current_password.setEchoMode(QLineEdit.Password)
         self.current_password.setStyleSheet(input_style)
         self.current_password.setPlaceholderText('Nhập mật khẩu hiện tại')
-        
+        # Toggle action
+        self.toggle_pwd_action = QAction(self)
+        self.toggle_pwd_action.setIcon(QIcon(self.get_eye_icon(False)))
+        self.toggle_pwd_action.setToolTip("Hiện/Ẩn mật khẩu")
+        self.toggle_pwd_action.triggered.connect(self.toggle_current_pwd)
+        self.current_password.addAction(self.toggle_pwd_action, QLineEdit.TrailingPosition)
+
         # New password
         new_pwd_label = QLabel('🔑 Mật khẩu mới:')
         new_pwd_label.setStyleSheet(label_style)
@@ -93,7 +76,12 @@ class ChangePasswordDialog(QDialog):
         self.new_password.setEchoMode(QLineEdit.Password)
         self.new_password.setStyleSheet(input_style)
         self.new_password.setPlaceholderText('Nhập mật khẩu mới (tối thiểu 6 ký tự)')
-        
+        self.toggle_new_pwd_action = QAction(self)
+        self.toggle_new_pwd_action.setIcon(QIcon(self.get_eye_icon(False)))
+        self.toggle_new_pwd_action.setToolTip("Hiện/Ẩn mật khẩu")
+        self.toggle_new_pwd_action.triggered.connect(self.toggle_new_pwd)
+        self.new_password.addAction(self.toggle_new_pwd_action, QLineEdit.TrailingPosition)
+
         # Confirm password
         confirm_pwd_label = QLabel('🔐 Xác nhận mật khẩu:')
         confirm_pwd_label.setStyleSheet(label_style)
@@ -101,7 +89,12 @@ class ChangePasswordDialog(QDialog):
         self.confirm_password.setEchoMode(QLineEdit.Password)
         self.confirm_password.setStyleSheet(input_style)
         self.confirm_password.setPlaceholderText('Nhập lại mật khẩu mới')
-        
+        self.toggle_confirm_pwd_action = QAction(self)
+        self.toggle_confirm_pwd_action.setIcon(QIcon(self.get_eye_icon(False)))
+        self.toggle_confirm_pwd_action.setToolTip("Hiện/Ẩn mật khẩu")
+        self.toggle_confirm_pwd_action.triggered.connect(self.toggle_confirm_pwd)
+        self.confirm_password.addAction(self.toggle_confirm_pwd_action, QLineEdit.TrailingPosition)
+
         # Add to form layout
         form_layout.addWidget(current_pwd_label)
         form_layout.addWidget(self.current_password)
@@ -109,63 +102,52 @@ class ChangePasswordDialog(QDialog):
         form_layout.addWidget(self.new_password)
         form_layout.addWidget(confirm_pwd_label)
         form_layout.addWidget(self.confirm_password)
-        
         form_frame.setLayout(form_layout)
         layout.addWidget(form_frame)
-        
+
         # Buttons
         buttons_layout = QHBoxLayout()
         buttons_layout.setSpacing(15)
-        
-        # Cancel button
         btn_cancel = QPushButton('❌ Hủy')
         btn_cancel.setStyleSheet("""
-            QPushButton {
-                background: #6b7280;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 12px 20px;
-                font-weight: 600;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background: #4b5563;
-            }
+            QPushButton { background: #6b7280; color: white; border: none; border-radius: 8px; padding: 12px 20px; font-weight: 600; font-size: 14px; }
+            QPushButton:hover { background: #4b5563; }
         """)
         btn_cancel.clicked.connect(self.reject)
-        
-        # Save button
         btn_save = QPushButton('🔑 Đổi mật khẩu')
         btn_save.setStyleSheet("""
-            QPushButton {
-                background: #667eea;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 12px 20px;
-                font-weight: 600;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background: #5a67d8;
-            }
+            QPushButton { background: #1976D2; color: white; border: none; border-radius: 8px; padding: 12px 20px; font-weight: 600; font-size: 14px; }
+            QPushButton:hover { background: #1256A1; }
         """)
         btn_save.clicked.connect(self.change_password)
-        
         buttons_layout.addStretch()
         buttons_layout.addWidget(btn_cancel)
         buttons_layout.addWidget(btn_save)
-        
         layout.addLayout(buttons_layout)
         self.setLayout(layout)
-        
-        # Set dialog style
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #f1f5f9;
-            }
-        """)
+
+    def get_eye_icon(self, is_open):
+        # Trả về đường dẫn icon con mắt (open/closed)
+        base_dir = os.path.join(os.path.dirname(__file__), '../../assets/function')
+        if is_open:
+            return os.path.abspath(os.path.join(base_dir, 'eye_open.png'))
+        else:
+            return os.path.abspath(os.path.join(base_dir, 'eye_closed.png'))
+
+    def toggle_current_pwd(self):
+        self.show_pwd = not self.show_pwd
+        self.current_password.setEchoMode(QLineEdit.Normal if self.show_pwd else QLineEdit.Password)
+        self.toggle_pwd_action.setIcon(QIcon(self.get_eye_icon(self.show_pwd)))
+
+    def toggle_new_pwd(self):
+        self.show_new_pwd = not self.show_new_pwd
+        self.new_password.setEchoMode(QLineEdit.Normal if self.show_new_pwd else QLineEdit.Password)
+        self.toggle_new_pwd_action.setIcon(QIcon(self.get_eye_icon(self.show_new_pwd)))
+
+    def toggle_confirm_pwd(self):
+        self.show_confirm_pwd = not self.show_confirm_pwd
+        self.confirm_password.setEchoMode(QLineEdit.Normal if self.show_confirm_pwd else QLineEdit.Password)
+        self.toggle_confirm_pwd_action.setIcon(QIcon(self.get_eye_icon(self.show_confirm_pwd)))
 
     def hash_password(self, password):
         """Hash mật khẩu với SHA-256"""

@@ -237,9 +237,8 @@ class AdminUserTab(QWidget):
         reason, ok = QInputDialog.getText(self, 'Lý do khóa', 'Nhập lý do khóa tài khoản:')
         if not ok or not reason.strip():
             return
-        
         try:
-            self.user_manager.update_user_status(user['user_id'], False)
+            self.user_manager.update_user(user['user_id'], is_active=False)
             self.audit_log_manager.add_log(f"User account {user['user_id']} locked", f"Reason: {reason}")
             QMessageBox.information(self, 'Thành công', 'Đã khóa tài khoản!')
             self.load_users_table()
@@ -254,9 +253,8 @@ class AdminUserTab(QWidget):
         if user.get('is_active', True):
             QMessageBox.information(self, 'Thông báo', 'Tài khoản đang hoạt động!')
             return
-        
         try:
-            self.user_manager.update_user_status(user['user_id'], True)
+            self.user_manager.update_user(user['user_id'], is_active=True)
             self.audit_log_manager.add_log(f"User account {user['user_id']} unlocked", "Account unlocked")
             QMessageBox.information(self, 'Thành công', 'Đã mở khóa tài khoản!')
             self.load_users_table()

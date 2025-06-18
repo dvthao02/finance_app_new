@@ -2,13 +2,13 @@
   {
     "user_id": "user_002",
     "description": "TE",
-    "amount": 100000000.0,
+    "amount": 10000000.0,
     "category_id": "cat_010",
     "date": "2025-06-18T00:00:00",
     "type": "income",
-    "created_at": "2025-06-18T15:34:47.908881",
-    "updated_at": "2025-06-18T15:34:47.908898",
-    "transaction_id": "txn_002"
+    "transaction_id": "txn_002",
+    "updated_at": "2025-06-18T22:03:38.877711",
+    "created_at": "2025-06-18T15:34:47.908881"
   },
   {
     "user_id": "user_002",
@@ -20,5 +20,49 @@
     "created_at": "2025-06-18T20:53:01.899958",
     "updated_at": "2025-06-18T20:53:01.899974",
     "transaction_id": "txn_003"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Bán hàng",
+    "amount": 1000000000.0,
+    "category_id": "cat_013",
+    "date": "2025-06-18T00:00:00",
+    "type": "income",
+    "created_at": "2025-06-18T21:28:17.058406",
+    "updated_at": "2025-06-18T21:28:17.058422",
+    "transaction_id": "txn_004"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Sách",
+    "amount": 200000.0,
+    "category_id": "cat_007",
+    "date": "2025-06-18T00:00:00",
+    "type": "expense",
+    "created_at": "2025-06-18T21:30:38.248609",
+    "updated_at": "2025-06-18T21:30:38.248624",
+    "transaction_id": "txn_005"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Tiền điện",
+    "amount": 595000.0,
+    "category_id": "cat_003",
+    "date": "2025-06-18T00:00:00",
+    "type": "expense",
+    "created_at": "2025-06-18T21:30:52.310390",
+    "updated_at": "2025-06-18T21:30:52.310404",
+    "transaction_id": "txn_006"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Tiền nước",
+    "amount": 400000.0,
+    "category_id": "cat_003",
+    "date": "2025-06-18T00:00:00",
+    "type": "expense",
+    "created_at": "2025-06-18T21:31:10.563188",
+    "updated_at": "2025-06-18T21:31:10.563200",
+    "transaction_id": "txn_007"
   }
 ]

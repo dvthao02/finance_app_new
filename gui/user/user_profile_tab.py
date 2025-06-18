@@ -229,7 +229,7 @@ class UserProfileTab(QWidget):
                 self.show_avatar(new_avatar_path)
             except Exception as e:
                 QMessageBox.critical(self, "Lỗi", f"Không thể lưu ảnh đại diện: {e}")
-
+                
     def save_user_data(self):
         if self.current_user:
             user_id = self.current_user.get('id') or self.current_user.get('user_id')
@@ -237,23 +237,75 @@ class UserProfileTab(QWidget):
                 QMessageBox.critical(self, "Lỗi", "Không tìm thấy ID người dùng.")
                 return
 
+            # Lấy dữ liệu từ form
+            full_name = self.entries["full_name"].text().strip()
+            email = self.entries["email"].text().strip()
+            date_of_birth = self.entries["date_of_birth"].date().toString("dd/MM/yyyy")
+            gender = self.entries["gender"].currentText()
+            phone_number = self.entries["phone_number"].text().strip()
+
+            # Kiểm tra dữ liệu
+            from utils.file_helper import is_valid_email, is_valid_phone
+
+            # Kiểm tra tên đầy đủ không được để trống
+            if not full_name:
+                QMessageBox.warning(self, "Thiếu thông tin", "Vui lòng nhập họ và tên.")
+                self.entries["full_name"].setFocus()
+                return
+
+            # Kiểm tra định dạng email
+            if email and not is_valid_email(email):
+                QMessageBox.warning(self, "Lỗi định dạng", 
+                    "Email không đúng định dạng.\nVí dụ: example@domain.com")
+                self.entries["email"].setFocus()
+                return
+
+            # Kiểm tra tính duy nhất của email
+            if email and email != self.current_user.get("email"):
+                if not self.user_manager.is_email_unique(email, user_id_to_exclude=user_id):
+                    QMessageBox.warning(self, "Email đã tồn tại", 
+                        "Email này đã được đăng ký. Vui lòng sử dụng email khác.")
+                    self.entries["email"].setFocus()
+                    return
+
+            # Kiểm tra định dạng số điện thoại
+            if phone_number and not is_valid_phone(phone_number):
+                QMessageBox.warning(self, "Lỗi định dạng",
+                    "Số điện thoại không hợp lệ. Số điện thoại phải có 10-11 chữ số.")
+                self.entries["phone_number"].setFocus()
+                return
+
+            # Kiểm tra tính duy nhất của số điện thoại
+            if phone_number and phone_number != self.current_user.get("phone_number"):
+                if not self.user_manager.is_phone_unique(phone_number, user_id_to_exclude=user_id):
+                    QMessageBox.warning(self, "Số điện thoại đã tồn tại", 
+                        "Số điện thoại này đã được đăng ký. Vui lòng sử dụng số khác.")
+                    self.entries["phone_number"].setFocus()
+                    return
+
+            # Tạo dictionary dữ liệu cập nhật
             updated_data = {
-                "full_name": self.entries["full_name"].text(),
-                "email": self.entries["email"].text(),
-                "date_of_birth": self.entries["date_of_birth"].date().toString("dd/MM/yyyy"),
-                "gender": self.entries["gender"].currentText(),
-                "phone_number": self.entries["phone_number"].text(),
+                "full_name": full_name,
+                "email": email,
+                "date_of_birth": date_of_birth,
+                "gender": gender,
+                "phone_number": phone_number,
             }
             
             if self.new_avatar_path:
                 updated_data["avatar"] = self.new_avatar_path
 
-            if self.user_manager.update_user_profile(user_id, updated_data):
+            # Gửi dữ liệu đã được kiểm tra đến user_manager
+            result = self.user_manager.update_user_profile(user_id, updated_data)
+            if result and result.get("status") == "success":
                 QMessageBox.information(self, "Thành công", "Cập nhật thông tin thành công!")
                 self.new_avatar_path = None
                 self.profile_updated.emit()
                 self.load_user_data()
             else:
-                QMessageBox.critical(self, "Lỗi", "Không thể cập nhật thông tin.")
+                error_message = "Không thể cập nhật thông tin."
+                if result and result.get("message"):
+                    error_message = result.get("message")
+                QMessageBox.critical(self, "Lỗi", error_message)
         else:
             QMessageBox.critical(self, "Lỗi", "Không có người dùng nào đang đăng nhập.")

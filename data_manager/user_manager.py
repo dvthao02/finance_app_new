@@ -1,7 +1,6 @@
 # user_manager.py
 
 import bcrypt
-# import re # No longer needed directly here
 import os
 import json
 import logging

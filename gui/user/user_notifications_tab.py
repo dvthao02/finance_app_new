@@ -1,9 +1,10 @@
 from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, QFrame, QApplication
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPropertyAnimation, QRect
-from PyQt5.QtGui import QFont, QPainter, QColor, QPen
+from PyQt5.QtGui import QFont, QPainter, QColor, QPen, QIcon
 import json
 from utils.file_helper import load_json
 from data_manager.notification_manager import NotificationManager
+import os
 
 class ToastNotification(QWidget):
     """Toast notification widget that appears temporarily at bottom-right"""
@@ -75,11 +76,12 @@ class ToastNotification(QWidget):
 
 class NotificationCenter(QWidget):
     """Notification center for viewing all notifications"""
+    notification_changed = pyqtSignal()
     
-    def __init__(self, user_manager, notification_manager, parent=None): # Thêm notification_manager
+    def __init__(self, user_manager, notification_manager, parent=None):
         super().__init__(parent)
         self.user_manager = user_manager
-        self.notification_manager = notification_manager # Lưu notification_manager
+        self.notification_manager = notification_manager
         self.init_ui()
         self.load_notifications()
         
@@ -128,6 +130,24 @@ class NotificationCenter(QWidget):
         action_layout = QHBoxLayout()
         action_layout.setAlignment(Qt.AlignRight)
         
+        self.refresh_btn = QPushButton("Làm mới")
+        self.refresh_btn.setFont(QFont('Segoe UI', 12))
+        self.refresh_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #f1f5f9;
+                color: #475569;
+                border: 1px solid #cbd5e1;
+                padding: 8px 16px;
+                border-radius: 6px;
+                font-weight: 500;
+                margin-right: 10px;
+            }
+            QPushButton:hover {
+                background-color: #e2e8f0;
+            }
+        """)
+        self.refresh_btn.clicked.connect(self.load_notifications)
+        
         mark_all_btn = QPushButton("Đánh dấu tất cả đã đọc")
         mark_all_btn.setFont(QFont('Segoe UI', 12))
         mark_all_btn.setStyleSheet("""
@@ -144,6 +164,8 @@ class NotificationCenter(QWidget):
             }
         """)
         mark_all_btn.clicked.connect(self.mark_all_read)
+        
+        action_layout.addWidget(self.refresh_btn)
         action_layout.addWidget(mark_all_btn)
         
         content_layout.addLayout(action_layout)
@@ -172,24 +194,63 @@ class NotificationCenter(QWidget):
     def load_notifications(self):
         # Clear existing notifications
         for i in reversed(range(self.content_layout.count())):
-            self.content_layout.itemAt(i).widget().setParent(None)
+            widget = self.content_layout.itemAt(i).widget()
+            if widget:
+                widget.setParent(None)
             
         try:
-            user_id = getattr(self.user_manager, 'current_user', {}).get('id')
-            notifications = self.notification_manager.get_user_notifications(user_id)
+            # Lấy user_id từ get_current_user thay vì từ thuộc tính
+            current_user = self.user_manager.get_current_user()
+            user_id = current_user.get('id') or current_user.get('user_id') if current_user else None
             
-            if not notifications:
-                no_notif_label = QLabel("Không có thông báo nào")
-                no_notif_label.setAlignment(Qt.AlignCenter)
-                no_notif_label.setFont(QFont('Segoe UI', 14))
-                no_notif_label.setStyleSheet("""
+            if not user_id:
+                no_user_label = QLabel("Không có người dùng đăng nhập. Vui lòng đăng nhập lại.")
+                no_user_label.setAlignment(Qt.AlignCenter)
+                no_user_label.setFont(QFont('Segoe UI', 14))
+                no_user_label.setStyleSheet("""
                     QLabel {
-                        color: #94a3b8;
+                        color: #ef4444;
                         font-style: italic;
                         padding: 40px;
                     }
                 """)
-                self.content_layout.addWidget(no_notif_label)
+                self.content_layout.addWidget(no_user_label)
+                return
+            
+            # Lấy cả thông báo chung (không có user_id) và thông báo riêng của user
+            all_notifications = self.notification_manager.get_all_notifications()
+            notifications = []
+            
+            for notif in all_notifications:
+                # Thêm thông báo nếu là thông báo chung hoặc dành cho user hiện tại
+                if notif.get('user_id') == user_id or not notif.get('user_id'):
+                    notifications.append(notif)
+            
+            if not notifications:
+                no_notif_frame = QFrame()
+                no_notif_frame.setStyleSheet("""
+                    QFrame {
+                        background-color: #f8fafc;
+                        border-radius: 8px;
+                        padding: 30px;
+                    }
+                """)
+                no_notif_layout = QVBoxLayout(no_notif_frame)
+                
+                no_notif_label = QLabel("Không có thông báo mới")
+                no_notif_label.setAlignment(Qt.AlignCenter)
+                no_notif_label.setFont(QFont('Segoe UI', 16, QFont.Bold))
+                no_notif_label.setStyleSheet("color: #64748b;")
+                
+                no_notif_desc = QLabel("Khi có thông báo mới, bạn sẽ thấy chúng ở đây.")
+                no_notif_desc.setAlignment(Qt.AlignCenter)
+                no_notif_desc.setFont(QFont('Segoe UI', 12))
+                no_notif_desc.setStyleSheet("color: #94a3b8; margin-top: 10px;")
+                
+                no_notif_layout.addWidget(no_notif_label)
+                no_notif_layout.addWidget(no_notif_desc)
+                
+                self.content_layout.addWidget(no_notif_frame)
                 return
                 
             # Sort by date (newest first)
@@ -208,6 +269,7 @@ class NotificationCenter(QWidget):
     def create_notification_widget(self, notification):
         widget = QFrame()
         is_read = notification.get('is_read', False)
+        notif_id = notification.get('id')
         
         widget.setStyleSheet(f"""
             QFrame {{
@@ -220,23 +282,61 @@ class NotificationCenter(QWidget):
             QLabel {{
                 border: none;
             }}
+            QPushButton {{
+                background-color: transparent;
+                border: none;
+                padding: 5px;
+                border-radius: 4px;
+            }}
+            QPushButton:hover {{
+                background-color: #f1f5f9;
+            }}
         """)
         
-        layout = QVBoxLayout(widget)
-        layout.setContentsMargins(10, 10, 10, 10)
+        # Main layout
+        main_layout = QVBoxLayout(widget)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(8)
+        
+        # Header layout with title and read button
+        header_layout = QHBoxLayout()
         
         # Title
         title = QLabel(notification.get('title', 'Thông báo'))
         title.setFont(QFont("Segoe UI", 14, QFont.Bold if not is_read else QFont.Medium))
         title.setStyleSheet(f"color: {'#64748b' if is_read else '#1e293b'};")
-        layout.addWidget(title)
+        header_layout.addWidget(title)
+        
+        header_layout.addStretch()
+        
+        # Mark as read button
+        if not is_read and notif_id:
+            mark_read_btn = QPushButton("Đã đọc")
+            mark_read_btn.setFont(QFont("Segoe UI", 10))
+            mark_read_btn.setCursor(Qt.PointingHandCursor)
+            mark_read_btn.setStyleSheet("""
+                QPushButton {
+                    color: #3b82f6;
+                    background-color: #dbeafe;
+                    padding: 4px 10px;
+                    border-radius: 4px;
+                }
+                QPushButton:hover {
+                    background-color: #bfdbfe;
+                }
+            """)
+            mark_read_btn.clicked.connect(lambda: self.mark_as_read(notif_id))
+            header_layout.addWidget(mark_read_btn)
+        
+        main_layout.addLayout(header_layout)
         
         # Content
-        content = QLabel(notification.get('content', ''))
+        content = QLabel(notification.get('content', notification.get('message', '')))
         content.setWordWrap(True)
         content.setFont(QFont("Segoe UI", 12))
         content.setStyleSheet(f"color: {'#94a3b8' if is_read else '#475569'}; margin-top: 5px;")
-        layout.addWidget(content)
+        content.setMinimumHeight(content.sizeHint().height())
+        main_layout.addWidget(content)
         
         # Date and type
         info_layout = QHBoxLayout()
@@ -248,23 +348,27 @@ class NotificationCenter(QWidget):
         
         info_layout.addStretch()
         
+        # Type label with better visual styling
         type_label = QLabel(notification.get('type', 'Thông báo'))
         type_colors = {
-            'Tin tức': '#3b82f6',
-            'Cảnh báo': '#f97316', 
-            'Bảo trì': '#8b5cf6'
+            'Tin tức': ('#dbeafe', '#3b82f6'),  # (bg, text)
+            'Cảnh báo': ('#fef3c7', '#d97706'), 
+            'Bảo trì': ('#f3e8ff', '#8b5cf6')
         }
-        type_color = type_colors.get(notification.get('type'), '#64748b')
+        
+        notif_type = notification.get('type', 'Thông báo')
+        bg_color, text_color = type_colors.get(notif_type, ('#f1f5f9', '#64748b'))
+        
         type_label.setFont(QFont("Segoe UI", 10, QFont.Medium))
         type_label.setStyleSheet(f"""
-            background-color: {type_color};
-            color: white;
+            background-color: {bg_color};
+            color: {text_color};
             padding: 3px 10px;
             border-radius: 12px;
         """)
         info_layout.addWidget(type_label)
         
-        layout.addLayout(info_layout)
+        main_layout.addLayout(info_layout)
         
         return widget
         
@@ -278,12 +382,34 @@ class NotificationCenter(QWidget):
         except:
             return date_str
             
-    def mark_all_read(self):
+    def mark_as_read(self, notification_id):
+        """Mark a single notification as read"""
         try:
-            user_id = getattr(self.user_manager, 'current_user', {}).get('id')
-            self.notification_manager.mark_all_as_read(user_id)
-            self.load_notifications()
-            show_toast(self, "Đã đánh dấu tất cả thông báo là đã đọc", "success")
+            if self.notification_manager.update_notification(notification_id, is_read=True):
+                show_toast(self, "Đã đánh dấu thông báo là đã đọc", "success")
+                self.load_notifications()
+                self.notification_changed.emit()
+            else:
+                show_toast(self, "Không thể đánh dấu thông báo", "error")
+        except Exception as e:
+            show_toast(self, f"Lỗi: {str(e)}", "error")
+            
+    def mark_all_read(self):
+        """Mark all notifications as read"""
+        try:
+            current_user = self.user_manager.get_current_user()
+            user_id = current_user.get('id') or current_user.get('user_id') if current_user else None
+            
+            if not user_id:
+                show_toast(self, "Không thể xác định người dùng hiện tại", "error")
+                return
+                
+            if self.notification_manager.mark_all_as_read(user_id):
+                show_toast(self, "Đã đánh dấu tất cả thông báo là đã đọc", "success")
+                self.load_notifications()
+                self.notification_changed.emit()
+            else:
+                show_toast(self, "Không có thông báo nào cần đánh dấu", "info")
         except Exception as e:
             show_toast(self, f"Lỗi: {str(e)}", "error")
 

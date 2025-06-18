@@ -49,7 +49,7 @@ class AdminDashboard(BaseDashboard):
             self.overview_tab = AdminOverviewTab(self.user_manager, self.transaction_manager)
             self.user_tab = AdminUserTab(self.user_manager, self.audit_log_manager)
             self.category_tab = AdminCategoryTab(self.category_manager)
-            self.notify_tab = AdminNotifyTab(self.notification_manager)
+            self.notify_tab = AdminNotifyTab(self.notification_manager, self.user_manager)
             self.audit_tab = AdminAuditTab(self.audit_log_manager)
             self.profile_tab = AdminProfileTab()
             if self.content_stack is not None:

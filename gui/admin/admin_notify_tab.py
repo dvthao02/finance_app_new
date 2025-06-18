@@ -2,9 +2,10 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTextE
 from utils.ui_styles import TableStyleHelper, ButtonStyleHelper, UIStyles
 
 class AdminNotifyTab(QWidget):
-    def __init__(self, notification_manager, parent=None):
+    def __init__(self, notification_manager, user_manager=None, parent=None):
         super().__init__(parent)
         self.notification_manager = notification_manager
+        self.user_manager = user_manager
         self.init_ui()
         self.load_notifications_table()
 
@@ -45,18 +46,30 @@ class AdminNotifyTab(QWidget):
         btn_layout.addWidget(self.btn_delete_notify)
         layout.addLayout(btn_layout)
         
-        # Kết nối các nút với các hàm
-        self.btn_view_notify.clicked.connect(self.view_notification_detail)
+        # Kết nối các nút với các hàm        self.btn_view_notify.clicked.connect(self.view_notification_detail)
         self.btn_mark_read.clicked.connect(self.mark_notification_read)
         self.btn_delete_notify.clicked.connect(self.delete_notification)
         self.notify_title.returnPressed.connect(self.send_notification)
-
-    def load_notifications_table(self, current_user_id=None):
+        
+    def load_notifications_table(self):
+        # Lấy user hiện tại
+        current_user = None
+        if self.user_manager:
+            current_user = self.user_manager.get_current_user()
+            current_user_id = current_user.get('id') or current_user.get('user_id') if current_user else None
+        else:
+            current_user_id = None
+            
         notifications = self.notification_manager.get_all_notifications()
         filtered = []
+        
         for n in notifications:
+            # Hiển thị thông báo nếu:
+            # 1. Thông báo không có user_id (thông báo chung cho mọi người)
+            # 2. Thông báo có user_id và user_id đó khớp với user hiện tại
             if not n.get('user_id') or (current_user_id and n.get('user_id') == current_user_id):
                 filtered.append(n)
+                
         self.notify_table.setRowCount(0)
         for n in filtered:
             row = self.notify_table.rowCount()
@@ -88,13 +101,13 @@ class AdminNotifyTab(QWidget):
             return dt.strftime("%d-%m-%Y %H:%M:%S")
         except Exception:
             return dt_str
-
+            
     def clear_form(self):
         """Clear all input fields"""
         self.notify_title.clear()
         self.notify_content.clear()
         self.notify_type.setCurrentIndex(0)
-
+        
     def send_notification(self):
         title = self.notify_title.text().strip()
         content = self.notify_content.toPlainText().strip()
@@ -104,7 +117,16 @@ class AdminNotifyTab(QWidget):
             return
         
         try:
-            self.notification_manager.add_notification(title, content, notify_type)
+            # Lấy user_id từ user hiện tại nếu có
+            current_user = None
+            if self.user_manager:
+                current_user = self.user_manager.get_current_user()
+                user_id = current_user.get('id') or current_user.get('user_id') if current_user else None
+            else:
+                user_id = None
+                
+            # Gửi thông báo với user_id
+            self.notification_manager.add_notification(title, content, notify_type, user_id=user_id)
             QMessageBox.information(self, 'Thành công', 'Đã gửi thông báo!')
             self.load_notifications_table()
             self.clear_form()  # Clear form after successful addition

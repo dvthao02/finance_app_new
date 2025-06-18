@@ -2188,5 +2188,80 @@
     "user_id": null,
     "action": "logout",
     "timestamp": "2025-06-18T20:53:12.776076"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T21:05:59.268761"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T21:11:59.294926"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T21:27:34.921680"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T21:44:00.330539"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T22:02:58.344714"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-18T22:05:06.828505"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T22:12:30.321619"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T22:14:29.868984"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T22:20:31.432845"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-18T23:15:17.831863"
+  },
+  {
+    "user_id": "user_005",
+    "action": "Cấp lại mật khẩu mới (admin): 12345aA@",
+    "timestamp": "2025-06-18T23:17:26.464425"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-18T23:38:57.211715"
+  },
+  {
+    "user_id": "User account user_005 locked",
+    "action": "Reason: like",
+    "timestamp": "2025-06-18T23:39:03.565337"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-18T23:39:13.616200"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T23:43:06.098516"
   }
 ]
