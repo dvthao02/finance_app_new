@@ -2,10 +2,10 @@ import sys
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QPushButton, QTableWidget, 
     QTableWidgetItem, QGroupBox, QDateEdit, QSizePolicy, QSpacerItem, QToolTip, QMessageBox,
-    QHeaderView, QScrollArea # Added QScrollArea
+    QHeaderView, QScrollArea, QProgressBar # Added QProgressBar
 )
 from PyQt5.QtCore import Qt, QDate, QMargins, QPointF, QLineF
-from PyQt5.QtGui import QFont, QPainter, QColor
+from PyQt5.QtGui import QFont, QPainter, QColor, QCursor, QPalette # Added QPalette, Added QCursor
 from PyQt5.QtChart import QChart, QChartView, QBarSeries, QBarSet, QPieSeries, QPieSlice, QBarCategoryAxis, QValueAxis, QLegend
 import datetime
 import logging
@@ -19,6 +19,22 @@ from utils.quick_actions import add_quick_actions_to_widget
 from utils.ui_styles import TableStyleHelper, ChartStyleHelper
 
 OTHER_CATEGORY_THRESHOLD_PERCENT = 3.0 # Categories below this % go into "Khác"
+
+class HoverableBudgetListItemWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAutoFillBackground(True)
+        self.original_palette = self.palette()
+        self.hover_palette = QPalette(self.original_palette) # QPalette is now defined
+        self.hover_palette.setColor(QPalette.Window, QColor("#e9ecef")) # Light gray for hover
+
+    def enterEvent(self, event):
+        self.setPalette(self.hover_palette)
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.setPalette(self.original_palette)
+        super().leaveEvent(event)
 
 class UserOverviewTab(QWidget):
     def __init__(self, user_manager, transaction_manager, category_manager, wallet_manager=None, budget_manager=None, notification_manager=None, parent=None):
@@ -153,23 +169,22 @@ class UserOverviewTab(QWidget):
         main_layout.addLayout(info_layout)
         
         # Charts for budgets and spending by category
-        self.charts_group = QGroupBox("Biểu đồ thống kê")
+        self.charts_group = QGroupBox("Biểu đồ và Ngân sách tháng này") # Adjusted title
         charts_group_layout = QVBoxLayout() 
         chart_layout_h = QHBoxLayout() 
 
-        # Tạo biểu đồ cột cho ngân sách
-        self.budget_chart = QChart()
-        self.budget_chart.setTitle("Ngân sách và chi tiêu")
-        self.budget_chart.legend().setVisible(True)
-        self.budget_chart.legend().setAlignment(Qt.AlignBottom)
+        # New Budget Overview List Section - Initialized here but added to chart_layout_h
+        self.budget_overview_list_group = QGroupBox("Ngân sách tháng này")
+        self.budget_overview_list_group.setStyleSheet("QGroupBox { font-weight: bold; }")
+        self.budget_overview_list_layout = QVBoxLayout()
+        self.budget_overview_list_group.setLayout(self.budget_overview_list_layout)
+        self.budget_overview_list_group.setMinimumHeight(300) # Give it some initial height
+        self.budget_overview_list_group.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+
+        # Add Budget Overview List to the left side of the horizontal chart layout
+        chart_layout_h.addWidget(self.budget_overview_list_group, 1) # Assign stretch factor 1
         
-        self.budget_chart_view = QChartView(self.budget_chart)
-        self.budget_chart_view.setRenderHint(QPainter.Antialiasing)
-        self.budget_chart_view.setMinimumHeight(300) # Keep reasonable height
-        self.budget_chart_view.setMouseTracking(True)
-        chart_layout_h.addWidget(self.budget_chart_view)
-        
-        # Tạo biểu đồ tròn cho chi tiêu
+        # Tạo biểu đồ tròn cho chi tiêu (remains on the right)
         self.spending_chart = QChart()
         self.spending_chart.setTitle("Chi tiêu theo danh mục")
         self.spending_chart.legend().setVisible(True)
@@ -185,11 +200,15 @@ class UserOverviewTab(QWidget):
         self.spending_chart_view.setRenderHint(QPainter.Antialiasing)
         self.spending_chart_view.setMinimumHeight(350) 
         self.spending_chart_view.setMouseTracking(True)
-        chart_layout_h.addWidget(self.spending_chart_view)
+        chart_layout_h.addWidget(self.spending_chart_view, 1) # Assign stretch factor 1
 
         charts_group_layout.addLayout(chart_layout_h) 
         self.charts_group.setLayout(charts_group_layout)
-        main_layout.addWidget(self.charts_group) 
+        main_layout.addWidget(self.charts_group)
+
+        # Remove the old placement of budget_overview_list_group from main_layout if it was there
+        # (It was added directly to main_layout in previous versions, ensure it's not added twice)
+        # The new placement is inside chart_layout_h
 
         # Recent transactions table - moved to the bottom
         self.recent_transactions_group = QGroupBox("Giao dịch gần đây (15 mục mới nhất)")
@@ -265,15 +284,17 @@ class UserOverviewTab(QWidget):
             self.saving_card.update_subtitle(f"Trong {subtitle_period}")
 
             if not self.user_id or not self.transaction_manager or not self.category_manager:
-                logging.warning("User ID, TransactionManager, or CategoryManager not available.")
+                logging.warning("UserOverviewTab: User ID, TransactionManager, or CategoryManager not available for dashboard update.")
                 self.balance_card.set_value(0); self.expense_card.set_value(0); self.saving_card.set_value(0)
                 self.tx_table.setRowCount(0)
-                if hasattr(self, 'budget_chart'): self.budget_chart.removeAllSeries()
                 if hasattr(self, 'spending_series'): self.spending_series.clear()
                 return
             
+            logging.debug(f"UserOverviewTab: Starting dashboard update for user {self.user_id}. Filter: {current_filter_text}")
             start_date, end_date = self.get_filter_dates()
+            logging.debug(f"UserOverviewTab: Date range for transactions: Start={start_date}, End={end_date}")
             transactions = self.transaction_manager.get_transactions_in_range(start_date, end_date, self.user_id)
+            logging.debug(f"UserOverviewTab: Found {len(transactions)} transactions in range.")
             
             total_income = sum(t["amount"] for t in transactions if t["type"] == "income")
             total_expense = sum(t["amount"] for t in transactions if t["type"] == "expense")
@@ -305,72 +326,65 @@ class UserOverviewTab(QWidget):
                 self.tx_table.setItem(row, 3, QTableWidgetItem(t.get("note", "")))
             self.tx_table.resizeColumnsToContents()
 
-            if self.budget_manager:
-                self.budget_chart.removeAllSeries()
-                for axis in self.budget_chart.axes(): self.budget_chart.removeAxis(axis)
-                
-                category_totals_for_budget = {}
-                for t in transactions:
-                    if t.get("type") == "expense" and t.get("category_id"):
-                        category_totals_for_budget[t["category_id"]] = category_totals_for_budget.get(t["category_id"], 0) + t["amount"]
-
-                budgets = self.budget_manager.get_budgets_by_user(self.user_id)
-                budget_series = QBarSeries()
-                categories_for_chart, budget_values, spent_values = [], [], []
-                
-                for budget in budgets:
-                    if budget.get("amount", 0) > 0:
-                        category_id = budget["category_id"]
-                        category_name = self.category_manager.get_category_name(category_id) or "Không xác định"
-                        total_budget = budget["amount"]
-                        total_spent = category_totals_for_budget.get(category_id, 0)
-                        
-                        categories_for_chart.append(category_name)
-                        budget_values.append(total_budget)
-                        spent_values.append(total_spent)
-                        
-                        if total_spent > total_budget and self.notification_manager:
-                            self.notification_manager.add_notification(
-                                title="Cảnh báo ngân sách",
-                                content=f"Danh mục '{category_name}' đã vượt ngân sách!\\nNgân sách: {total_budget:,} đ\\nĐã chi tiêu: {total_spent:,} đ",
-                                notify_type="budget", user_id=self.user_id
-                            )
-                
-                if categories_for_chart:
-                    budget_set = QBarSet("Ngân sách")
-                    spent_set = QBarSet("Đã chi tiêu")
-                    budget_set.append(budget_values)
-                    spent_set.append(spent_values)
-                    
-                    budget_set.setColor(QColor("#10b981"))
-                    spent_set.setColor(QColor("#ef4444"))
-                    
-                    budget_series.append(budget_set)
-                    budget_series.append(spent_set)
-                    budget_series.setLabelsVisible(False)
-                    budget_series.setLabelsPosition(QBarSeries.LabelsInsideEnd)
-                    budget_series.setLabelsFormat("%.0f đ")  # Corrected format for bar labels
-
-                    budget_series.hovered.connect(self.on_bar_hovered)
-                    self.budget_chart.addSeries(budget_series)
-                
-                    axisX = QBarCategoryAxis(); axisX.append(categories_for_chart); axisX.setTitleText("Danh mục")
-                    self.budget_chart.setAxisX(axisX, budget_series)
-                    
-                    axisY = QValueAxis(); axisY.setTitleText("Số tiền (đ)")
-                    max_val = 0
-                    if budget_values or spent_values:
-                         max_val = max(max(budget_values if budget_values else [0]), max(spent_values if spent_values else [0]))
-                    axisY.setRange(0, max_val * 1.1 if max_val > 0 else 100)
-                    axisY.setLabelFormat("%{value:,.0f}")
-                    self.budget_chart.setAxisY(axisY, budget_series)
-                    
-                    font = QFont("Arial", 10)
-                    self.budget_chart.setFont(font); self.budget_chart.legend().setFont(font)
-                    if self.budget_chart.axisX(): self.budget_chart.axisX().setLabelsFont(font)
-                    if self.budget_chart.axisY(): self.budget_chart.axisY().setLabelsFont(font)
-                else:
-                    self.budget_chart.setTitle("Ngân sách và chi tiêu (Không có dữ liệu)")
+            # --- REMOVE OLD BUDGET BAR CHART LOGIC ---
+            # if self.budget_manager:
+            #     # self.budget_chart.removeAllSeries() # This was the source of the error
+            #     # for axis in self.budget_chart.axes(): self.budget_chart.removeAxis(axis)
+            #     
+            #     logging.info(f"UserOverviewTab: Updating budget chart for user {self.user_id}. Filter: {self.filter_combo.currentText()}")
+            #     all_user_budgets = self.budget_manager.get_budgets_by_user(self.user_id)
+            #     logging.info(f"UserOverviewTab: Raw budgets from budget_manager for user {self.user_id} ({len(all_user_budgets)} items): {all_user_budgets}")
+            #
+            #     budgets_for_period = []
+            #     current_display_month = None
+            #     current_display_year = None
+            #
+            #     if current_filter_text == "Tháng này":
+            #         today = datetime.date.today()
+            #         current_display_month = today.month
+            #         current_display_year = today.year
+            #         logging.debug(f"UserOverviewTab: Filter is 'Tháng này'. Target year={current_display_year}, month={current_display_month} for budgets.")
+            #     else:
+            #         logging.debug(f"UserOverviewTab: Filter is '{current_filter_text}'. Budget chart will show all user budgets with limit > 0.")
+            #
+            #     for budget_item in all_user_budgets:
+            #         budget_cat_id = budget_item.get('category_id')
+            #         budget_limit = budget_item.get('limit', 0)
+            #         try:
+            #             b_month = int(budget_item.get('month'))
+            #             b_year = int(budget_item.get('year'))
+            #         except (ValueError, TypeError):
+            #             logging.warning(f"UserOverviewTab: Budget item has invalid month/year: {budget_item}. Skipping.")
+            #             continue
+            #
+            #         logging.debug(f"UserOverviewTab: Checking budget: ID={budget_item.get('id')}, CatID='{budget_cat_id}', M={b_month}(type:{type(b_month)}), Y={b_year}(type:{type(b_year)}), Limit={budget_limit}, current_amount={budget_item.get('current_amount')}")
+            #
+            #         if budget_limit > 0:
+            #             if current_display_year and current_display_month: 
+            #                 if b_year == current_display_year and b_month == current_display_month:
+            #                     budgets_for_period.append(budget_item)
+            #             else: 
+            #                 budgets_for_period.append(budget_item)
+            #     
+            #     logging.info(f"UserOverviewTab: Filtered budgets_for_period before charting ({len(budgets_for_period)} items): {budgets_for_period}")
+            #     
+            #     # Clear previous chart data for tooltips - These attributes are removed
+            #     # self.chart_category_names = []
+            #     # self.chart_budget_values = []
+            #     # self.chart_spent_values = []
+            #
+            #     # ... (Logic for populating self.chart_category_names etc. and updating self.budget_chart) ...
+            #     # This entire block for self.budget_chart is now removed.
+            #
+            #     # if self.chart_category_names: 
+            #     #    ... (add series to self.budget_chart) ...
+            #     # else:
+            #     #    # Determine the correct "no data" message 
+            #     #    if not budgets_for_period: 
+            #     #        self.budget_chart.setTitle("Ngân sách và chi tiêu (Không có dữ liệu ngân sách cho kỳ này)")
+            #     #    else: 
+            #     #        self.budget_chart.setTitle("Ngân sách và chi tiêu (Không có dữ liệu hợp lệ để vẽ biểu đồ)")
+            # --- END REMOVE OLD BUDGET BAR CHART LOGIC ---
             
             # Update Spending Pie Chart
             self.spending_series.clear()
@@ -410,7 +424,6 @@ class UserOverviewTab(QWidget):
                     
                     slice = self.spending_series.append(category_name, total_value) # category_name for legend
                     # slice.setLabel(f\"{percentage:.1f}%\") # DEFER setting final label text
-                    
                     slice.setLabelVisible(True) # Initial visibility
 
                     slice.setProperty("category_name_prop", category_name) 
@@ -441,94 +454,229 @@ class UserOverviewTab(QWidget):
 
             # Explicitly set legend labels to category names
             if self.spending_chart.legend().isVisible() and self.spending_series.count() > 0:
+                # Update legend items based on current slices
                 legend_markers = self.spending_chart.legend().markers(self.spending_series)
-                pie_slices = self.spending_series.slices()
-
-                if len(legend_markers) == len(pie_slices):
-                    for i in range(len(legend_markers)):
-                        marker = legend_markers[i]
-                        current_slice = pie_slices[i]
-                        
-                        category_name_for_legend = current_slice.property("category_name_prop")
-                        if category_name_for_legend is not None:
-                            marker.setLabel(str(category_name_for_legend))
-                        else:
-                            logging.warning(f"Missing 'category_name_prop' for slice: {current_slice.label()} in pie chart legend.")
-                else:
-                    logging.warning(
-                        f"Pie chart legend update: Mismatch between number of slices ({len(pie_slices)}) "
-                        f"and legend markers ({len(legend_markers)}). Legend labels might not be updated correctly."
-                    )
+                for i, s_slice in enumerate(self.spending_series.slices()):
+                    if i < len(legend_markers):
+                        cat_name = s_slice.property("category_name_prop")
+                        if cat_name:
+                             legend_markers[i].setLabel(cat_name)
             
-        except Exception as e:
-            logging.error(f"Lỗi khi cập nhật dashboard: {str(e)}")
-            import traceback; traceback.print_exc()
-            QMessageBox.critical(self, "Lỗi", f"Không thể cập nhật dashboard: {str(e)}")
+            # ---- Update Budget Overview List ----
+            # Clear previous budget list items
+            while self.budget_overview_list_layout.count():
+                child = self.budget_overview_list_layout.takeAt(0)
+                if child.widget():
+                    child.widget().deleteLater()
 
-    def on_bar_hovered(self, status, index, barset):
-        try:
-            if not barset: QToolTip.hideText(); return
-
-            if status:
-                axis_x = self.budget_chart.axisX()
-                if not axis_x or not hasattr(axis_x, 'categories') or not axis_x.categories():
-                    QToolTip.hideText(); return
+            if self.budget_manager and self.user_id and self.category_manager:
+                today = datetime.date.today()
+                current_month_budgets = self.budget_manager.get_budgets_by_month(today.year, today.month, self.user_id)
                 
-                categories_list = axis_x.categories()
-                if index >= len(categories_list) or index >= barset.count():
-                    QToolTip.hideText(); return
+                logging.debug(f"UserOverviewTab: Found {len(current_month_budgets)} budgets for current month ({today.month}/{today.year}) for overview list.")
                 
-                category_name = categories_list[index]
-                current_bar_value = barset.at(index)
-                other_bar_set_label = "Đã chi tiêu" if barset.label() == "Ngân sách" else "Ngân sách"
-                other_bar_value = 0
-
-                for series_item in self.budget_chart.series():
-                    if isinstance(series_item, QBarSeries):
-                        for bs in series_item.barSets():
-                            if bs.label() == other_bar_set_label and index < bs.count():
-                                other_bar_value = bs.at(index); break
-                        if other_bar_value != 0 or (barset.label() == "Đã chi tiêu" and other_bar_set_label == "Ngân sách"): 
-                            break 
-                
-                tip = f"<b>{category_name}</b><br/>"
-                if barset.label() == "Ngân sách":
-                    tip += f"Ngân sách: {current_bar_value:,.0f} đ<br/>Đã chi tiêu: {other_bar_value:,.0f} đ"
+                if not current_month_budgets:
+                    no_budget_label = QLabel("Không có ngân sách nào được thiết lập cho tháng này.")
+                    no_budget_label.setAlignment(Qt.AlignCenter)
+                    no_budget_label.setStyleSheet("padding: 10px; color: grey;")
+                    self.budget_overview_list_layout.addWidget(no_budget_label)
                 else:
-                    tip += f"Ngân sách: {other_bar_value:,.0f} đ<br/>Đã chi tiêu: {current_bar_value:,.0f} đ"
-                
-                QToolTip.showText(self.cursor().pos(), tip, self.budget_chart_view)
+                    for budget in current_month_budgets:
+                        category_id = budget.get('category_id')
+                        category_name = "N/A"
+                        if category_id:
+                            cat_obj = self.category_manager.get_category_by_id(category_id)
+                            if cat_obj:
+                                category_name = cat_obj.get('name', 'N/A')
+                        
+                        limit = budget.get('limit', 0)
+                        # current_amount now represents the REMAINING balance
+                        remaining = budget.get('current_amount', 0)  # remaining balance
+                        spent = limit - remaining  # spent = limit - remaining
+                        
+                        # Ensure spent is not negative (in case of data inconsistency)
+                        spent = max(0, spent)
+                        
+                        percentage = 0
+                        if limit > 0:
+                            percentage = int((spent / limit) * 100)
+                        percentage = min(max(percentage, 0), 100) # Clamp
+
+                        item_widget = HoverableBudgetListItemWidget() # MODIFIED HERE
+                        item_layout = QHBoxLayout(item_widget)
+                        item_layout.setContentsMargins(8, 5, 8, 5) # Adjusted margins for a bit more padding
+
+                        name_label = QLabel(f"{category_name}")
+                        name_label.setMinimumWidth(100) 
+                        name_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+                        name_label.setStyleSheet("background-color: transparent;") # Ensure label bg is transparent
+
+                        progress_bar = QProgressBar()
+                        progress_bar.setValue(percentage)
+                        progress_bar.setFormat(f"{percentage}%")
+                        progress_bar.setFixedHeight(18) # Slightly smaller height
+                        progress_bar.setStyleSheet("background-color: transparent;") # Ensure progressbar bg is transparent within item_widget
+
+                        progress_bar_style_sheet = (
+                            "QProgressBar {"
+                            "    border: 1px solid #cccccc;"
+                            "    border-radius: 5px;"
+                            "    text-align: center;"
+                            "    height: 18px;"
+                            "    background-color: #f0f0f0;"
+                            "    /* Lighter background for the bar track */"
+                            "}"
+                            "QProgressBar::chunk {"
+                            "    background-color: %s;"
+                            "    border-radius: 4px;"
+                            "}"
+                        )
+                        chunk_color = "#10b981" # Default Green
+                        if percentage >= 90:
+                            chunk_color = "#ef4444" # Red
+                        elif percentage >= 75:
+                            chunk_color = "#f97316" # Orange
+                        progress_bar.setStyleSheet(progress_bar_style_sheet % chunk_color)
+
+                        item_layout.addWidget(name_label)
+                        item_layout.addWidget(progress_bar, 1) 
+
+                        tooltip_text = (f"<b>{category_name}</b><br>"
+                                        f"Giới hạn: {limit:,.0f} đ<br>"
+                                        f"Đã chi: {spent:,.0f} đ<br>"
+                                        f"Còn lại: {remaining:,.0f} đ<br>"
+                                        f"Tiến độ: {percentage}%")
+                        item_widget.setToolTip(tooltip_text)
+                        
+                        self.budget_overview_list_layout.addWidget(item_widget)
+                    
+                    self.budget_overview_list_layout.addStretch(1) 
             else:
-                QToolTip.hideText()
+                if not self.budget_manager: logging.warning("UserOverviewTab: BudgetManager not available for budget overview list.")
+                if not self.user_id: logging.warning("UserOverviewTab: User ID not available for budget overview list.")
+                if not self.category_manager: logging.warning("UserOverviewTab: CategoryManager not available for budget overview list.")
+                
+                unavailable_label = QLabel("Không thể tải danh sách ngân sách.")
+                unavailable_label.setAlignment(Qt.AlignCenter)
+                unavailable_label.setStyleSheet("padding: 10px; color: grey;")
+                self.budget_overview_list_layout.addWidget(unavailable_label)
+            # ---- End of Budget Overview List Update ----
+
+            # Refresh chart views
+            self.spending_chart_view.repaint()
+
         except Exception as e:
-            logging.error(f"Lỗi trong on_bar_hovered: {e}")
-            import traceback; traceback.print_exc()
-            QToolTip.hideText()
+            logging.error(f"UserOverviewTab: Lỗi cập nhật dashboard: {e}", exc_info=True)
+            # Optionally, display a user-friendly error message in the UI
+            # error_dialog = QMessageBox(self)
+            # error_dialog.setIcon(QMessageBox.Warning)
+            # error_dialog.setText(f"Không thể tải dữ liệu tổng quan: {e}")
+            # error_dialog.setWindowTitle("Lỗi")
+            # error_dialog.exec_()
 
     def on_slice_hovered(self, slice, state):
-        try:
-            if state:
+        """Handle pie chart slice hover events"""
+        if state:  # Hovering over a slice
+            try:
                 category_name = slice.property("category_name_prop")
-                value = slice.property("category_value_prop")
-                percentage = slice.property("category_percentage_prop")
+                category_value = slice.property("category_value_prop")
+                category_percentage = slice.property("category_percentage_prop")
                 
-                if category_name is None or value is None or percentage is None: 
-                    QToolTip.hideText() 
-                    return
+                if category_name and category_value is not None:
+                    tooltip_text = (
+                        f"<b>{category_name}</b><br>"
+                        f"Số tiền: {category_value:,.0f} đ<br>"
+                        f"Tỷ lệ: {category_percentage:.1f}%"
+                    )
+                    QToolTip.showText(QCursor.pos(), tooltip_text)
+            except Exception as e:
+                logging.error(f"Error in on_slice_hovered: {e}")
 
-                tooltip_text = f"<b>{category_name}</b><br/>{value:,.0f} đ ({percentage:.1f}%)"
-                QToolTip.showText(self.cursor().pos(), tooltip_text, self.spending_chart_view)
-            else:
-                QToolTip.hideText()
-        except Exception as e:
-            logging.error(f"Lỗi trong on_slice_hovered: {e}")
-            QToolTip.hideText()
+    def handle_add_income(self):
+        """Handle add income quick action"""
+        # This should be connected to the main window's add income functionality
+        pass
 
-    def _parse_date(self, date_str):
-        try: return datetime.datetime.fromisoformat(date_str.replace('Z', '+00:00')).date()
-        except: return None
+    def handle_add_expense(self):
+        """Handle add expense quick action"""
+        # This should be connected to the main window's add expense functionality
+        pass
 
-    def handle_add_income(self): print("[QuickAction] Thêm thu nhập")
-    def handle_add_expense(self): print("[QuickAction] Thêm chi tiêu")
-    def handle_view_report(self): print("[QuickAction] Xem báo cáo")
-    def handle_view_budget(self): print("[QuickAction] Xem ngân sách")
+    def handle_view_report(self):
+        """Handle view report quick action"""
+        # This should be connected to the main window's view report functionality
+        pass
+
+    def handle_view_budget(self):
+        """Handle view budget quick action"""
+        # This should be connected to the main window's view budget functionality
+        pass
+
+    def update_budget_overview_list(self):
+        # Clear existing items
+        for i in reversed(range(self.budget_overview_list_layout.count())):
+            widget_item = self.budget_overview_list_layout.itemAt(i)
+            if widget_item:
+                widget = widget_item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+
+        if not self.budget_manager or not self.user_id:
+            no_data_label = QLabel("Không có dữ liệu ngân sách.")
+            self.budget_overview_list_layout.addWidget(no_data_label)
+            return
+
+        today = datetime.date.today()
+        current_month_budgets = self.budget_manager.get_budgets_by_month_year(self.user_id, today.month, today.year)
+        
+        if not current_month_budgets:
+            no_data_label = QLabel("Không có ngân sách nào cho tháng này.")
+            self.budget_overview_list_layout.addWidget(no_data_label)
+            return
+
+        for budget_item_data in current_month_budgets:
+            category_id = budget_item_data.get("category_id")
+            category_name = self.category_manager.get_category_name(category_id) if category_id else "Chưa phân loại"
+            limit = budget_item_data.get("limit", 0)
+            current_amount_spent = abs(budget_item_data.get("current_amount", 0)) # abs() to ensure positive
+            remaining = limit - current_amount_spent
+            progress_percentage = (current_amount_spent / limit * 100) if limit > 0 else 0
+            
+            item_widget = HoverableBudgetListItemWidget() # Use the hoverable widget
+            item_layout = QVBoxLayout(item_widget)
+            item_layout.setContentsMargins(8, 5, 8, 5) # Add some padding
+
+            name_label = QLabel(f"<b>{category_name}</b>")
+            item_layout.addWidget(name_label)
+
+            progress_bar = QProgressBar()
+            progress_bar.setValue(int(progress_percentage))
+            progress_bar.setTextVisible(False) # Hide default text
+            progress_bar.setFixedHeight(12) # Make it a bit slimmer
+            progress_bar.setStyleSheet(f"""
+                QProgressBar {{
+                    border: 1px solid #cccccc;
+                    border-radius: 5px;
+                    background-color: #f0f0f0; /* Lighter background for the bar track */
+                    text-align: center;
+                }}
+                QProgressBar::chunk {{
+                    background-color: {'#66bb6a' if progress_percentage <= 70 else ('#ffa726' if progress_percentage <= 100 else '#ef5350')};
+                    border-radius: 4px;
+                }}
+            """)
+            item_layout.addWidget(progress_bar)
+
+            details_label = QLabel(f"Đã chi: {current_amount_spent:,.0f}đ / {limit:,.0f}đ")
+            details_label.setStyleSheet("font-size: 9pt; color: #555;")
+            item_layout.addWidget(details_label)
+            
+            item_widget.setToolTip(
+                f"<b>{category_name}</b><br>"
+                f"Ngân sách: {limit:,.0f}đ<br>"
+                f"Đã chi: {current_amount_spent:,.0f}đ ({progress_percentage:.1f}%)<br>"
+                f"Còn lại: {remaining:,.0f}đ"
+            )
+            self.budget_overview_list_layout.addWidget(item_widget)
+
+        self.budget_overview_list_layout.addStretch(1) # Push items to the top

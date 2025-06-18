@@ -7,7 +7,7 @@ import datetime
 logger = logging.getLogger(__name__)
 
 class TransactionManager:
-    def __init__(self, file_path='transactions.json'):
+    def __init__(self, file_path='transactions.json', budget_manager=None):
         """Khởi tạo quản lý giao dịch
         
         Args:
@@ -19,6 +19,7 @@ class TransactionManager:
         self.file_path = os.path.join(data_dir, file_path)
         if not os.path.exists(self.file_path):
             save_json(self.file_path, [])
+        self.budget_manager = budget_manager # Thêm tham chiếu đến BudgetManager nếu truyền vào
 
     def get_all_transactions(self):
         """Lấy tất cả giao dịch
@@ -74,7 +75,92 @@ class TransactionManager:
         
         transactions.append(transaction)
         save_json(self.file_path, transactions)
+        # Sau khi thêm giao dịch chi tiêu, chỉ gọi apply_expense_to_budget (KHÔNG gọi add_or_update_budget)
+        if self.budget_manager and transaction.get('type') == 'expense':
+            user_id = transaction.get('user_id')
+            category_id = transaction.get('category_id')
+            date_str = transaction.get('date')
+            amount = transaction.get('amount', 0)
+            print(f"[DEBUG] add_transaction: user_id={user_id}, category_id={category_id}, date={date_str}, amount={amount}")
+            if user_id and category_id and date_str:
+                try:
+                    tx_date = datetime.datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                    year, month = tx_date.year, tx_date.month
+                    print(f"[DEBUG] Calling apply_expense_to_budget with: user_id={user_id}, category_id={category_id}, year={year}, month={month}, amount={amount}")
+                    self.budget_manager.apply_expense_to_budget(user_id, category_id, year, month, amount)
+                except Exception as e:
+                    print(f"[DEBUG] Error in apply_expense_to_budget: {e}")
         return transaction
+
+    def get_transaction_by_id(self, transaction_id):
+        """Lấy giao dịch theo ID của nó."""
+        transactions = self.get_all_transactions()
+        for t in transactions:
+            if t.get('transaction_id') == transaction_id:
+                return t
+        return None
+
+    def update_transaction(self, updated_transaction):
+        """Cập nhật một giao dịch hiện có."""
+        transactions = self.get_all_transactions()
+        for i, t in enumerate(transactions):
+            if t.get('transaction_id') == updated_transaction.get('transaction_id'):
+                # Preserve created_at if not in updated_transaction or make it explicit
+                if 'created_at' not in updated_transaction and 'created_at' in t:
+                    updated_transaction['created_at'] = t['created_at']
+                updated_transaction['updated_at'] = datetime.datetime.now().isoformat()
+                transactions[i] = updated_transaction
+                save_json(self.file_path, transactions)
+                # Sau khi cập nhật giao dịch chi tiêu, cập nhật ngân sách liên quan
+                if self.budget_manager and updated_transaction.get('type') == 'expense':
+                    user_id = updated_transaction.get('user_id')
+                    category_id = updated_transaction.get('category_id')
+                    date_str = updated_transaction.get('date')
+                    if user_id and category_id and date_str:
+                        try:
+                            tx_date = datetime.datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                            year, month = tx_date.year, tx_date.month
+                            self.budget_manager.add_or_update_budget({
+                                'user_id': user_id,
+                                'category_id': category_id,
+                                'month': month,
+                                'year': year
+                            })
+                        except Exception as e:
+                            logger.error(f"TransactionManager: Error updating budget after update_transaction: {e}")
+                return updated_transaction
+        # Handle case where transaction to update is not found (optional: raise error or return None)
+        logger.warning(f"Transaction with ID {updated_transaction.get('transaction_id')} not found for update.")
+        return None 
+
+    def delete_transaction(self, transaction_id):
+        """Xóa một giao dịch theo ID của nó."""
+        transactions = self.get_all_transactions()
+        original_length = len(transactions)
+        transactions = [t for t in transactions if t.get('transaction_id') != transaction_id]
+        if len(transactions) < original_length:
+            save_json(self.file_path, transactions)
+            # Sau khi xóa giao dịch chi tiêu, cập nhật ngân sách liên quan
+            deleted_tx = [t for t in transactions if t.get('transaction_id') == transaction_id]
+            if self.budget_manager and deleted_tx and deleted_tx[0].get('type') == 'expense':
+                user_id = deleted_tx[0].get('user_id')
+                category_id = deleted_tx[0].get('category_id')
+                date_str = deleted_tx[0].get('date')
+                if user_id and category_id and date_str:
+                    try:
+                        tx_date = datetime.datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                        year, month = tx_date.year, tx_date.month
+                        self.budget_manager.add_or_update_budget({
+                            'user_id': user_id,
+                            'category_id': category_id,
+                            'month': month,
+                            'year': year
+                        })
+                    except Exception as e:
+                        logger.error(f"TransactionManager: Error updating budget after delete_transaction: {e}")
+            return True
+        logger.warning(f"Transaction with ID {transaction_id} not found for deletion.")
+        return False
 
     def get_transactions_by_month(self, year, month):
         """Lấy giao dịch theo tháng
@@ -211,3 +297,57 @@ class TransactionManager:
 
         logger.debug(f"-> {len(filtered_transactions)} giao dịch trong khoảng {start_datetime} - {end_datetime} cho user_id={user_id}")
         return filtered_transactions
+    
+    def get_total_expenses(self, user_id, category_id, year, month):
+        """
+        Tính toán tổng số tiền chi tiêu cho một người dùng, theo danh mục, năm và tháng nhất định.
+        
+        Args:
+            user_id: ID của người dùng
+            category_id: ID của danh mục chi tiêu
+            year: Năm cần tính toán
+            month: Tháng cần tính toán
+            
+        Returns:
+            float: Tổng số tiền chi tiêu
+        """
+        user_transactions = self.get_transactions_by_user(user_id)
+        total_spent = 0
+        for t in user_transactions:
+            if t.get('type') == 'expense' and \
+               t.get('category_id') == category_id:
+                try:
+                    # Đảm bảo ngày hợp lệ và được phân tích đúng cách
+                    date_str = t.get('date', '')
+                    if not date_str: # Bỏ qua nếu thiếu ngày
+                        continue
+                    
+                    # Xử lý 'Z' ở cuối chuỗi ngày để chỉ định timezone UTC nếu có
+                    if date_str.endswith('Z'):
+                        tx_date = datetime.datetime.fromisoformat(date_str[:-1] + '+00:00')
+                    else:
+                        # Cố gắng phân tích trực tiếp, hoặc thêm timezone nếu nó là naive
+                        # Phần này có thể cần điều chỉnh dựa trên định dạng ngày tháng chính xác được lưu trữ
+                        try:
+                            tx_date = datetime.datetime.fromisoformat(date_str)
+                        except ValueError: # Nếu là naive và fromisoformat thất bại
+                            # Giả định rằng đây là giờ địa phương nếu không có timezone, hoặc có thể mặc định là UTC
+                            # Để đơn giản, hãy giả định rằng nó có thể phân tích được hoặc đã có timezone
+                            logger.warning(f"Transaction {t.get('transaction_id')} has date '{date_str}' that might be naive or unparseable without further context.")
+                            # Cố gắng một định dạng phổ biến nếu fromisoformat thất bại
+                            try:
+                                tx_date = datetime.datetime.strptime(date_str.split('T')[0], "%Y-%m-%d")
+                            except: # Nếu tất cả đều thất bại, bỏ qua giao dịch này để tính toán tổng
+                                logger.error(f"Could not parse date for transaction {t.get('transaction_id')}: {date_str}")
+                                continue
+                                
+                    if tx_date.year == year and tx_date.month == month:
+                        total_spent += t.get('amount', 0)
+                except ValueError as e:
+                    logger.error(f"Invalid date format ('{t.get('date')}') for transaction {t.get('transaction_id')}: {e}")
+                    continue
+                except Exception as ex: # Bắt bất kỳ lỗi phân tích nào khác
+                    logger.error(f"Error processing transaction {t.get('transaction_id')} for date parsing: {ex}")
+                    continue
+        logger.debug(f"TransactionManager.get_total_expenses for user {user_id}, cat {category_id}, {month}/{year}: {total_spent}")
+        return total_spent

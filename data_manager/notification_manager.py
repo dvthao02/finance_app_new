@@ -1,8 +1,12 @@
 import os
 from utils.file_helper import load_json, save_json, generate_id, get_current_datetime
+from PyQt5.QtCore import pyqtSignal, QObject # Add QObject and pyqtSignal
 
-class NotificationManager:
+class NotificationManager(QObject): # Inherit from QObject
+    notification_added = pyqtSignal(dict) # Signal that emits the new notification
+
     def __init__(self, file_path='notifications.json'):
+        super().__init__() # Call QObject constructor
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         data_dir = os.path.join(base_dir, 'data')
         os.makedirs(data_dir, exist_ok=True)
@@ -25,6 +29,7 @@ class NotificationManager:
         }
         notifications.append(notification)
         save_json(self.file_path, notifications)
+        self.notification_added.emit(notification) # Emit signal with the new notification
         return notification
 
     def update_notification(self, notification_id, **kwargs):

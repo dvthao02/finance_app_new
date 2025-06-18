@@ -33,7 +33,7 @@
     "avatar": null,
     "date_of_birth": "1995-05-15",
     "address": "456 User Ave, Ho Chi Minh City",
-    "last_login": "2025-06-17T12:00:38.582237",
+    "last_login": "2025-06-18T08:38:34.680771",
     "last_activity": "2025-06-10T09:45:00Z",
     "gender": "Nam"
   },
@@ -48,7 +48,7 @@
     "is_active": true,
     "created_at": "2025-06-11T20:31:07.031700",
     "updated_at": "2025-06-16T09:24:38.871326",
-    "last_login": "2025-06-11T20:32:48.066367",
+    "last_login": "2025-06-17T17:05:43.255620",
     "avatar": null,
     "date_of_birth": "",
     "address": ""
@@ -65,6 +65,22 @@
     "created_at": "2025-06-16T11:52:23.570815",
     "updated_at": "2025-06-16T11:52:23.570815",
     "last_login": "2025-06-16T16:15:45.588298",
+    "avatar": null,
+    "date_of_birth": "",
+    "address": ""
+  },
+  {
+    "user_id": "user_005",
+    "username": "thaodv02",
+    "password": "$2b$12$0Ys4IZ9DKcE4Sd/FQeRhZO49V7vkiwCIGQUzGwb441TX661WrC.o6",
+    "full_name": "ĐỖ VĂN THAO",
+    "email": "thaodv02@gmail.com",
+    "phone": "",
+    "role": "user",
+    "is_active": true,
+    "created_at": "2025-06-17T19:32:01.111530",
+    "updated_at": "2025-06-17T19:32:01.111530",
+    "last_login": "2025-06-17T19:32:11.418441",
     "avatar": null,
     "date_of_birth": "",
     "address": ""

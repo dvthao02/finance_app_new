@@ -13,6 +13,10 @@ import datetime
 import json
 from data_manager.budget_manager import BudgetManager
 from data_manager.notification_manager import NotificationManager
+import logging
+
+# Impo rt the new transaction tab
+from gui.user.user_transaction_tab import UserTransactionTab
 
 class UserDashboard(BaseDashboard):
     
@@ -24,8 +28,17 @@ class UserDashboard(BaseDashboard):
         self.transaction_manager = transaction_manager
         self.category_manager = category_manager
         self.wallet_manager = wallet_manager # Might be None
-        self.budget_manager = BudgetManager() # Own instance
         self.notification_manager = notification_manager # Passed instance
+        # Pass all required managers to BudgetManager, including user_manager
+        self.budget_manager = BudgetManager(
+            notification_manager=self.notification_manager, 
+            category_manager=self.category_manager,
+            user_manager=self.user_manager # Added user_manager
+        )
+
+        # Connect the notification_added signal to a handler
+        if hasattr(self.notification_manager, 'notification_added'):
+            self.notification_manager.notification_added.connect(self.handle_new_notification)
 
         # BaseDashboard.init_ui() should have been called by super().__init__()
         # self.current_user will be set by set_current_user()
@@ -44,11 +57,10 @@ class UserDashboard(BaseDashboard):
         """Return list of (text, icon_name) tuples for navigation"""
         return [
             ("Tổng quan", "app_icon.png"),
-            ("Thêm giao dịch", "income_icon.png"),
-            ("Lịch sử giao dịch", "expense_icon.png"),
-            ("Báo cáo", "active_users_icon.png"),
-            ("Ngân sách", "categories_icon.png"),
-            ("Danh mục", "categories_icon.png"),
+            ("Giao dịch", "expense_icon.png"),
+            ("Ngân sách", "categories_icon.png"), # Moved up
+            ("Danh mục", "categories_icon.png"),   # Moved up
+            ("Báo cáo", "active_users_icon.png"),   # Moved down
             ("Thông báo", "notifications_icon.png"),
             ("Cài đặt", "app_icon.png"),
             ("Hồ sơ", "users_icon.png"),
@@ -59,11 +71,10 @@ class UserDashboard(BaseDashboard):
         try:
             # Import user tabs
             from gui.user.user_overview_tab import UserOverviewTab
-            from gui.user.user_transaction_form_tab import UserTransactionForm
-            from gui.user.user_transaction_history_tab import UserTransactionHistory
-            from gui.user.user_report_tab import UserReport
-            from gui.user.user_budget_tab import UserBudget
-            from gui.user.user_category_tab import UserCategoryTab
+            # UserTransactionTab is already imported at the top of the file
+            from gui.user.user_budget_tab import UserBudgetTab # Corrected import
+            from gui.user.user_category_tab import UserCategoryTab # Ensure this is imported
+            from gui.user.user_report_tab import UserReport # Ensure this is imported
             from gui.user.user_notifications_tab import NotificationCenter
             from gui.user.user_settings_tab import UserSettings
             from gui.user.user_profile_tab import UserProfile
@@ -85,21 +96,41 @@ class UserDashboard(BaseDashboard):
 
             print(f"DEBUG: UserDashboard.setup_user_content using user_id={user_id} for tabs")
             
-            # Create tabs
+            # Create tabs (ensure instantiation order doesn't strictly matter here, only addWidget order)
             self.overview_tab = UserOverviewTab(
                 user_manager=self.user_manager, 
                 transaction_manager=self.transaction_manager, 
                 category_manager=self.category_manager, 
                 wallet_manager=self.wallet_manager, 
-                budget_manager=self.budget_manager, # Pass the instance from UserDashboard
-                notification_manager=self.notification_manager # Pass the instance from UserDashboard
+                budget_manager=self.budget_manager, 
+                notification_manager=self.notification_manager
             )
-            self.transaction_form = UserTransactionForm(self.user_manager, self.transaction_manager, self.category_manager, self.wallet_manager)
-            self.transaction_history = UserTransactionHistory(self.user_manager, self.transaction_manager, self.category_manager, self.wallet_manager)
-            self.report_tab = UserReport(self.user_manager, self.transaction_manager, self.category_manager)
-            self.budget_tab = UserBudget(self.user_manager, self.transaction_manager, self.category_manager, self.wallet_manager, self.budget_manager)
+            
+            self.transaction_tab = UserTransactionTab(
+                user_manager=self.user_manager,
+                transaction_manager=self.transaction_manager,
+                category_manager=self.category_manager,
+                wallet_manager=self.wallet_manager, 
+                budget_manager=self.budget_manager,
+                notification_manager=self.notification_manager
+            )
+            self.transaction_tab.transaction_added_or_updated.connect(self.refresh_overview_and_related_tabs)
+
+            self.budget_tab = UserBudgetTab( # Corrected class name
+                current_user_id=user_id,  # Pass user_id directly
+                user_manager=self.user_manager, 
+                transaction_manager=self.transaction_manager, 
+                category_manager=self.category_manager, 
+                wallet_manager=self.wallet_manager,
+                budget_manager=self.budget_manager,
+                notification_manager=self.notification_manager
+            )
+            if hasattr(self.budget_tab, 'budget_changed'): # Connect signal if it exists
+                self.budget_tab.budget_changed.connect(self.refresh_overview_and_related_tabs) # Or a more specific handler
+
             self.category_tab = UserCategoryTab(self.category_manager, user_id, reload_callback=self.reload_categories)
-            self.notifications_tab = NotificationCenter(self.user_manager, self.notification_manager) # Pass notification_manager
+            self.report_tab = UserReport(self.user_manager, self.transaction_manager, self.category_manager)
+            self.notifications_tab = NotificationCenter(self.user_manager, self.notification_manager)
             self.settings_tab = UserSettings(self.user_manager, self.wallet_manager, self.category_manager)
             self.profile_tab = UserProfile(self.user_manager)
             
@@ -109,16 +140,15 @@ class UserDashboard(BaseDashboard):
                 self.content_stack.removeWidget(widget)
                 widget.deleteLater()
             
-            # Add tabs to content stack
-            self.content_stack.addWidget(self.overview_tab)
-            self.content_stack.addWidget(self.transaction_form)
-            self.content_stack.addWidget(self.transaction_history)
-            self.content_stack.addWidget(self.report_tab)
-            self.content_stack.addWidget(self.budget_tab)
-            self.content_stack.addWidget(self.category_tab)
-            self.content_stack.addWidget(self.notifications_tab)
-            self.content_stack.addWidget(self.settings_tab)
-            self.content_stack.addWidget(self.profile_tab)
+            # Add tabs to content stack in the new order
+            self.content_stack.addWidget(self.overview_tab)      # 0
+            self.content_stack.addWidget(self.transaction_tab)  # 1
+            self.content_stack.addWidget(self.budget_tab)       # 2 - New order
+            self.content_stack.addWidget(self.category_tab)     # 3 - New order
+            self.content_stack.addWidget(self.report_tab)       # 4 - New order
+            self.content_stack.addWidget(self.notifications_tab) # 5
+            self.content_stack.addWidget(self.settings_tab)     # 6
+            self.content_stack.addWidget(self.profile_tab)      # 7
             
             print(f"DEBUG: User dashboard setup complete, {self.content_stack.count()} tabs added")
             
@@ -130,34 +160,130 @@ class UserDashboard(BaseDashboard):
             import traceback
             traceback.print_exc()
     
+    def refresh_overview_and_related_tabs(self):
+        """Refreshes tabs that depend on transaction or budget data."""
+        logging.debug("UserDashboard: refresh_overview_and_related_tabs CALLED") # Changed from print
+        if hasattr(self, 'overview_tab') and self.overview_tab:
+            logging.debug("UserDashboard: Refreshing Overview Tab") # Changed from print
+            self.overview_tab.update_dashboard()
+        
+        if hasattr(self, 'budget_tab') and self.budget_tab:
+            logging.debug("UserDashboard: Refreshing Budget Tab") # Changed from print
+            if hasattr(self.budget_tab, 'load_budgets_and_categories'):
+                self.budget_tab.load_budgets_and_categories()
+            elif hasattr(self.budget_tab, 'load_data_to_ui'): # Fallback for older name
+                 self.budget_tab.load_data_to_ui()
+
+        if hasattr(self, 'transaction_tab') and self.transaction_tab:
+            logging.debug("UserDashboard: Refreshing Transaction Tab") # Changed from print
+            if hasattr(self.transaction_tab, 'load_transactions_to_table'):
+                self.transaction_tab.load_transactions_to_table()
+        
+        if hasattr(self, 'report_tab') and self.report_tab:
+            if hasattr(self.report_tab, 'reload_data'): 
+                logging.debug("UserDashboard: Refreshing Report Tab") # Changed from print
+                self.report_tab.reload_data()
+
+
+    def handle_new_notification(self, notification_data):
+        """Handles new notifications, e.g., by showing a toast or updating the notification tab."""
+        logging.info(f"UserDashboard: New notification received: {notification_data.get('title')}")
+        
+        # 1. Show a Toast Notification
+        if hasattr(self, 'show_toast_notification'): # Check if BaseDashboard has this method
+            self.show_toast_notification(
+                message=f"{notification_data.get('title')}: {notification_data.get('content')}", 
+                type=notification_data.get('type', 'info'),
+                duration=5000 # Show for 5 seconds
+            )
+        else:
+            # Fallback or alternative way to show toast if not in BaseDashboard
+            # For example, directly creating and showing ToastNotification if it's accessible
+            from .user_notifications_tab import ToastNotification # Relative import
+            toast = ToastNotification(
+                message=f"{notification_data.get('title')}: {notification_data.get('content')}",
+                type=notification_data.get('type', 'info'),
+                duration=5000,
+                parent=self # Show relative to the dashboard
+            )
+            toast.show_notification(self) # Pass self as parent_widget for positioning
+
+        # 2. Refresh the NotificationCenter tab if it's created and visible or active
+        if hasattr(self, 'notifications_tab') and self.notifications_tab:
+            # Option A: Always reload data (simplest)
+            if hasattr(self.notifications_tab, 'load_notifications'):
+                self.notifications_tab.load_notifications()
+                logging.debug("UserDashboard: Refreshed NotificationCenter tab due to new notification.")
+            
+            # Option B: Reload only if the tab is currently visible (more complex, might need to check self.content_stack.currentWidget())
+            # current_widget = self.content_stack.currentWidget()
+            # if current_widget == self.notifications_tab:
+            #     if hasattr(self.notifications_tab, 'load_notifications'):
+            #         self.notifications_tab.load_notifications()
+            #         logging.debug("UserDashboard: Refreshed visible NotificationCenter tab.")
+
+        # 3. Optionally, update a badge count on the "Thông báo" navigation button
+        # This is more complex and would require the navigation buttons to support badges.
+        # For now, we'll skip this, but it's a potential enhancement.
+
     def on_tab_changed(self, index):
         """Called when tab is changed"""
+        # New mapping based on get_navigation_items():
+        # 0: Tổng quan
+        # 1: Giao dịch
+        # 2: Ngân sách (NEW ORDER)
+        # 3: Danh mục (NEW ORDER)
+        # 4: Báo cáo (NEW ORDER)
+        # 5: Thông báo
+        # 6: Cài đặt
+        # 7: Hồ sơ
+
+        nav_items = self.get_navigation_items()
+        current_tab_name = nav_items[index][0] if 0 <= index < len(nav_items) else None
+
         try:
             if not hasattr(self, 'content_stack') or self.content_stack.count() == 0:
-                print("DEBUG: Content stack not initialized")
+                print("DEBUG: Content stack not initialized or empty")
                 return
                 
-            print(f"DEBUG: Switching to tab index {index}")
+            print(f"DEBUG: Switching to tab index {index} (Name: {current_tab_name})")
+            
             if 0 <= index < self.content_stack.count():
                 self.content_stack.setCurrentIndex(index)
-                
-                # Refresh data for specific tabs
-                if index == 0:  # Overview tab
-                    self.overview_tab.update_dashboard()
-                elif index == 2:  # Transaction history
-                    if hasattr(self.transaction_history, 'reload_data'):
-                        self.transaction_history.reload_data()
-                elif index == 3:  # Report tab
-                    if hasattr(self.report_tab, 'reload_data'):
-                        self.report_tab.reload_data()
-                elif index == 6:  # Notifications tab
-                    if hasattr(self.notifications_tab, 'load_notifications'):
-                        self.notifications_tab.load_notifications()
-                elif index == 8:  # Profile tab
-                    if hasattr(self.profile_tab, 'load_user_data'):
-                        self.profile_tab.load_user_data()
+                current_widget = self.content_stack.widget(index) # Get current widget for safer checks
+
+                if current_tab_name == "Tổng quan": # Index 0
+                    if hasattr(self, 'overview_tab') and self.overview_tab == current_widget:
+                        self.overview_tab.update_dashboard()
+                elif current_tab_name == "Giao dịch": # Index 1
+                    if hasattr(self, 'transaction_tab') and self.transaction_tab == current_widget:
+                        pass # Manages its own state, or add a refresh if general context changes
+                elif current_tab_name == "Ngân sách": # Index 2
+                    if hasattr(self, 'budget_tab') and self.budget_tab == current_widget:
+                        if hasattr(self.budget_tab, 'load_budgets_and_categories'): 
+                            self.budget_tab.load_budgets_and_categories()
+                elif current_tab_name == "Danh mục": # Index 3
+                    if hasattr(self, 'category_tab') and self.category_tab == current_widget:
+                        if hasattr(self.category_tab, 'reload_data'): 
+                            self.category_tab.reload_data()
+                elif current_tab_name == "Báo cáo": # Index 4
+                    if hasattr(self, 'report_tab') and self.report_tab == current_widget:
+                        if hasattr(self.report_tab, 'reload_data'):
+                            self.report_tab.reload_data()
+                elif current_tab_name == "Thông báo": # Index 5
+                    if hasattr(self, 'notifications_tab') and self.notifications_tab == current_widget:
+                        if hasattr(self.notifications_tab, 'load_notifications'):
+                            self.notifications_tab.load_notifications()
+                elif current_tab_name == "Cài đặt": # Index 6
+                    if hasattr(self, 'settings_tab') and self.settings_tab == current_widget:
+                        if hasattr(self.settings_tab, 'load_settings'): # Assuming a load_settings method
+                            self.settings_tab.load_settings()
+                elif current_tab_name == "Hồ sơ": # Index 7
+                    if hasattr(self, 'profile_tab') and self.profile_tab == current_widget:
+                        if hasattr(self.profile_tab, 'load_user_data'):
+                            self.profile_tab.load_user_data()
             else:
-                print(f"DEBUG: Invalid tab index {index}")
+                print(f"DEBUG: Invalid tab index {index} for content_stack with {self.content_stack.count()} widgets")
         except Exception as e:
             print(f"Error in on_tab_changed: {e}")
             import traceback
@@ -166,24 +292,27 @@ class UserDashboard(BaseDashboard):
     def reload_categories(self):
         """Callback to reload category in other tabs when there are changes"""
         try:
-            if hasattr(self.transaction_form, 'reload_categories'):
-                self.transaction_form.reload_categories()
-            if hasattr(self.transaction_history, 'load_categories'):
-                self.transaction_history.load_categories()
-            if hasattr(self.report_tab, 'reload_categories'):
-                self.report_tab.reload_categories()
-            self.update_dashboard()
+            if hasattr(self, 'transaction_tab') and hasattr(self.transaction_tab, 'load_categories'):
+                self.transaction_tab.load_categories()
+            if hasattr(self, 'overview_tab') and hasattr(self.overview_tab, 'update_dashboard'): # Overview might use categories in charts
+                self.overview_tab.update_dashboard()
+            if hasattr(self, 'budget_tab') and hasattr(self.budget_tab, 'load_budgets_and_categories'): # Budget tab likely needs category refresh
+                self.budget_tab.load_budgets_and_categories()
+            # Add other tabs that depend on category list if necessary
+            print("DEBUG: UserDashboard.reload_categories called and propagated.")
         except Exception as e:
-            print(f"Error reloading categories: {e}")
+            print(f"Error in reload_categories: {e}")
+            import traceback
+            traceback.print_exc()
 
     def update_dashboard(self):
         """Update dashboard data"""
         try:
             if hasattr(self, 'overview_tab'):
                 self.overview_tab.update_dashboard()
-            if hasattr(self, 'transaction_history'):
-                if hasattr(self.transaction_history, 'reload_data'):
-                    self.transaction_history.reload_data()
+            if hasattr(self, 'transaction_tab'):
+                if hasattr(self.transaction_tab, 'load_transactions_to_table'):
+                    self.transaction_tab.load_transactions_to_table()
             if hasattr(self, 'report_tab'):
                 if hasattr(self.report_tab, 'reload_data'):
                     self.report_tab.reload_data()
@@ -201,7 +330,7 @@ class UserDashboard(BaseDashboard):
     
     def show_profile(self):
         """Show profile tab"""
-        self.switch_tab(8)  # Profile tab is now at index 8 (9th item in the list)
+        self.switch_tab(7)  # Profile tab is at index 7
     def set_current_user(self, user):
         """Set current user, update managers, and setup UI content"""
         super().set_current_user(user) # This should set self.current_user in BaseDashboard
@@ -266,28 +395,26 @@ class UserDashboard(BaseDashboard):
     
     def handle_add_income(self):
         """Handle quick action: Add Income"""
-        self.switch_tab(1)  # Switch to transaction form
-        # Pre-select income type if possible
+        self.switch_tab(1)  # Switch to transaction tab (index 1)
         try:
-            if hasattr(self.transaction_form, 'transaction_type_combo'):
-                self.transaction_form.transaction_type_combo.setCurrentText("Thu nhập")
+            if hasattr(self, 'transaction_tab') and hasattr(self.transaction_tab, 'open_add_transaction_dialog'):
+                self.transaction_tab.open_add_transaction_dialog(transaction_type="income")
         except Exception as e:
-            print(f"Error setting income type: {e}")
+            print(f"Error in handle_add_income: {e}")
     
     def handle_add_expense(self):
         """Handle quick action: Add Expense"""
-        self.switch_tab(1)  # Switch to transaction form
-        # Pre-select expense type if possible
+        self.switch_tab(1) # Switch to transaction tab (index 1)
         try:
-            if hasattr(self.transaction_form, 'transaction_type_combo'):
-                self.transaction_form.transaction_type_combo.setCurrentText("Chi tiêu")
+            if hasattr(self, 'transaction_tab') and hasattr(self.transaction_tab, 'open_add_transaction_dialog'):
+                self.transaction_tab.open_add_transaction_dialog(transaction_type="expense")
         except Exception as e:
-            print(f"Error setting expense type: {e}")
+            print(f"Error in handle_add_expense: {e}")
     
     def handle_view_report(self):
         """Handle quick action: View Report"""
-        self.switch_tab(3)  # Switch to report tab
+        self.switch_tab(4)  # Switch to report tab (index 4)
     
     def handle_view_budget(self):
         """Handle quick action: View Budget"""
-        self.switch_tab(4)  # Switch to budget tab
+        self.switch_tab(2)  # Switch to budget tab (index 2)

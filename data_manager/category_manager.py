@@ -191,15 +191,19 @@ class CategoryManager:
         except Exception as e:
             logger.error(f"Error getting category {category_id}: {str(e)}")
             return None
-
-    def get_category_by_name(self, name):
-        """Lấy category theo tên"""
+            
+    def get_category_by_name(self, name, user_id=None, category_type=None):
+        """Lấy category theo tên, có thể lọc theo user_id và category_type"""
         try:
             if not name:
                 return None
                 
             for category in self.categories:
-                if category['name'].lower() == name.lower():
+                name_match = category['name'].lower() == name.lower()
+                user_match = user_id is None or category.get('user_id') == user_id
+                type_match = category_type is None or category.get('type') == category_type
+                
+                if name_match and user_match and type_match:
                     return category
             return None
             
