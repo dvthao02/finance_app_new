@@ -2,6 +2,8 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButt
 from PyQt5.QtGui import QFont, QIcon, QPixmap, QColor, QPalette
 from PyQt5.QtCore import Qt, QSize, pyqtSignal, QTimer
 import os
+import logging
+from utils.file_helper import get_asset_path
 
 
 class BaseDashboard(QWidget):
@@ -148,7 +150,7 @@ class BaseDashboard(QWidget):
         logo = QLabel()
         logo.setStyleSheet("color: white !important; background: transparent;")
         try:
-            logo_path = self.get_asset_path('app_icon.png')
+            logo_path = get_asset_path('app_icon.png', 'function')
             if os.path.exists(logo_path):
                 logo.setPixmap(QPixmap(logo_path).scaled(36, 36, Qt.KeepAspectRatio, Qt.SmoothTransformation))
             else:
@@ -170,11 +172,19 @@ class BaseDashboard(QWidget):
         layout.addStretch()
         
         layout.addStretch()
-        
-        # Chuông thông báo
-        self.notification_btn = QPushButton('🔔')
-        self.notification_btn.setFont(QFont('Segoe UI', 16))
+          # Chuông thông báo
+        self.notification_btn = QPushButton()
         self.notification_btn.setFixedSize(44, 44)
+        
+        # Thêm icon thông báo từ assets
+        notify_icon_path = get_asset_path('notifications_icon.png', 'function')
+        if os.path.exists(notify_icon_path):
+            self.notification_btn.setIcon(QIcon(notify_icon_path))
+            self.notification_btn.setIconSize(QSize(22, 22))
+        else:  # Fallback to text if image not found
+            self.notification_btn.setText('🔔')
+            self.notification_btn.setFont(QFont('Segoe UI', 16))
+        
         self.notification_btn.setStyleSheet("""
             QPushButton {
                 color: white !important;
@@ -200,7 +210,7 @@ class BaseDashboard(QWidget):
         # Lấy avatar qua UserManager để đảm bảo đúng logic
         from data_manager.user_manager import UserManager
         user_manager = UserManager()
-        user_avatar = user_manager.get_user_avatar(self.current_user.get('username')) if self.current_user else 'assets/avatar_user_001.jpg'
+        user_avatar = user_manager.get_user_avatar(self.current_user.get('username')) if self.current_user else get_asset_path('avatar_user_001.jpg', 'avatar')
         self.user_button = QPushButton(f'  {user_name}')
         self.user_button.setFont(QFont('Segoe UI', 13, QFont.Medium))
         self.user_button.setStyleSheet("""
@@ -212,21 +222,22 @@ class BaseDashboard(QWidget):
                 font-weight: 500;
                 text-align: left;
             }
-        """)
-        # Set avatar icon (bo tròn)
-        from PyQt5.QtGui import QIcon, QPixmap, QPainterPath, QPainter
+        """)        # Set avatar icon (bo tròn)
+        from PyQt5.QtGui import QPainterPath, QPainter
+        
         def get_rounded_avatar(path, size=32):
             pixmap = QPixmap(path).scaled(size, size, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
             rounded = QPixmap(size, size)
             rounded.fill(Qt.transparent)
             painter = QPainter(rounded)
             painter.setRenderHint(QPainter.Antialiasing)
-            path = QPainterPath()
-            path.addEllipse(0, 0, size, size)
-            painter.setClipPath(path)
+            painter_path = QPainterPath()
+            painter_path.addEllipse(0, 0, size, size)
+            painter.setClipPath(painter_path)
             painter.drawPixmap(0, 0, pixmap)
             painter.end()
             return rounded
+            
         avatar_icon = QIcon(get_rounded_avatar(user_avatar, 32))
         self.user_button.setIcon(avatar_icon)
         self.user_button.setIconSize(QSize(32, 32))
@@ -260,6 +271,12 @@ class BaseDashboard(QWidget):
             btn.setFixedHeight(52)  # Tăng height để phù hợp
             btn.setCursor(Qt.PointingHandCursor)
             btn.setCheckable(True)
+            
+            # Thêm icon từ tệp trong thư mục assets
+            icon_path = get_asset_path(f'{icon_name}', 'function')
+            if os.path.exists(icon_path):
+                btn.setIcon(QIcon(icon_path))
+                btn.setIconSize(QSize(24, 24))  # Cài đặt kích thước icon
             
             if i == 0:  # Mục đầu tiên được chọn mặc định
                 btn.setStyleSheet("""
@@ -308,10 +325,17 @@ class BaseDashboard(QWidget):
         layout.addStretch()
         
         # Nút đăng xuất ở dưới cùng
-        logout_btn = QPushButton('🚪  Đăng xuất')
+        logout_btn = QPushButton('  Đăng xuất')
         logout_btn.setFont(QFont('Segoe UI', 15, QFont.Medium))
         logout_btn.setFixedHeight(50)
         logout_btn.setCursor(Qt.PointingHandCursor)
+        
+        # Thêm icon đăng xuất
+        logout_icon_path = get_asset_path('logout.png', 'function')
+        if os.path.exists(logout_icon_path):
+            logout_btn.setIcon(QIcon(logout_icon_path))
+            logout_btn.setIconSize(QSize(24, 24))
+        
         logout_btn.setStyleSheet("""
             QPushButton {
                 text-align: left;
@@ -328,18 +352,15 @@ class BaseDashboard(QWidget):
                 background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, 
                     stop: 0 #fef2f2, stop: 1 #fee2e2);
                 color: #b91c1c;
-                border-left: 4px solid #dc2626;
-            }
+                border-left: 4px solid #dc2626;            }
         """)
         logout_btn.clicked.connect(self.handle_logout)
         layout.addWidget(logout_btn)
-        
         return sidebar
-
+        
     def switch_tab(self, index):
         """Chuyển đổi sang tab khác với hiệu ứng mượt mà"""
-        print(f"DEBUG: Switching to tab index {index}")
-          # Cập nhật trạng thái nút với phản hồi hình ảnh
+        # Cập nhật trạng thái nút với phản hồi hình ảnh
         for i, btn in enumerate(self.sidebar_buttons):
             if i == index:
                 btn.setStyleSheet("""
@@ -354,6 +375,10 @@ class BaseDashboard(QWidget):
                         margin: 3px 12px;
                         font-weight: 600;
                         font-size: 15px;
+                    }
+                    QPushButton:hover {
+                        background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, 
+                            stop: 0 #2563eb, stop: 1 #0891b2);
                     }
                 """)
                 btn.setChecked(True)
@@ -378,9 +403,8 @@ class BaseDashboard(QWidget):
                     }
                 """)
                 btn.setChecked(False)
-        
-        # Chuyển đổi nội dung với kiểm tra lỗi
-                # Switch content with error checking
+          # Chuyển đổi nội dung với kiểm tra lỗi
+        # Switch content with error checking
         if self.content_stack and 0 <= index < self.content_stack.count():
             self.content_stack.setCurrentIndex(index)
             self.current_tab_index = index
@@ -390,29 +414,21 @@ class BaseDashboard(QWidget):
             if current_widget:
                 current_widget.setVisible(True)
                 current_widget.show()
-                print(f"DEBUG: Switched to tab {index}, widget: {current_widget}")
-                print(f"DEBUG: Widget visible: {current_widget.isVisible()}")
             
             self.on_tab_changed(index)
         else:
-            print(f"DEBUG: Cannot switch to tab {index} - stack count: {self.content_stack.count() if self.content_stack else 'None'}")
-    
-    def get_asset_path(self, filename):
-        """Lấy đường dẫn đầy đủ tới tệp tin tài sản"""
-        # Lấy thư mục nơi kịch bản đang được thực thi
-        current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        return os.path.join(current_dir, 'assets', filename)
+            pass  # Tab index not valid    #def get_asset_path(self, filename):
+    #    """Lấy đường dẫn đầy đủ tới tệp tin tài sản"""
+    #    # Lấy thư mục nơi kịch bản đang được thực thi
+    #    current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    #    return os.path.join(current_dir, 'assets', filename)
     
     def add_content_widget(self, widget):
         """Thêm một widget vào ngăn xếp nội dung"""
-        print(f"DEBUG: add_content_widget called, content_stack: {self.content_stack}")
-        print(f"DEBUG: content_stack type: {type(self.content_stack)}")
-        print(f"DEBUG: content_stack is not None: {self.content_stack is not None}")
         if self.content_stack is not None:
             self.content_stack.addWidget(widget)
-            print(f"DEBUG: Widget added, stack count now: {self.content_stack.count()}")
         else:
-            print("ERROR: content_stack is None in add_content_widget!")
+            logging.error("content_stack is None in add_content_widget!")
     
     def set_current_user(self, user):
         """Đặt người dùng hiện tại và cập nhật UI"""
@@ -436,16 +452,15 @@ class BaseDashboard(QWidget):
             # Tạo tiêu đề mới với thông tin người dùng
             new_header = self.create_header()
             main_layout.insertWidget(0, new_header)
-    
     def update_user_info(self):
         """Cập nhật thông tin người dùng trong tiêu đề"""
         # Chức năng này sẽ được các lớp con triển khai nếu cần thiết
         pass
-    
+        
     def handle_logout(self):
         """Xử lý hành động đăng xuất"""
         self.logout_signal.emit()
-    
+        
     def show_profile(self):
         """Hiển thị tab hồ sơ - chức năng này sẽ được các lớp con triển khai"""
         # Đối với bảng điều khiển quản trị viên, chuyển sang tab hồ sơ
@@ -453,7 +468,7 @@ class BaseDashboard(QWidget):
             profile_tab_index = 5  # Tab hồ sơ thường ở chỉ mục 5
             self.switch_tab(profile_tab_index)
         else:
-            print("Chức năng hồ sơ chưa được triển khai cho bảng điều khiển này")
+            logging.info("Chức năng hồ sơ chưa được triển khai cho bảng điều khiển này")
     
     def on_tab_changed(self, index):
         """Được gọi khi tab được thay đổi - chức năng này sẽ được các lớp con triển khai"""
@@ -463,32 +478,70 @@ class BaseDashboard(QWidget):
     def get_dashboard_title(self):
         """Trả về tiêu đề bảng điều khiển"""
         return "Dashboard"
-    
+        
     def get_navigation_items(self):
-        """Trả về danh sách các bộ (văn bản, tên biểu tượng) cho điều hướng"""
+        """Trả về danh sách các bộ (văn bản, tên file icon) cho điều hướng
+           Icon cần được đặt trong thư mục assets/function
+        """
         return [
-            ("Trang chủ", "app_icon.png"),
+            ("Tổng quan", "overview.png"),
+            # Các lớp con sẽ ghi đè phương thức này để cung cấp danh sách đầy đủ
         ]
-    
     def show_welcome_toast(self):
         """Hiển thị thông điệp chào mừng - chức năng này sẽ được các lớp con triển khai"""
-        if self.current_user:
+        if self.current_user:            
             try:
                 from gui.user.user_notifications_tab import show_welcome_message
                 show_welcome_message(self.current_user, self)
             except Exception as e:
-                print(f"Error showing welcome toast: {e}")
-    
-    # --- Hiển thị số lượng thông báo chưa đọc ---
+                logging.error(f"Error showing welcome toast: {e}")
+        
+        # --- Hiển thị số lượng thông báo chưa đọc ---
         from data_manager.notification_manager import NotificationManager
         self.notification_manager = NotificationManager()
         unread_count = 0
+        
         if self.current_user:
             unread_count = self.notification_manager.get_unread_count(self.current_user.get('user_id'))
+            
+        # Thay đổi cách hiển thị thông báo chưa đọc để phù hợp với icon
         if unread_count > 0:
-            self.notification_btn.setText(f'🔔 {unread_count}')
+            # Sử dụng badge nhỏ hiển thị số lượng thông báo
+            self.notification_btn.setText(f"{unread_count}")
+            self.notification_btn.setStyleSheet("""
+                QPushButton {
+                    color: white !important;
+                    background: rgba(255,255,255,0.15) !important;
+                    border: 1px solid rgba(255,255,255,0.2);
+                    border-radius: 22px;
+                    font-size: 12px;
+                    font-weight: bold;
+                    padding-top: -2px;
+                    padding-left: 2px;
+                    text-align: center;
+                    qproperty-toolButtonStyle: ToolButtonTextBesideIcon;
+                }
+                QPushButton:hover {
+                    background: rgba(255,255,255,0.25) !important;
+                    border-color: rgba(255,255,255,0.3);
+                }
+            """)
         else:
-            self.notification_btn.setText('🔔')
+            # Nếu không có thông báo, chỉ hiển thị icon
+            self.notification_btn.setText("")
+            self.notification_btn.setStyleSheet("""
+                QPushButton {
+                    color: white !important;
+                    background: rgba(255,255,255,0.15) !important;
+                    border: 1px solid rgba(255,255,255,0.2);
+                    border-radius: 22px;
+                }
+                QPushButton:hover {
+                    background: rgba(255,255,255,0.25) !important;
+                    border-color: rgba(255,255,255,0.3);
+                }
+            """)
+            
         self.notification_btn.clicked.connect(self.show_user_notifications)
         # ---
     

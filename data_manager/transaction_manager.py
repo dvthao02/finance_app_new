@@ -76,20 +76,19 @@ class TransactionManager:
         transactions.append(transaction)
         save_json(self.file_path, transactions)
         # Sau khi thêm giao dịch chi tiêu, chỉ gọi apply_expense_to_budget (KHÔNG gọi add_or_update_budget)
-        if self.budget_manager and transaction.get('type') == 'expense':
+        if self.budget_manager and transaction.get('type') == 'expense':            
             user_id = transaction.get('user_id')
             category_id = transaction.get('category_id')
             date_str = transaction.get('date')
             amount = transaction.get('amount', 0)
-            print(f"[DEBUG] add_transaction: user_id={user_id}, category_id={category_id}, date={date_str}, amount={amount}")
+            logging.debug(f"add_transaction: user_id={user_id}, category_id={category_id}, date={date_str}, amount={amount}")
             if user_id and category_id and date_str:
                 try:
                     tx_date = datetime.datetime.fromisoformat(date_str.replace('Z', '+00:00'))
                     year, month = tx_date.year, tx_date.month
-                    print(f"[DEBUG] Calling apply_expense_to_budget with: user_id={user_id}, category_id={category_id}, year={year}, month={month}, amount={amount}")
                     self.budget_manager.apply_expense_to_budget(user_id, category_id, year, month, amount)
                 except Exception as e:
-                    print(f"[DEBUG] Error in apply_expense_to_budget: {e}")
+                    logging.error(f"Error in apply_expense_to_budget: {e}")
         return transaction
 
     def get_transaction_by_id(self, transaction_id):

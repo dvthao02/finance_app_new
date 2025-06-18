@@ -4,32 +4,32 @@
     "description": "Be",
     "amount": 5000000.0,
     "category_id": "cat_011",
-    "date": "2025-06-17T00:00:00",
+    "date": "2025-01-17T00:00:00",
     "type": "income",
-    "created_at": "2025-06-17T17:59:01.113674",
-    "updated_at": "2025-06-17T17:59:01.113680",
-    "transaction_id": "txn_001"
+    "transaction_id": "txn_001",
+    "updated_at": "2025-06-18T15:35:38.789889",
+    "created_at": "2025-06-17T17:59:01.113674"
   },
   {
     "user_id": "user_002",
-    "description": "a",
-    "amount": 110000.0,
-    "category_id": "cat_004",
+    "description": "TE",
+    "amount": 100000000.0,
+    "category_id": "cat_010",
     "date": "2025-06-18T00:00:00",
-    "type": "expense",
-    "transaction_id": "txn_002",
-    "updated_at": "2025-06-18T09:04:08.192785",
-    "created_at": "2025-06-18T08:46:07.032136"
+    "type": "income",
+    "created_at": "2025-06-18T15:34:47.908881",
+    "updated_at": "2025-06-18T15:34:47.908898",
+    "transaction_id": "txn_002"
   },
   {
     "user_id": "user_002",
-    "description": "T",
-    "amount": 20000.0,
-    "category_id": "cat_004",
+    "description": "Gym",
+    "amount": 50000000.0,
+    "category_id": "cat_006",
     "date": "2025-06-18T00:00:00",
     "type": "expense",
-    "created_at": "2025-06-18T09:31:02.948850",
-    "updated_at": "2025-06-18T09:31:02.948860",
+    "created_at": "2025-06-18T15:35:11.962008",
+    "updated_at": "2025-06-18T15:35:11.962024",
     "transaction_id": "txn_003"
   }
 ]

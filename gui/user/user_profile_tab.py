@@ -398,24 +398,13 @@ class UserProfile(QWidget):
             # Load all users
             package_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             users_file_path = os.path.join(package_dir, 'data', 'users.json')
-            with open(users_file_path, 'r', encoding='utf-8') as f:
-                all_users = json.load(f)
-            
             # Update user in list
             user_id = self.current_user.get('id')
-            for i, user in enumerate(all_users):
-                if user.get('id') == user_id:
-                    all_users[i] = updated_user
-                    break
-            
-            # Save to file
-            with open(users_file_path, 'w', encoding='utf-8') as f:
-                json.dump(all_users, f, ensure_ascii=False, indent=2)
-            
-            # Update user manager
+            self.user_manager.update_user_profile(user_id, updated_user)
+            # Update user manager cache
             self.user_manager.current_user = updated_user
             if hasattr(self.user_manager, 'users'):
-                self.user_manager.users = all_users
+                self.user_manager.users = self.user_manager.load_users()
             
             # Reset avatar path sau khi đã lưu
             self.avatar_path = None

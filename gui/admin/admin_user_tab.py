@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QComboBox, QDateEdit, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox, QInputDialog
 from PyQt5.QtCore import QDate
 from PyQt5.QtGui import QColor
+import logging
 from utils.ui_styles import TableStyleHelper, ButtonStyleHelper, UIStyles
 
 class AdminUserTab(QWidget):
@@ -94,156 +95,104 @@ class AdminUserTab(QWidget):
         self.btn_unlock.setEnabled(False)
         self.btn_reset_pw.setEnabled(False)
     
+    def add_user_to_table(self, user):
+        """Adds a single user to the table, handling potential data errors."""
+        try:
+            row = self.user_table.rowCount()
+            self.user_table.insertRow(row)
+
+            # Safely get user data
+            user_id = user.get('user_id', 'N/A')
+            full_name = user.get('full_name', 'N/A')
+            email = user.get('email', 'N/A')
+            created_at = user.get('created_at', '')
+            last_login = user.get('last_login', '')
+            is_active = user.get('is_active', True)
+
+            # Format data for display
+            created_at_fmt = self.format_datetime(created_at)
+            last_login_fmt = self.format_datetime(last_login)
+            status_text = 'Hoạt động' if is_active else 'Bị khóa'
+
+            # Create and set table items
+            self.user_table.setItem(row, 0, QTableWidgetItem(str(user_id)))
+            self.user_table.setItem(row, 1, QTableWidgetItem(full_name))
+            self.user_table.setItem(row, 2, QTableWidgetItem(email))
+            self.user_table.setItem(row, 3, QTableWidgetItem(created_at_fmt))
+            self.user_table.setItem(row, 4, QTableWidgetItem(last_login_fmt))
+            self.user_table.setItem(row, 5, QTableWidgetItem(status_text))
+
+        except Exception as e:
+            logging.error(f"Error adding user row for {user.get('user_id', 'UNKNOWN')}: {e}")
+            # If adding a user fails, add an error row to make it visible
+            try:
+                row = self.user_table.rowCount()
+                self.user_table.insertRow(row)
+                self.user_table.setItem(row, 0, QTableWidgetItem(str(user.get('user_id', 'ERROR'))))
+                self.user_table.setItem(row, 1, QTableWidgetItem("Lỗi khi tải dữ liệu"))
+            except Exception as inner_e:
+                logging.critical(f"Could not add error row to user table: {inner_e}")
+
     def load_users_table(self):
         """Load users data into table with proper display handling"""
         try:
-            users = self.user_manager.load_users()
             self.user_table.setRowCount(0)
-            print(f"Loading {len(users)} users into table...")
+            users = self.user_manager.load_users()
+            logging.debug(f"Loading {len(users)} users into table...")
+            for user in users:
+                self.add_user_to_table(user)
             
-            for i, user in enumerate(users):
-                user_id = user.get('user_id', 'NO_ID')
-                print(f"\nProcessing user {i+1}: {user_id}")
-                
-                try:
-                    row = self.user_table.rowCount()
-                    self.user_table.insertRow(row)
-                    print(f"  Created row {row}")
-                    
-                    # Safely get and set basic user info
-                    full_name = user.get('full_name', '')
-                    email = user.get('email', '')
-                    
-                    print(f"  Setting basic data: {user_id}, {full_name}, {email}")
-                    
-                    # Create items and set them
-                    id_item = QTableWidgetItem(str(user_id))
-                    name_item = QTableWidgetItem(str(full_name))
-                    email_item = QTableWidgetItem(str(email))
-                    
-                    self.user_table.setItem(row, 0, id_item)
-                    self.user_table.setItem(row, 1, name_item) 
-                    self.user_table.setItem(row, 2, email_item)
-                    
-                    # Safely format datetime fields
-                    created_at = user.get('created_at', '')
-                    last_login = user.get('last_login', '')
-                    print(f"  Datetime data - created_at: {created_at}, last_login: {last_login}")
-                    
-                    try:
-                        created_at_fmt = self.format_datetime(created_at)
-                        print(f"  Formatted created_at: {created_at_fmt}")
-                    except Exception as e:
-                        print(f"  ❌ Error formatting created_at for user {user_id}: {e}")
-                        created_at_fmt = str(created_at)
-                    
-                    try:
-                        last_login_fmt = self.format_datetime(last_login)
-                        print(f"  Formatted last_login: {last_login_fmt}")
-                    except Exception as e:
-                        print(f"  ❌ Error formatting last_login for user {user_id}: {e}")
-                        last_login_fmt = str(last_login)
-                    
-                    # Create datetime items
-                    created_item = QTableWidgetItem(created_at_fmt)
-                    login_item = QTableWidgetItem(last_login_fmt)
-                    
-                    self.user_table.setItem(row, 3, created_item)
-                    self.user_table.setItem(row, 4, login_item)
-                    
-                    # Safely get status
-                    is_active = user.get('is_active', True)
-                    status_text = 'Hoạt động' if is_active else 'Bị khóa'
-                    status_item = QTableWidgetItem(status_text)
-                    self.user_table.setItem(row, 5, status_item)
-                    
-                    # Force table to refresh display for this row
-                    self.user_table.resizeRowToContents(row)
-                    
-                    # Ensure all items are properly displayed
-                    for col in range(6):
-                        item = self.user_table.item(row, col)
-                        if item:
-                            # Force item to update its display
-                            item.setData(0, item.text())
-                    
-                    print(f"  ✅ User {user_id} loaded successfully")
-                    
-                except Exception as e:
-                    print(f"  ❌ Error loading user row {user_id}: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    
-                    # Still try to add a basic row to avoid empty table
-                    try:
-                        row = self.user_table.rowCount()
-                        self.user_table.insertRow(row)
-                        self.user_table.setItem(row, 0, QTableWidgetItem(str(user.get('user_id', 'ERROR'))))
-                        self.user_table.setItem(row, 1, QTableWidgetItem('ERROR LOADING DATA'))
-                        self.user_table.setItem(row, 2, QTableWidgetItem(''))
-                        self.user_table.setItem(row, 3, QTableWidgetItem(''))
-                        self.user_table.setItem(row, 4, QTableWidgetItem(''))
-                        self.user_table.setItem(row, 5, QTableWidgetItem('ERROR'))
-                        print(f"  Added error row for user {user_id}")
-                    except:
-                        print(f"  Failed to add error row for user {user_id}")
-                    
-            print(f"✅ Table loading completed. Total rows: {self.user_table.rowCount()}")
-              # Force complete table refresh to fix display issues
             self.user_table.resizeColumnsToContents()
-            self.user_table.resizeRowsToContents()
-            
-            # Force table repaint with better timing
             self.user_table.viewport().update()
-            self.user_table.update()
-            self.user_table.repaint()
-            
-            # Additional refresh for stubborn display issues
-            from PyQt5.QtCore import QTimer
-            QTimer.singleShot(100, lambda: self.user_table.viewport().update())
-            QTimer.singleShot(200, lambda: self.user_table.repaint())
-                    
+            logging.info(f"Table loading completed. Total rows: {self.user_table.rowCount()}")
+
         except Exception as e:
-            print(f"❌ Critical error loading users table: {e}")
+            logging.error(f"Critical error loading users table: {e}")
             import traceback
             traceback.print_exc()
+            QMessageBox.critical(self, "Lỗi nghiêm trọng", f"Không thể tải danh sách người dùng: {e}")
 
     def search_user(self):
-        keyword = self.user_search_input.text().lower()
+        keyword = self.user_search_input.text().lower().strip()
         status = self.user_status_filter.currentText()
         from_date = self.user_from_date.date().toString("yyyy-MM-dd")
         to_date = self.user_to_date.date().toString("yyyy-MM-dd")
-        users = self.user_manager.load_users()
-        filtered = []
-        for user in users:
-            if keyword and keyword not in user.get('full_name', '').lower() and keyword not in user.get('email', '').lower():
-                continue
-            is_active = user.get('is_active', True)
-            if status == 'Hoạt động' and not is_active:
-                continue
-            if status == 'Bị khóa' and is_active:
-                continue
-            created_at = user.get('created_at', '')[:10]
-            if from_date and created_at and created_at < from_date:
-                continue
-            if to_date and created_at and created_at > to_date:
-                continue
-            filtered.append(user)
-        self.user_table.setRowCount(0)
-        for user in filtered:
-            row = self.user_table.rowCount()
-            self.user_table.insertRow(row)
-            self.user_table.setItem(row, 0, QTableWidgetItem(user.get('user_id', '')))
-            self.user_table.setItem(row, 1, QTableWidgetItem(user.get('full_name', '')))
-            self.user_table.setItem(row, 2, QTableWidgetItem(user.get('email', '')))
-            created_at = user.get('created_at', '')
-            last_login = user.get('last_login', '')
-            created_at_fmt = self.format_datetime(created_at)
-            last_login_fmt = self.format_datetime(last_login)
-            self.user_table.setItem(row, 3, QTableWidgetItem(created_at_fmt))
-            self.user_table.setItem(row, 4, QTableWidgetItem(last_login_fmt))
-            is_active = user.get('is_active', True)
-            self.user_table.setItem(row, 5, QTableWidgetItem('Hoạt động' if is_active else 'Bị khóa'))
+        
+        try:
+            users = self.user_manager.load_users()
+            filtered_users = []
+
+            for user in users:
+                # Keyword filter
+                if keyword:
+                    if keyword not in user.get('full_name', '').lower() and keyword not in user.get('email', '').lower():
+                        continue
+                
+                # Status filter
+                is_active = user.get('is_active', True)
+                if status == 'Hoạt động' and not is_active:
+                    continue
+                if status == 'Bị khóa' and is_active:
+                    continue
+                
+                # Date filter
+                created_at = user.get('created_at', '')
+                if created_at:
+                    user_date = created_at[:10]
+                    if from_date and user_date < from_date:
+                        continue
+                    if to_date and user_date > to_date:
+                        continue
+                
+                filtered_users.append(user)
+
+            self.user_table.setRowCount(0)
+            for user in filtered_users:
+                self.add_user_to_table(user)
+        
+        except Exception as e:
+            logging.error(f"Error during user search: {e}")
+            QMessageBox.warning(self, "Lỗi", f"Đã xảy ra lỗi khi tìm kiếm: {e}")
 
     def format_datetime(self, dt_str):
         from datetime import datetime
@@ -288,15 +237,15 @@ class AdminUserTab(QWidget):
         reason, ok = QInputDialog.getText(self, 'Lý do khóa', 'Nhập lý do khóa tài khoản:')
         if not ok or not reason.strip():
             return
-        user['is_active'] = False
-        users = self.user_manager.load_users()
-        for u in users:
-            if u.get('user_id') == user['user_id']:
-                u['is_active'] = False
-        self.user_manager.save_users(users)
-        self.audit_log_manager.add_log(user['user_id'], f'Khóa tài khoản: {reason}')
-        QMessageBox.information(self, 'Thành công', 'Đã khóa tài khoản!')
-        self.load_users_table()
+        
+        try:
+            self.user_manager.update_user_status(user['user_id'], False)
+            self.audit_log_manager.add_log(f"User account {user['user_id']} locked", f"Reason: {reason}")
+            QMessageBox.information(self, 'Thành công', 'Đã khóa tài khoản!')
+            self.load_users_table()
+        except Exception as e:
+            logging.error(f"Failed to lock user {user['user_id']}: {e}")
+            QMessageBox.warning(self, "Lỗi", f"Không thể khóa tài khoản: {e}")
 
     def unlock_user(self):
         user = self.get_selected_user()
@@ -305,15 +254,15 @@ class AdminUserTab(QWidget):
         if user.get('is_active', True):
             QMessageBox.information(self, 'Thông báo', 'Tài khoản đang hoạt động!')
             return
-        user['is_active'] = True
-        users = self.user_manager.load_users()
-        for u in users:
-            if u.get('user_id') == user['user_id']:
-                u['is_active'] = True
-        self.user_manager.save_users(users)
-        self.audit_log_manager.add_log(user['user_id'], 'Mở khóa tài khoản')
-        QMessageBox.information(self, 'Thành công', 'Đã mở khóa tài khoản!')
-        self.load_users_table()
+        
+        try:
+            self.user_manager.update_user_status(user['user_id'], True)
+            self.audit_log_manager.add_log(f"User account {user['user_id']} unlocked", "Account unlocked")
+            QMessageBox.information(self, 'Thành công', 'Đã mở khóa tài khoản!')
+            self.load_users_table()
+        except Exception as e:
+            logging.error(f"Failed to unlock user {user['user_id']}: {e}")
+            QMessageBox.warning(self, "Lỗi", f"Không thể mở khóa tài khoản: {e}")
 
     def reset_user_password(self):
         user = self.get_selected_user()
@@ -360,24 +309,6 @@ class AdminUserTab(QWidget):
                 if cell_item:
                     # Force item update
                     cell_item.setSelected(True)
-    def on_item_clicked(self, item):
-        """Handle item click to ensure selection is visible"""
-        if item:
-            row = item.row()
-            self.user_table.selectRow(row)
-            
-            # Force refresh the selection styling
-            self.user_table.clearSelection()
-            self.user_table.selectRow(row)
-            
-            # Ensure the selection is properly formatted
-            for col in range(self.user_table.columnCount()):
-                cell_item = self.user_table.item(row, col)
-                if cell_item:
-                    # Force item update
-                    cell_item.setSelected(True)
-            
-            self.on_selection_changed()
     
     def on_selection_changed(self):
         """Handle table selection changes to provide visual feedback"""

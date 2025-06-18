@@ -693,7 +693,3 @@ class UserBudgetTab(QWidget):
         # print(f"UserBudgetTab: current_user_id set to {user_id}")
         self.load_budgets_and_categories() # Reload data for the new user
 
-# Example of QColorConstants if not available (usually part of PyQt5.QtGui)
-class QColorConstants:
-    Red = QColor("red")
-    Green = QColor("green")

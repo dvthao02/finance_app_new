@@ -25,7 +25,8 @@ class NotificationManager(QObject): # Inherit from QObject
             'content': content,
             'type': notify_type,
             'created_at': get_current_datetime(),
-            'user_id': user_id
+            'user_id': user_id,
+            'is_read': False  # Luôn thêm trường is_read khi tạo mới
         }
         notifications.append(notification)
         save_json(self.file_path, notifications)

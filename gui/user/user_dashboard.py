@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QFrame, QComboBox, QSizePolicy, QTableWidget, QTableWidgetItem, QHeaderView, QLineEdit, QStackedWidget
 from PyQt5.QtGui import QFont, QIcon, QPixmap, QColor, QPalette
 from PyQt5.QtCore import Qt, QSize, pyqtSignal, QTimer
+import logging
 from base.base_dashboard import BaseDashboard
 from utils.ui_styles import TableStyleHelper, ButtonStyleHelper, UIStyles
 from utils.quick_actions import add_quick_actions_to_widget
@@ -41,14 +42,12 @@ class UserDashboard(BaseDashboard):
             self.notification_manager.notification_added.connect(self.handle_new_notification)
 
         # BaseDashboard.init_ui() should have been called by super().__init__()
-        # self.current_user will be set by set_current_user()
-        # self.setup_user_content() will be called by set_current_user()
-        # Ensure content_stack exists (usually created in BaseDashboard.init_ui)
+        # self.current_user will be set by set_current_user()        # self.setup_user_content() will be called by set_current_user()        # Ensure content_stack exists (usually created in BaseDashboard.init_ui)
         if not hasattr(self, 'content_stack'):
-            print("WARN: UserDashboard.__init__ - self.content_stack not found after super().__init__().")
+            logging.warning("UserDashboard.__init__ - self.content_stack not found after super().__init__().")
             # If BaseDashboard is supposed to create it, this is an issue.
             # For now, we assume BaseDashboard's init_ui (called via super) creates self.content_stack.
-        
+    
     def get_dashboard_title(self):
         """Return the dashboard title"""
         return "Quản lý Chi Tiêu Cá Nhân"
@@ -56,13 +55,13 @@ class UserDashboard(BaseDashboard):
     def get_navigation_items(self):
         """Return list of (text, icon_name) tuples for navigation"""
         return [
-            ("Tổng quan", "app_icon.png"),
-            ("Giao dịch", "expense_icon.png"),
-            ("Ngân sách", "categories_icon.png"), # Moved up
-            ("Danh mục", "categories_icon.png"),   # Moved up
-            ("Báo cáo", "active_users_icon.png"),   # Moved down
+            ("Tổng quan", "overview.png"),
+            ("Giao dịch", "transaction.png"),
+            ("Ngân sách", "budgeting.png"),
+            ("Danh mục", "categories_icon.png"),
+            ("Báo cáo", "report.png"),
             ("Thông báo", "notifications_icon.png"),
-            ("Cài đặt", "app_icon.png"),
+            ("Cài đặt", "setting.png"),
             ("Hồ sơ", "users_icon.png"),
         ]
     
@@ -83,9 +82,8 @@ class UserDashboard(BaseDashboard):
             # self.current_user should be set by set_current_user via super().set_current_user()
             if hasattr(self, 'current_user') and self.current_user:
                 user_id = self.current_user.get('id') or self.current_user.get('user_id')
-            
             if not user_id:
-                print("ERROR: UserDashboard.setup_user_content - user_id is not available. Cannot create tabs.")
+                logging.error("UserDashboard.setup_user_content - user_id is not available. Cannot create tabs.")
                 # Clear existing widgets if any, to prevent using old data
                 if hasattr(self, 'content_stack'):
                     while self.content_stack.count():
@@ -94,7 +92,7 @@ class UserDashboard(BaseDashboard):
                         widget.deleteLater()
                 return
 
-            print(f"DEBUG: UserDashboard.setup_user_content using user_id={user_id} for tabs")
+            logging.debug(f"UserDashboard.setup_user_content using user_id={user_id} for tabs")
             
             # Create tabs (ensure instantiation order doesn't strictly matter here, only addWidget order)
             self.overview_tab = UserOverviewTab(
@@ -128,10 +126,20 @@ class UserDashboard(BaseDashboard):
             if hasattr(self.budget_tab, 'budget_changed'): # Connect signal if it exists
                 self.budget_tab.budget_changed.connect(self.refresh_overview_and_related_tabs) # Or a more specific handler
 
-            self.category_tab = UserCategoryTab(self.category_manager, user_id, reload_callback=self.reload_categories)
+            self.category_tab = UserCategoryTab(self.user_manager, self.category_manager)
             self.report_tab = UserReport(self.user_manager, self.transaction_manager, self.category_manager)
             self.notifications_tab = NotificationCenter(self.user_manager, self.notification_manager)
-            self.settings_tab = UserSettings(self.user_manager, self.wallet_manager, self.category_manager)
+            
+            from data_manager.user_manager import UserManager
+            class DummySettingsManager:
+                def load_settings(self):
+                    return {}
+                def save_settings(self, settings):
+                    pass
+            # Nếu bạn đã có SettingsManager thực sự, thay DummySettingsManager bằng class thật
+            self.settings_manager = DummySettingsManager()
+            self.settings_tab = UserSettings(self.user_manager, self.wallet_manager, self.category_manager, self.settings_manager)
+            
             self.profile_tab = UserProfile(self.user_manager)
             
             # Clear existing widgets
@@ -143,20 +151,19 @@ class UserDashboard(BaseDashboard):
             # Add tabs to content stack in the new order
             self.content_stack.addWidget(self.overview_tab)      # 0
             self.content_stack.addWidget(self.transaction_tab)  # 1
-            self.content_stack.addWidget(self.budget_tab)       # 2 - New order
-            self.content_stack.addWidget(self.category_tab)     # 3 - New order
-            self.content_stack.addWidget(self.report_tab)       # 4 - New order
+            self.content_stack.addWidget(self.budget_tab)       # 2 
+            self.content_stack.addWidget(self.category_tab)     # 3 
+            self.content_stack.addWidget(self.report_tab)       # 4 
             self.content_stack.addWidget(self.notifications_tab) # 5
             self.content_stack.addWidget(self.settings_tab)     # 6
             self.content_stack.addWidget(self.profile_tab)      # 7
-            
-            print(f"DEBUG: User dashboard setup complete, {self.content_stack.count()} tabs added")
+            logging.debug(f"User dashboard setup complete, {self.content_stack.count()} tabs added")
             
             # Setup Quick Actions
             self.setup_quick_actions()
             
         except Exception as e:
-            print(f"Error setting up user content: {e}")
+            logging.error(f"Error setting up user content: {e}")
             import traceback
             traceback.print_exc()
     
@@ -241,12 +248,12 @@ class UserDashboard(BaseDashboard):
         nav_items = self.get_navigation_items()
         current_tab_name = nav_items[index][0] if 0 <= index < len(nav_items) else None
 
-        try:
+        try:            
             if not hasattr(self, 'content_stack') or self.content_stack.count() == 0:
-                print("DEBUG: Content stack not initialized or empty")
+                logging.debug("Content stack not initialized or empty")
                 return
                 
-            print(f"DEBUG: Switching to tab index {index} (Name: {current_tab_name})")
+            logging.debug(f"Switching to tab index {index} (Name: {current_tab_name})")
             
             if 0 <= index < self.content_stack.count():
                 self.content_stack.setCurrentIndex(index)
@@ -281,11 +288,11 @@ class UserDashboard(BaseDashboard):
                 elif current_tab_name == "Hồ sơ": # Index 7
                     if hasattr(self, 'profile_tab') and self.profile_tab == current_widget:
                         if hasattr(self.profile_tab, 'load_user_data'):
-                            self.profile_tab.load_user_data()
-            else:
-                print(f"DEBUG: Invalid tab index {index} for content_stack with {self.content_stack.count()} widgets")
+                            self.profile_tab.load_user_data()            
+                        else:
+                            logging.debug(f"Invalid tab index {index} for content_stack with {self.content_stack.count()} widgets")
         except Exception as e:
-            print(f"Error in on_tab_changed: {e}")
+            logging.error(f"Error in on_tab_changed: {e}")
             import traceback
             traceback.print_exc()
     
@@ -296,12 +303,11 @@ class UserDashboard(BaseDashboard):
                 self.transaction_tab.load_categories()
             if hasattr(self, 'overview_tab') and hasattr(self.overview_tab, 'update_dashboard'): # Overview might use categories in charts
                 self.overview_tab.update_dashboard()
-            if hasattr(self, 'budget_tab') and hasattr(self.budget_tab, 'load_budgets_and_categories'): # Budget tab likely needs category refresh
-                self.budget_tab.load_budgets_and_categories()
+            if hasattr(self, 'budget_tab') and hasattr(self.budget_tab, 'load_budgets_and_categories'): # Budget tab likely needs category refresh                self.budget_tab.load_budgets_and_categories()
             # Add other tabs that depend on category list if necessary
-            print("DEBUG: UserDashboard.reload_categories called and propagated.")
+                logging.debug("UserDashboard.reload_categories called and propagated.")
         except Exception as e:
-            print(f"Error in reload_categories: {e}")
+            logging.error(f"Error in reload_categories: {e}")
             import traceback
             traceback.print_exc()
 
@@ -315,18 +321,18 @@ class UserDashboard(BaseDashboard):
                     self.transaction_tab.load_transactions_to_table()
             if hasattr(self, 'report_tab'):
                 if hasattr(self.report_tab, 'reload_data'):
-                    self.report_tab.reload_data()
+                    self.report_tab.reload_data()        
         except Exception as e:
-            print(f"Error updating dashboard: {e}")
+            logging.error(f"Error updating dashboard: {e}")
     
     def show_welcome_toast(self):
         """Show welcome message"""
         if self.current_user:
             try:
-                from gui.user.user_notifications_tab import show_welcome_message
+                from gui.user.user_notifications_tab import show_welcome_message                
                 show_welcome_message(self.current_user, self)
             except Exception as e:
-                print(f"Error showing welcome toast: {e}")
+                logging.error(f"Error showing welcome toast: {e}")
     
     def show_profile(self):
         """Show profile tab"""
@@ -357,14 +363,13 @@ class UserDashboard(BaseDashboard):
                     if hasattr(manager, 'current_user_id'):
                         manager.current_user_id = user_id
                     elif hasattr(manager, 'set_current_user_id'): # If it has a setter method
-                        manager.set_current_user_id(user_id)
-
-            print(f"DEBUG: UserDashboard.set_current_user - user_id set to {user_id} in managers")
+                        manager.set_current_user_id(user_id)            
+                        logging.debug(f"UserDashboard.set_current_user - user_id set to {user_id} in managers")
             
             # Now that user_id is set and managers are updated, setup/refresh content
             self.setup_user_content() 
         else:
-            print("DEBUG: UserDashboard.set_current_user - user_id not found in user object. Clearing content.")
+            logging.debug("UserDashboard.set_current_user - user_id not found in user object. Clearing content.")
             # Clear or show placeholder in content_stack if user becomes None or invalid
             if hasattr(self, 'content_stack'):
                  while self.content_stack.count():
@@ -387,20 +392,19 @@ class UserDashboard(BaseDashboard):
             self.quick_actions.add_expense_requested.connect(self.handle_add_expense)
             self.quick_actions.view_report_requested.connect(self.handle_view_report)
             self.quick_actions.view_budget_requested.connect(self.handle_view_budget)
-            
-            print("DEBUG: Quick actions setup complete")
+            logging.debug("Quick actions setup complete")
             
         except Exception as e:
-            print(f"Error setting up quick actions: {e}")
+            logging.error(f"Error setting up quick actions: {e}")
     
     def handle_add_income(self):
         """Handle quick action: Add Income"""
         self.switch_tab(1)  # Switch to transaction tab (index 1)
         try:
             if hasattr(self, 'transaction_tab') and hasattr(self.transaction_tab, 'open_add_transaction_dialog'):
-                self.transaction_tab.open_add_transaction_dialog(transaction_type="income")
+                self.transaction_tab.open_add_transaction_dialog(transaction_type="income")        
         except Exception as e:
-            print(f"Error in handle_add_income: {e}")
+            logging.error(f"Error in handle_add_income: {e}")
     
     def handle_add_expense(self):
         """Handle quick action: Add Expense"""
@@ -409,7 +413,7 @@ class UserDashboard(BaseDashboard):
             if hasattr(self, 'transaction_tab') and hasattr(self.transaction_tab, 'open_add_transaction_dialog'):
                 self.transaction_tab.open_add_transaction_dialog(transaction_type="expense")
         except Exception as e:
-            print(f"Error in handle_add_expense: {e}")
+            logging.error(f"Error in handle_add_expense: {e}")
     
     def handle_view_report(self):
         """Handle quick action: View Report"""

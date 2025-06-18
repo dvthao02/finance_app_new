@@ -16,11 +16,12 @@ class UserSettings(QWidget):
     """
     settings_changed = pyqtSignal()  # Signal khi có thay đổi cài đặt
     
-    def __init__(self, user_manager, wallet_manager, category_manager, parent=None):
+    def __init__(self, user_manager, wallet_manager, category_manager, settings_manager, parent=None):
         super().__init__(parent)
         self.user_manager = user_manager
         self.wallet_manager = wallet_manager
         self.category_manager = category_manager
+        self.settings_manager = settings_manager
         self.settings = {}
         self.init_ui()
         self.load_settings()
@@ -407,8 +408,7 @@ class UserSettings(QWidget):
     def load_settings(self):
         """Load settings from file"""
         try:
-            with open('data/settings.json', 'r', encoding='utf-8') as f:
-                self.settings = json.load(f)
+            self.settings = self.settings_manager.load_settings()
                 
             # Apply settings to UI
             if 'theme' in self.settings:
@@ -448,7 +448,7 @@ class UserSettings(QWidget):
         except Exception as e:
             print(f"Error loading settings: {e}")
             self.settings = {}
-            
+
     def save_settings(self):
         """Save settings to file"""
         try:
@@ -467,13 +467,9 @@ class UserSettings(QWidget):
                 'update_notification': self.update_check.isChecked(),
                 'updated_at': datetime.datetime.now().isoformat()
             })
-            
-            with open('data/settings.json', 'w', encoding='utf-8') as f:
-                json.dump(self.settings, f, ensure_ascii=False, indent=2)
-                
+            self.settings_manager.save_settings(self.settings)
             QMessageBox.information(self, 'Thành công', 'Đã lưu cài đặt thành công!')
             self.settings_changed.emit()
-            
         except Exception as e:
             QMessageBox.critical(self, 'Lỗi', f'Không thể lưu cài đặt: {str(e)}')
             

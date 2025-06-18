@@ -4,37 +4,40 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 import os
+import logging
 
 try:
     from data_manager.user_manager import UserManager
+    from utils.file_helper import get_asset_path
 except Exception as e:
-    print('[ERROR] Lỗi import UserManager:', e)
     import traceback
+    import logging
+    logging.error(f'[ERROR] Lỗi import UserManager: {e}')
     traceback.print_exc()
     raise
 
 class LoginForm(QDialog):
     login_success = pyqtSignal(str)
-
+    
     def __init__(self, parent=None):
         super().__init__(parent)
-        
         try:
             self.user_manager = UserManager()
         except Exception as e:
-            print('[ERROR] Lỗi khi khởi tạo UserManager:', e)
             import traceback
+            logging.error(f'[ERROR] Lỗi khi khởi tạo UserManager: {e}')
             traceback.print_exc()
             raise
             
         self.init_ui()
+        
     def init_ui(self):
         self.setWindowTitle("Đăng nhập tài khoản")
         try:
-            icon_path = self.get_asset_path("app_icon.png")
+            icon_path = get_asset_path("app_icon.png", "function")
             self.setWindowIcon(QIcon(icon_path))
         except Exception as e:
-            print(f'[ERROR] Could not set icon: {e}')
+            logging.error(f'[ERROR] Could not set icon: {e}')
         self.setFixedSize(400, 450)
 
         self.setStyleSheet("QDialog { background-color: #f0f0f0; }")
@@ -108,16 +111,16 @@ class LoginForm(QDialog):
             }
         """)
         self.password_input.setFixedHeight(40)
-
+        
         # Toggle password visibility
         try:
             self.toggle_password_action = QAction(self)
-            self.toggle_password_action.setIcon(QIcon(self.get_asset_path('eye_closed.png')))
+            self.toggle_password_action.setIcon(QIcon(get_asset_path('eye_closed.png', 'function')))
             self.toggle_password_action.setToolTip("Hiện/Ẩn mật khẩu")
             self.toggle_password_action.triggered.connect(self.toggle_password_visibility)
-            self.password_input.addAction(self.toggle_password_action, QLineEdit.TrailingPosition)
+            self.password_input.addAction(self.toggle_password_action, QLineEdit.TrailingPosition)        
         except Exception as e:
-            print(f'[ERROR] Could not add password toggle: {e}')
+            logging.error(f'[ERROR] Could not add password toggle: {e}')
 
         card_layout.addWidget(password_label)
         card_layout.addWidget(self.password_input)
@@ -190,32 +193,30 @@ class LoginForm(QDialog):
                 self.login_success.emit(user["user_id"])
                 self.accept()
             else:
-                QMessageBox.critical(self, "Đăng nhập thất bại", result.get("message", "Email/tên đăng nhập hoặc mật khẩu không đúng"))
+                QMessageBox.critical(self, "Đăng nhập thất bại", result.get("message", "Email/tên đăng nhập hoặc mật khẩu không đúng"))        
         except Exception as e:
-            print(f'[ERROR] Error during authentication: {e}')
             import traceback
+            logging.error(f'[ERROR] Error during authentication: {e}')
             traceback.print_exc()
             QMessageBox.critical(self, "Lỗi", "Có lỗi xảy ra trong quá trình đăng nhập")
-
+            
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key_Return, Qt.Key_Enter):
             self.handle_login()
-
-    def get_asset_path(self, filename):
-        base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        return os.path.join(base_path, "assets", filename)
-
+    
+    # Removed the old get_asset_path method
+    
     def toggle_password_visibility(self):
         if self.password_input.echoMode() == QLineEdit.Password:
             self.password_input.setEchoMode(QLineEdit.Normal)
             try:
-                self.toggle_password_action.setIcon(QIcon(self.get_asset_path('eye_open.png')))
+                self.toggle_password_action.setIcon(QIcon(get_asset_path('eye_open.png', 'function')))
             except:
                 pass
         else:
             self.password_input.setEchoMode(QLineEdit.Password)
             try:
-                self.toggle_password_action.setIcon(QIcon(self.get_asset_path('eye_closed.png')))
+                self.toggle_password_action.setIcon(QIcon(get_asset_path('eye_closed.png', 'function')))
             except:
                 pass
 
@@ -227,9 +228,9 @@ class LoginForm(QDialog):
             
             dialog_result = register_form.exec_()
             
-            self.activateWindow()
+            self.activateWindow()        
         except Exception as e:
-            print(f'[ERROR] Could not show register form: {e}')
+            logging.error(f'[ERROR] Could not show register form: {e}')
             QMessageBox.warning(self, "Lỗi", "Không thể mở form đăng ký")
 
     def on_register_success_from_dialog(self, user_id):
@@ -257,7 +258,7 @@ class LoginForm(QDialog):
                     else:
                         QMessageBox.warning(self, "Lỗi", reset_result["message"])
                 else:
-                    QMessageBox.warning(self, "Lỗi", result["message"])
+                    QMessageBox.warning(self, "Lỗi", result["message"])        
         except Exception as e:
-            print(f'[ERROR] Error in forgot password dialog: {e}')
+            logging.error(f'[ERROR] Error in forgot password dialog: {e}')
             QMessageBox.warning(self, "Lỗi", "Có lỗi xảy ra khi xử lý quên mật khẩu")

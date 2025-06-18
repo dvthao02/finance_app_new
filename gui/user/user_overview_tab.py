@@ -1,4 +1,5 @@
 import sys
+import logging
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QPushButton, QTableWidget, 
     QTableWidgetItem, QGroupBox, QDateEdit, QSizePolicy, QSpacerItem, QToolTip, QMessageBox,
@@ -56,11 +57,11 @@ class UserOverviewTab(QWidget):
                 self.user_name = current_user_details.get("name", "Người dùng")
             else:
                 self.user_name = "Người dùng" 
-                logging.warning(f"UserOverviewTab: Không tìm thấy chi tiết người dùng cho user_id {self.user_id}, nhưng user_id đã được đặt.")
+                logging.warning(f"UserOverviewTab: Không tìm thấy chi tiết người dùng cho user_id {self.user_id}, nhưng user_id đã được đặt.")        
         else:
             logging.warning("UserOverviewTab: user_manager.current_user_id không tìm thấy hoặc là None.")
             
-        print(f"DEBUG: UserOverviewTab initialized with user_id={self.user_id}, user_name={self.user_name}")
+        logging.debug(f"UserOverviewTab initialized with user_id={self.user_id}, user_name={self.user_name}")
         self.init_ui()
         self.update_dashboard()
 

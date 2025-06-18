@@ -4,6 +4,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QPixmap
 import os
 from data_manager.user_manager import UserManager
+from utils.file_helper import get_asset_path
 
 
 class RegisterForm(QDialog):
@@ -14,15 +15,14 @@ class RegisterForm(QDialog):
         super().__init__(parent)
         self.user_manager = UserManager()  # Add user_manager instance
         self.setWindowTitle("Đăng Ký Tài Khoản")
-        self.setWindowIcon(QIcon(self.get_asset_path("app_icon.png")))
+        self.setWindowIcon(QIcon(get_asset_path("app_icon.png", "function")))
         self.setFixedSize(400, 720)
         self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
         self.setStyleSheet("QDialog { background-color: #f0f0f0; }")
         self.setup_ui()
-
-    def get_asset_path(self, filename):
-        base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        return os.path.join(base_path, "assets", filename)
+        #     def get_asset_path(self, filename):
+#         base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+#         return os.path.join(base_path, "assets", filename)
 
     def validate_email(self):
         email = self.email_edit.text().strip()
@@ -233,8 +233,9 @@ class RegisterForm(QDialog):
             }
         """)
         self.password_edit.setFixedHeight(40)
+        
         self.toggle_password_action = QAction(self)
-        self.toggle_password_action.setIcon(QIcon(self.get_asset_path('eye_closed.png')))
+        self.toggle_password_action.setIcon(QIcon(get_asset_path('eye_closed.png', 'function')))
         self.toggle_password_action.setToolTip("Hiện/Ẩn mật khẩu")
         self.toggle_password_action.triggered.connect(self.toggle_password_visibility)
         self.password_edit.addAction(self.toggle_password_action, QLineEdit.TrailingPosition)
@@ -267,8 +268,9 @@ class RegisterForm(QDialog):
             }
         """)
         self.confirm_edit.setFixedHeight(40)
+        
         self.toggle_confirm_action = QAction(self)
-        self.toggle_confirm_action.setIcon(QIcon(self.get_asset_path('eye_closed.png')))
+        self.toggle_confirm_action.setIcon(QIcon(get_asset_path('eye_closed.png', 'function')))
         self.toggle_confirm_action.setToolTip("Hiện/Ẩn mật khẩu")
         self.toggle_confirm_action.triggered.connect(self.toggle_confirm_visibility)
         self.confirm_edit.addAction(self.toggle_confirm_action, QLineEdit.TrailingPosition)
@@ -317,24 +319,24 @@ class RegisterForm(QDialog):
         card_layout.addWidget(login_btn)
 
         dialog_main_layout.addWidget(form_card)
-
+        
     def toggle_password_visibility(self):
         """Toggle password visibility"""
         if self.password_edit.echoMode() == QLineEdit.Password:
             self.password_edit.setEchoMode(QLineEdit.Normal)
-            self.toggle_password_action.setIcon(QIcon(self.get_asset_path('eye_open.png')))
+            self.toggle_password_action.setIcon(QIcon(get_asset_path('eye_open.png', 'function')))
         else:
             self.password_edit.setEchoMode(QLineEdit.Password)
-            self.toggle_password_action.setIcon(QIcon(self.get_asset_path('eye_closed.png')))
-
+            self.toggle_password_action.setIcon(QIcon(get_asset_path('eye_closed.png', 'function')))
+            
     def toggle_confirm_visibility(self):
         """Toggle confirm password visibility"""
         if self.confirm_edit.echoMode() == QLineEdit.Password:
             self.confirm_edit.setEchoMode(QLineEdit.Normal)
-            self.toggle_confirm_action.setIcon(QIcon(self.get_asset_path('eye_open.png')))
+            self.toggle_confirm_action.setIcon(QIcon(get_asset_path('eye_open.png', 'function')))
         else:
             self.confirm_edit.setEchoMode(QLineEdit.Password)
-            self.toggle_confirm_action.setIcon(QIcon(self.get_asset_path('eye_closed.png')))
+            self.toggle_confirm_action.setIcon(QIcon(get_asset_path('eye_closed.png', 'function')))
 
     def register(self):
         """Xử lý đăng ký"""

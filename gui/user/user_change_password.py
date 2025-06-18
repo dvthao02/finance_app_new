@@ -218,29 +218,10 @@ class ChangePasswordDialog(QDialog):
             
             # Update user data
             user_id = self.current_user.get('id')
-            
-            # Load all users
-            with open('data/users.json', 'r', encoding='utf-8') as f:
-                all_users = json.load(f)
-            
-            # Update password for user
-            for i, user in enumerate(all_users):
-                if user.get('id') == user_id:
-                    all_users[i]['password'] = new_password_hash
-                    all_users[i]['updated_at'] = datetime.datetime.now().isoformat()
-                    all_users[i]['password_changed_at'] = datetime.datetime.now().isoformat()
-                    break
-            
-            # Save to file
-            with open('data/users.json', 'w', encoding='utf-8') as f:
-                json.dump(all_users, f, ensure_ascii=False, indent=2)
-            
-            # Update user manager
+            self.user_manager.update_user_password(user_id, new_password_hash)
+            # Update user manager cache if needed
             if hasattr(self.user_manager, 'users'):
-                self.user_manager.users = all_users
-            
-            # Update current user
-            self.user_manager.current_user['password'] = new_password_hash
+                self.user_manager.users = self.user_manager.load_users()
             
             QMessageBox.information(self, '✅ Thành công', 
                                   'Đã đổi mật khẩu thành công!\n'

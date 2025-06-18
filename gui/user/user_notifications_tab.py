@@ -1,11 +1,12 @@
-from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, QFrame
+from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, QFrame, QApplication
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPropertyAnimation, QRect
 from PyQt5.QtGui import QFont, QPainter, QColor, QPen
 import json
 from utils.file_helper import load_json
+from data_manager.notification_manager import NotificationManager
 
 class ToastNotification(QWidget):
-    """Toast notification widget that appears temporarily"""
+    """Toast notification widget that appears temporarily at bottom-right"""
     
     def __init__(self, message, type="info", duration=3000, parent=None):
         super().__init__(parent)
@@ -57,12 +58,12 @@ class ToastNotification(QWidget):
         self.timer.timeout.connect(self.hide_notification)
         self.timer.setSingleShot(True)
         
-    def show_notification(self, parent_widget):
-        if parent_widget:
-            # Position at top-right of parent
-            parent_rect = parent_widget.geometry()
-            x = parent_rect.x() + parent_rect.width() - self.width() - 20
-            y = parent_rect.y() + 80
+    def show_notification(self, parent_widget=None):
+        screen = QApplication.primaryScreen()
+        if screen:
+            screen_geometry = screen.availableGeometry()
+            x = screen_geometry.right() - self.width() - 30
+            y = screen_geometry.bottom() - self.height() - 30
             self.move(x, y)
         
         self.show()
@@ -174,16 +175,10 @@ class NotificationCenter(QWidget):
             self.content_layout.itemAt(i).widget().setParent(None)
             
         try:
-            notifications = load_json('data/notifications.json')
             user_id = getattr(self.user_manager, 'current_user', {}).get('id')
+            notifications = self.notification_manager.get_user_notifications(user_id)
             
-            # Filter notifications for current user
-            user_notifications = []
-            for notif in notifications:
-                if not notif.get('user_id') or notif.get('user_id') == user_id:
-                    user_notifications.append(notif)
-                    
-            if not user_notifications:
+            if not notifications:
                 no_notif_label = QLabel("Không có thông báo nào")
                 no_notif_label.setAlignment(Qt.AlignCenter)
                 no_notif_label.setFont(QFont('Segoe UI', 14))
@@ -198,9 +193,9 @@ class NotificationCenter(QWidget):
                 return
                 
             # Sort by date (newest first)
-            user_notifications.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+            notifications.sort(key=lambda x: x.get('created_at', ''), reverse=True)
             
-            for notif in user_notifications[:20]:  # Show latest 20
+            for notif in notifications[:20]:  # Show latest 20
                 notif_widget = self.create_notification_widget(notif)
                 self.content_layout.addWidget(notif_widget)
                 
@@ -285,31 +280,17 @@ class NotificationCenter(QWidget):
             
     def mark_all_read(self):
         try:
-            notifications = load_json('data/notifications.json')
             user_id = getattr(self.user_manager, 'current_user', {}).get('id')
-            
-            # Mark user notifications as read
-            for notif in notifications:
-                if not notif.get('user_id') or notif.get('user_id') == user_id:
-                    notif['is_read'] = True
-                    
-            # Save back to file
-            with open('data/notifications.json', 'w', encoding='utf-8') as f:
-                json.dump(notifications, f, ensure_ascii=False, indent=2)
-                
-            # Reload display
+            self.notification_manager.mark_all_as_read(user_id)
             self.load_notifications()
-            
-            # Show toast
             show_toast(self, "Đã đánh dấu tất cả thông báo là đã đọc", "success")
-            
         except Exception as e:
             show_toast(self, f"Lỗi: {str(e)}", "error")
 
 def show_toast(parent, message, type="info", duration=3000):
-    """Helper function to show toast notification"""
+    """Helper function to show toast notification at bottom-right"""
     toast = ToastNotification(message, type, duration, parent)
-    toast.show_notification(parent)
+    toast.show_notification()
     return toast
 
 def show_welcome_message(user, parent=None):

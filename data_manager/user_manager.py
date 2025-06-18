@@ -6,6 +6,8 @@ import os
 import json
 import logging
 import sys
+import random
+import string
 from datetime import datetime
 
 # Add the parent directory to sys.path to make imports work
@@ -215,14 +217,14 @@ class UserManager:
             return {"status": "error", "message": "Lỗi xác thực. Vui lòng thử lại sau."}
 
     def generate_reset_code(self, identifier):
-        """Sinh mã reset mật khẩu cho user (demo: in ra terminal, thực tế sẽ gửi email)"""
-        import random, string
+        """Sinh mã reset mật khẩu cho user (demo: in ra terminal, thực tế sẽ gửi email)"""        
         user = self.find_user_by_email_or_username(identifier)
         if not user:
             return {"status": "error", "message": "Không tìm thấy tài khoản với email/tên đăng nhập này."}
+        
         code = ''.join(random.choices(string.digits, k=6))
-        # Demo: in ra terminal, thực tế nên lưu vào DB và gửi email
-        print(f"[DEMO] Mã đặt lại mật khẩu cho {identifier}: {code}")
+        # Demo: ghi nhật ký, thực tế nên lưu vào DB và gửi email
+        logging.info(f"[DEMO] Mã đặt lại mật khẩu cho {identifier}: {code}")
         user['reset_code'] = code
         user['reset_code_time'] = datetime.now().isoformat()
         users = self.load_users()

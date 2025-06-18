@@ -276,7 +276,7 @@ def copy_avatar_to_assets(source_path, user_id):
         
         # Đường dẫn đến thư mục assets
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        assets_dir = os.path.join(base_dir, 'assets')
+        assets_dir = os.path.join(base_dir, 'assets', 'avatar')
         os.makedirs(assets_dir, exist_ok=True)
         
         # Đường dẫn đầy đủ đến file đích
@@ -291,3 +291,54 @@ def copy_avatar_to_assets(source_path, user_id):
     except Exception as e:
         logger.error(f"Lỗi khi sao chép avatar: {e}")
         return None
+
+def get_asset_path(filename, asset_type='function'):
+    """Lấy đường dẫn đầy đủ đến file trong thư mục assets
+    
+    Args:
+        filename (str): Tên file cần lấy đường dẫn
+        asset_type (str): Loại asset ('function' hoặc 'avatar')
+        
+    Returns:
+        str: Đường dẫn đầy đủ đến file trong thư mục assets
+    """
+    try:            
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        
+        if asset_type.lower() == 'avatar':
+            asset_path = os.path.join(base_dir, 'assets', 'avatar', filename)
+        else:  # mặc định là function
+            asset_path = os.path.join(base_dir, 'assets', 'function', filename)
+        
+        if os.path.exists(asset_path):
+            logger.debug(f"Đã tìm thấy asset: {asset_path}")
+            return asset_path
+        else:
+            logger.warning(f"Không tìm thấy file asset: {asset_path}")
+            
+            # Fallback mechanism - try to find the file in the old structure
+            legacy_path = os.path.join(base_dir, 'assets', filename)
+            if os.path.exists(legacy_path):
+                logger.info(f"Tìm thấy file trong đường dẫn cũ: {legacy_path}")
+                print(f"Found file in legacy path: {legacy_path}")
+                return legacy_path
+                  # Try to return a default image if the specific one was not found
+            if asset_type.lower() == 'avatar':
+                default_avatar = os.path.join(base_dir, 'assets', 'avatar', 'avatar_user_001.jpg')
+                if os.path.exists(default_avatar):
+                    logger.info(f"Using default avatar: {default_avatar}")
+                    return default_avatar
+            elif filename in ['eye_open.png', 'eye_closed.png']:
+                alternative_name = 'eye_closed.png' if filename == 'eye_open.png' else 'eye_open.png'
+                alt_path = os.path.join(base_dir, 'assets', 'function', alternative_name)
+                if os.path.exists(alt_path):
+                    logger.info(f"Using alternative icon: {alt_path}")
+                    return alt_path
+                    
+            # Still return the path even if not found, to help with debugging
+            return asset_path    
+    except Exception as e:
+        logger.error(f"Lỗi khi lấy đường dẫn asset: {e}")
+        import traceback
+        traceback.print_exc()
+        return filename  # Return the filename as a last resort

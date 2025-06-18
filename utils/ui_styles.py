@@ -145,8 +145,6 @@ class UIStyles:
             }
             QPushButton:hover {
                 background: #1d4ed8;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
             }
             QPushButton:pressed {
                 background: #1d4ed8;
@@ -178,8 +176,6 @@ class UIStyles:
             }
             QPushButton:hover {
                 background: #b91c1c;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
             }
             QPushButton:pressed {
                 background: #b91c1c;
@@ -211,8 +207,6 @@ class UIStyles:
             }
             QPushButton:hover {
                 background: #047857;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
             }
             QPushButton:pressed {
                 background: #047857;
@@ -249,7 +243,6 @@ class UIStyles:
             QLineEdit:focus, QComboBox:focus, QDateEdit:focus, QSpinBox:focus {
                 border-color: #3b82f6;
                 background: #fefefe;
-                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
             }
             QLineEdit::placeholder {
                 color: #9ca3af;
@@ -274,8 +267,6 @@ class UIStyles:
             QFrame:hover {
                 border-color: #93c5fd;
                 background: #fefefe;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-                transform: translateY(-2px);
             }
         """
     
@@ -333,7 +324,6 @@ class UIStyles:
             QLineEdit:focus {
                 border-color: #3b82f6;
                 background: #fefefe;
-                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
             }
             QLineEdit::placeholder {
                 color: #9ca3af;
