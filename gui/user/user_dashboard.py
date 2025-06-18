@@ -76,7 +76,7 @@ class UserDashboard(BaseDashboard):
             from gui.user.user_report_tab import UserReport # Ensure this is imported
             from gui.user.user_notifications_tab import NotificationCenter
             from gui.user.user_settings_tab import UserSettings
-            from gui.user.user_profile_tab import UserProfile
+            from gui.user.user_profile_tab import UserProfileTab
             
             user_id = None
             # self.current_user should be set by set_current_user via super().set_current_user()
@@ -140,7 +140,7 @@ class UserDashboard(BaseDashboard):
             self.settings_manager = DummySettingsManager()
             self.settings_tab = UserSettings(self.user_manager, self.wallet_manager, self.category_manager, self.settings_manager)
             
-            self.profile_tab = UserProfile(self.user_manager)
+            self.profile_tab = UserProfileTab(self.user_manager)
             
             # Clear existing widgets
             while self.content_stack.count():

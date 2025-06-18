@@ -181,6 +181,27 @@ class UserManager:
             logger.error(f"Error finding user by email/username: {str(e)}")
             return None
 
+    def get_user_by_id(self, user_id):
+        """Lấy thông tin user bằng user_id"""
+        if not user_id:
+            return None
+        try:
+            users = self.load_users()
+            for user in users:
+                # Check for both 'id' and 'user_id' for compatibility
+                if user.get('id') == user_id or user.get('user_id') == user_id:
+                    return user
+            return None
+        except Exception as e:
+            logger.error(f"Error getting user by ID: {str(e)}")
+            return None
+
+    def get_current_user(self):
+        """Lấy thông tin của người dùng hiện tại."""
+        if hasattr(self, 'current_user_id') and self.current_user_id:
+            return self.get_user_by_id(self.current_user_id)
+        return None
+
     def authenticate_user(self, identifier, password):
         try:
             if not identifier or not password:
@@ -320,6 +341,33 @@ class UserManager:
         except Exception as e: # Catch any other unexpected errors
             logger.error(f"Unexpected error adding user {email}: {str(e)}")
             return {"status": "error", "message": "Đã xảy ra lỗi hệ thống khi thêm người dùng."}
+
+    def update_user_profile(self, user_id, updated_data):
+        """Cập nhật thông tin hồ sơ của người dùng."""
+        try:
+            users = self.load_users()
+            user_found = False
+            for i, user in enumerate(users):
+                if user.get('id') == user_id or user.get('user_id') == user_id:
+                    # Update the user's dictionary with new data
+                    users[i].update(updated_data)
+                    users[i]['updated_at'] = datetime.now().isoformat()
+                    user_found = True
+                    break
+            
+            if not user_found:
+                return {"status": "error", "message": "Không tìm thấy người dùng."}
+
+            if self.save_users(users):
+                logger.info(f"Cập nhật hồ sơ thành công cho user ID: {user_id}")
+                # Return the fully updated user object
+                updated_user = self.get_user_by_id(user_id)
+                return {"status": "success", "user": updated_user}
+            else:
+                return {"status": "error", "message": "Lỗi khi lưu dữ liệu người dùng."}
+        except Exception as e:
+            logger.error(f"Lỗi khi cập nhật hồ sơ người dùng {user_id}: {str(e)}")
+            return {"status": "error", "message": f"Đã xảy ra lỗi không mong muốn: {str(e)}"}
 
     def update_user(self, user_id, **kwargs):
         try:
@@ -517,13 +565,6 @@ class UserManager:
     def get_all_users(self, active_only=True):
         users = self.load_users()
         return [user for user in users if user['is_active']] if active_only else users
-
-    def get_user_by_id(self, user_id):
-        users = self.load_users()
-        for user in users:
-            if user['user_id'] == user_id:
-                return user
-        return None  # Thay đổi để trả về None thay vì raise ValueError
 
     def get_user_avatar(self, username):
         user = self.find_user_by_username(username)

@@ -1983,5 +1983,210 @@
     "user_id": "user_001",
     "action": "login",
     "timestamp": "2025-06-18T16:35:34.195163"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T16:39:20.724450"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T16:48:44.080498"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-18T17:05:29.105639"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-18T17:06:02.458475"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-18T17:06:16.098718"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-18T17:15:32.686218"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-18T17:26:05.765315"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-18T17:28:44.180308"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T18:16:24.356321"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T18:17:22.457908"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-18T19:30:25.791596"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-18T19:31:16.963748"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-18T19:55:49.676659"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-18T19:57:43.580944"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T19:58:05.177122"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T20:00:20.560574"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T20:04:13.994528"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-18T20:10:49.865134"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-18T20:11:10.875956"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-18T20:11:15.479341"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-18T20:11:22.266175"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T20:11:27.162727"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T20:20:55.307094"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-18T20:21:15.617887"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T20:21:20.405323"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T20:27:25.558275"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-18T20:29:16.506896"
+  },
+  {
+    "user_id": "user_005",
+    "action": "Cấp lại mật khẩu mới (admin): 12345aA@",
+    "timestamp": "2025-06-18T20:30:37.449348"
+  },
+  {
+    "user_id": "user_003",
+    "action": "login",
+    "timestamp": "2025-06-18T20:30:58.298670"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-18T20:31:39.858784"
+  },
+  {
+    "user_id": "user_003",
+    "action": "login",
+    "timestamp": "2025-06-18T20:31:47.995313"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-18T20:32:15.542684"
+  },
+  {
+    "user_id": "user_005",
+    "action": "login",
+    "timestamp": "2025-06-18T20:32:40.073419"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T20:37:36.929368"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T20:39:03.695991"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T20:45:08.057258"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T20:46:11.048766"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T20:49:32.726964"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-18T20:50:35.936951"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-18T20:50:47.308391"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-18T20:53:12.776076"
   }
 ]

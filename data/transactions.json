@@ -1,17 +1,6 @@
 [
   {
     "user_id": "user_002",
-    "description": "Be",
-    "amount": 5000000.0,
-    "category_id": "cat_011",
-    "date": "2025-01-17T00:00:00",
-    "type": "income",
-    "transaction_id": "txn_001",
-    "updated_at": "2025-06-18T15:35:38.789889",
-    "created_at": "2025-06-17T17:59:01.113674"
-  },
-  {
-    "user_id": "user_002",
     "description": "TE",
     "amount": 100000000.0,
     "category_id": "cat_010",
@@ -23,13 +12,13 @@
   },
   {
     "user_id": "user_002",
-    "description": "Gym",
-    "amount": 50000000.0,
-    "category_id": "cat_006",
+    "description": "VNG",
+    "amount": 200000.0,
+    "category_id": "cat_002",
     "date": "2025-06-18T00:00:00",
     "type": "expense",
-    "created_at": "2025-06-18T15:35:11.962008",
-    "updated_at": "2025-06-18T15:35:11.962024",
+    "created_at": "2025-06-18T20:53:01.899958",
+    "updated_at": "2025-06-18T20:53:01.899974",
     "transaction_id": "txn_003"
   }
 ]

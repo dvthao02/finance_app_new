@@ -99,7 +99,7 @@ class ApplicationManager:
             
             self.user_dashboard.logout_signal.connect(self.handle_user_logout)
             self.user_dashboard.show()
-            self.user_dashboard.raise_()
+            self.user_dashboard.raise_()  
             self.user_dashboard.activateWindow()
         except Exception as e:
             logger.error(f"Lỗi bảng điều khiển người dùng: {e}")

@@ -1,22 +1,19 @@
-# Tạo file mới với tên user_transaction_form_tab.py
-# Copy nội dung từ user_transaction_form.py
+# UserTransactionTab.py
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
                             QLineEdit, QFrame, QComboBox, QDateEdit, QMessageBox, QCompleter,
                             QTableWidget, QTableWidgetItem, QGroupBox, QHeaderView, QScrollArea,
-                            QSizePolicy, QSpacerItem, QAbstractItemView) # Added QTableWidget, QTableWidgetItem, QGroupBox, QHeaderView, QScrollArea
+                            QSizePolicy, QSpacerItem, QAbstractItemView) 
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 from PyQt5.QtCore import Qt, QDate, pyqtSignal, QTimer
-import datetime # Added missing import
-import json     # Added missing import for test block
-import os       # Added missing import for test block
+import datetime
 import logging
 from utils.animated_widgets import pulse_widget, shake_widget
-from data_manager.transaction_manager import TransactionManager # Ensure this is imported
-from data_manager.category_manager import CategoryManager   # Ensure this is imported
-from data_manager.budget_manager import BudgetManager     # Ensure this is imported
+# from data_manager.transaction_manager import TransactionManager 
+# from data_manager.category_manager import CategoryManager   
+# from data_manager.budget_manager import BudgetManager     
 
 
-class UserTransactionTab(QWidget): # Renamed from UserTransactionForm
+class UserTransactionTab(QWidget):
     transaction_added_or_updated = pyqtSignal() # Signal to indicate data change
 
     def __init__(self, user_manager, transaction_manager, category_manager, wallet_manager, budget_manager, notification_manager, parent=None):
@@ -631,74 +628,3 @@ class UserTransactionTab(QWidget): # Renamed from UserTransactionForm
 
         except Exception as e:
             logging.error(f"UserTransactionTab: Error in update_budget_on_transaction: {e}", exc_info=True)
-
-
-# Example of how to use it (for testing, not part of the class)
-if __name__ == '__main__':
-    from PyQt5.QtWidgets import QApplication
-    import sys 
-    
-    # Mock managers - replace with your actual manager initializations
-    class MockUserManager:
-        def __init__(self):
-            self.current_user_id = "user123" 
-            self.users = [{"user_id": "user123", "name": "Test User"}]
-        def get_user_by_id(self, user_id):
-            return next((u for u in self.users if u["user_id"] == user_id), None)
-
-    # You would need to create mock data files (transactions.json, categories.json, budgets.json)
-    # or ensure your managers handle their absence gracefully for this test.
-    
-    # Create dummy data files if they don't exist for the mock managers to load
-    mock_data_path = "./data" # Adjust if your managers expect a different path
-    os.makedirs(mock_data_path, exist_ok=True)
-    
-    if not os.path.exists(os.path.join(mock_data_path, 'transactions.json')):
-        with open(os.path.join(mock_data_path, 'transactions.json'), 'w') as f:
-            json.dump([], f)
-    if not os.path.exists(os.path.join(mock_data_path, 'categories.json')):
-         with open(os.path.join(mock_data_path, 'categories.json'), 'w') as f:
-            # Add some default categories for testing
-            default_categories = [
-                {"category_id": "cat_food_sys", "name": "Ăn uống", "type": "expense", "icon": "🍽️", "user_id": "system", "is_active": True},
-                {"category_id": "cat_salary_sys", "name": "Lương", "type": "income", "icon": "💰", "user_id": "system", "is_active": True},
-                {"category_id": "cat_ent_user", "name": "Giải trí (User)", "type": "expense", "icon": "🎮", "user_id": "user123", "is_active": True}
-            ]
-            json.dump(default_categories, f)
-
-    if not os.path.exists(os.path.join(mock_data_path, 'budgets.json')):
-        with open(os.path.join(mock_data_path, 'budgets.json'), 'w') as f:
-            json.dump([], f)
-
-
-    app = QApplication(sys.argv)
-    
-    # Initialize actual managers, assuming they can find their data files
-    # or create them in their default locations (e.g., project_root/data/)
-    # For this example, ensure your managers are configured to look in a predictable place
-    # or pass specific paths if they support it.
-    # The paths in the managers are relative to their own location, so this might be tricky
-    # for a standalone test script like this.
-    # For a real test, you'd mock the file operations or use temporary file paths.
-
-    # For simplicity, let's assume managers will create files in a 'data' subdir of where this script runs
-    # This requires managers to be adjusted or this script to be in the project root.
-    try:
-        # Define user_mgr before using it for initializing UserTransactionTab
-        user_mgr = MockUserManager() 
-        transaction_mgr = TransactionManager() # Uses default 'data/transactions.json'
-        category_mgr = CategoryManager()       # Uses default 'data/categories.json'
-        budget_mgr = BudgetManager()           # Uses default 'data/budgets.json'
-    except Exception as e:
-        print(f"Error initializing managers for test: {e}")
-        print("Please ensure your data managers can correctly locate/create their data files.")
-        print("This test script might need to be run from your project's root directory,")
-        print("or managers need to be instantiated with explicit paths to test data files.")
-        sys.exit(1)
-
-
-    main_window = UserTransactionTab(user_mgr, transaction_mgr, category_mgr, None, budget_mgr, None)
-    main_window.setWindowTitle("Quản lý Giao dịch - Test")
-    main_window.setGeometry(100, 100, 1000, 700) # Adjusted size
-    main_window.show()
-    sys.exit(app.exec_())
