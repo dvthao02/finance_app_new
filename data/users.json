@@ -13,11 +13,9 @@
     "avatar": "d:\\APP\\finance_app\\assets\\avatar\\avatar_user_001.jpg",
     "date_of_birth": "2002-01-31",
     "address": "123 Admin Street, Hanoi",
-    "last_login": "2025-06-18T23:38:57.189391",
+    "last_login": "2025-06-19T00:38:12.628298",
     "last_activity": "2025-06-10T09:45:00Z",
-    "gender": "Nam",
-    "reset_code": null,
-    "reset_code_time": null
+    "gender": "Nam"
   },
   {
     "user_id": "user_002",
@@ -35,9 +33,9 @@
     "address": "456 User Ave, Ho Chi Minh City",
     "last_login": "2025-06-18T23:43:06.077896",
     "last_activity": "2025-06-10T09:45:00Z",
-    "gender": "Nam",
-    "birthday": "2000-06-18",
-    "phone_number": "0964350515"
+    "gender": "Nam"
+
+
   },
   {
     "user_id": "user_003",
@@ -54,7 +52,6 @@
     "avatar": "d:\\APP\\finance_app\\assets\\avatar\\avatar_user_003.jpg",
     "date_of_birth": "",
     "address": "",
-    "birthday": "2000-06-18",
     "gender": "Nam"
   },
   {

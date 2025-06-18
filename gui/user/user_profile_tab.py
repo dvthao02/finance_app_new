@@ -88,7 +88,7 @@ class UserProfileTab(QWidget):
             "email": "Email:",
             "date_of_birth": "Ngày sinh:",
             "gender": "Giới tính:",
-            "phone_number": "Số điện thoại:"
+            "phone": "Số điện thoại:"
         }
         
         label_style = "QLabel { color: #555555; font-weight: bold; }"
@@ -171,7 +171,7 @@ class UserProfileTab(QWidget):
                 self.entries["date_of_birth"].setDate(QDate.fromString(dob_str, "dd/MM/yyyy"))
 
             self.entries["gender"].setCurrentText(self.current_user.get("gender", ""))
-            self.entries["phone_number"].setText(self.current_user.get("phone_number", ""))
+            self.entries["phone"].setText(self.current_user.get("phone", ""))
             
             avatar_path = self.current_user.get("avatar")
             if avatar_path and os.path.exists(avatar_path):
@@ -242,7 +242,7 @@ class UserProfileTab(QWidget):
             email = self.entries["email"].text().strip()
             date_of_birth = self.entries["date_of_birth"].date().toString("dd/MM/yyyy")
             gender = self.entries["gender"].currentText()
-            phone_number = self.entries["phone_number"].text().strip()
+            phone = self.entries["phone"].text().strip()
 
             # Kiểm tra dữ liệu
             from utils.file_helper import is_valid_email, is_valid_phone
@@ -269,18 +269,18 @@ class UserProfileTab(QWidget):
                     return
 
             # Kiểm tra định dạng số điện thoại
-            if phone_number and not is_valid_phone(phone_number):
+            if phone and not is_valid_phone(phone):
                 QMessageBox.warning(self, "Lỗi định dạng",
                     "Số điện thoại không hợp lệ. Số điện thoại phải có 10-11 chữ số.")
-                self.entries["phone_number"].setFocus()
+                self.entries["phone"].setFocus()
                 return
 
             # Kiểm tra tính duy nhất của số điện thoại
-            if phone_number and phone_number != self.current_user.get("phone_number"):
-                if not self.user_manager.is_phone_unique(phone_number, user_id_to_exclude=user_id):
+            if phone and phone != self.current_user.get("phone"):
+                if not self.user_manager.is_phone_unique(phone, user_id_to_exclude=user_id):
                     QMessageBox.warning(self, "Số điện thoại đã tồn tại", 
                         "Số điện thoại này đã được đăng ký. Vui lòng sử dụng số khác.")
-                    self.entries["phone_number"].setFocus()
+                    self.entries["phone"].setFocus()
                     return
 
             # Tạo dictionary dữ liệu cập nhật
@@ -289,7 +289,7 @@ class UserProfileTab(QWidget):
                 "email": email,
                 "date_of_birth": date_of_birth,
                 "gender": gender,
-                "phone_number": phone_number,
+                "phone": phone,
             }
             
             if self.new_avatar_path:
