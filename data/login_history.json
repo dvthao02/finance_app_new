@@ -2658,5 +2658,40 @@
     "user_id": "user_002",
     "action": "login",
     "timestamp": "2025-06-19T19:01:29.481547"
+  },
+  {
+    "user_id": "user_001",
+    "action": "login",
+    "timestamp": "2025-06-19T19:06:41.026529"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-19T19:06:48.890086"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-19T19:06:54.113862"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-19T19:08:55.390262"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-19T19:09:30.554750"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-19T19:09:56.076662"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-19T19:10:01.804746"
   }
 ]
