@@ -5,6 +5,7 @@ from PyQt5.QtGui import QFont, QIcon, QColor, QPalette, QBrush
 from PyQt5.QtCore import Qt, QSize
 from data_manager.category_manager import CategoryManager
 from utils.icon_list import CATEGORY_ICONS, CATEGORY_COLORS
+from utils.ui_styles import TableStyleHelper
 import os
 
 class AdminCategoryTab(QWidget):

@@ -23,12 +23,11 @@ class AdminNotifyTab(QWidget):
         layout.addWidget(send_btn)
         
         self.notify_table = QTableWidget(0, 6)
+        TableStyleHelper.apply_common_table_style(self.notify_table)
         self.notify_table.setHorizontalHeaderLabels([
             "Tiêu đề", "Nội dung", "Loại", "Ngày gửi", "Ưu tiên", "Trạng thái"
         ])
         
-        # Áp dụng styling chung
-        TableStyleHelper.apply_common_table_style(self.notify_table)
         layout.addWidget(self.notify_table)
         
         btn_layout = QHBoxLayout()

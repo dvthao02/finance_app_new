@@ -48,6 +48,7 @@ class AdminUserTab(QWidget):
         
         # Cải thiện table với styling chung
         self.user_table = QTableWidget(0, 6)
+        TableStyleHelper.apply_common_table_style(self.user_table)
         self.user_table.setHorizontalHeaderLabels(["ID", "Tên hiển thị", "Email", "Ngày đăng ký", "Lần đăng nhập cuối", "Trạng thái"])
           # Áp dụng styling chung cho table
         TableStyleHelper.apply_common_table_style(self.user_table)

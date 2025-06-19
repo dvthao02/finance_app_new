@@ -188,17 +188,6 @@
   },
   {
     "user_id": "user_002",
-    "description": "Phúc Long",
-    "amount": 120000.0,
-    "category_id": "cat_015",
-    "date": "2025-06-19T00:00:00",
-    "type": "expense",
-    "created_at": "2025-06-19T08:14:26.945097",
-    "updated_at": "2025-06-19T08:14:26.945140",
-    "transaction_id": "txn_021"
-  },
-  {
-    "user_id": "user_002",
     "description": "Highlands Coffe",
     "amount": 78000.0,
     "category_id": "cat_015",
@@ -218,5 +207,27 @@
     "created_at": "2025-06-19T08:17:08.920167",
     "updated_at": "2025-06-19T08:17:08.920187",
     "transaction_id": "txn_023"
+  },
+  {
+    "user_id": "user_004",
+    "description": "be",
+    "amount": 40000.0,
+    "category_id": "cat_004",
+    "date": "2025-06-19T00:00:00",
+    "type": "expense",
+    "created_at": "2025-06-19T14:58:06.245447",
+    "updated_at": "2025-06-19T14:58:06.245463",
+    "transaction_id": "txn_024"
+  },
+  {
+    "user_id": "user_004",
+    "description": "Xăng",
+    "amount": 1000000.0,
+    "category_id": "cat_004",
+    "date": "2025-06-19T00:00:00",
+    "type": "expense",
+    "created_at": "2025-06-19T15:00:01.132128",
+    "updated_at": "2025-06-19T15:00:01.132137",
+    "transaction_id": "txn_025"
   }
 ]

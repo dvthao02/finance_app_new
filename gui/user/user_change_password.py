@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushBut
                             QLineEdit, QFrame, QMessageBox, QAction)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-import hashlib
 import os
 
 class ChangePasswordDialog(QDialog):
@@ -20,44 +19,44 @@ class ChangePasswordDialog(QDialog):
 
     def init_ui(self):
         self.setWindowTitle('🔑 Đổi mật khẩu')
-        self.setFixedSize(400, 340)
+        self.setFixedSize(420, 520)
         self.setModal(True)
         self.setStyleSheet("QDialog { background-color: white; }")
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(20)
-        layout.setContentsMargins(30, 30, 30, 30)
+        layout.setSpacing(16)
+        layout.setContentsMargins(28, 22, 28, 22)
 
         # Header
         header_label = QLabel('🔑 Đổi mật khẩu')
-        header_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #374151; margin-bottom: 10px;")
+        header_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #374151; margin-bottom: 8px;")
         header_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(header_label)
 
         # Form
         form_frame = QFrame()
-        form_frame.setStyleSheet("QFrame { background-color: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 25px; }")
+        form_frame.setStyleSheet("QFrame { background-color: #fff; border-radius: 10px; border: 1px solid #e2e8f0; padding: 18px; }")
         form_layout = QVBoxLayout(form_frame)
-        form_layout.setSpacing(15)
+        form_layout.setSpacing(14)
 
         input_style = """
             QLineEdit {
-                padding: 12px 15px;
-                border: 1.5px solid #e2e8f0;
-                border-radius: 8px;
-                font-size: 14px;
+                padding: 12px 14px;
+                border: 1.2px solid #e2e8f0;
+                border-radius: 7px;
+                font-size: 15px;
                 background-color: #f8fafc;
             }
             QLineEdit:focus {
                 border-color: #1976D2;
-                background-color: white;
+                background-color: #fff;
             }
         """
-        label_style = "color: #374151; font-weight: 600; font-size: 14px; margin-bottom: 5px;"
+        label_style = "color: #374151; font-weight: 600; font-size: 14px; margin-bottom: 2px;"
 
         # Current password
         current_pwd_label = QLabel('🔒 Mật khẩu hiện tại:')
-        current_pwd_label.setStyleSheet(label_style)
+        current_pwd_label.setStyleSheet(label_style + "border: none; background: none; padding: 0; margin-top: 0; margin-bottom: 2px;")
         self.current_password = QLineEdit()
         self.current_password.setEchoMode(QLineEdit.Password)
         self.current_password.setStyleSheet(input_style)
@@ -71,7 +70,7 @@ class ChangePasswordDialog(QDialog):
 
         # New password
         new_pwd_label = QLabel('🔑 Mật khẩu mới:')
-        new_pwd_label.setStyleSheet(label_style)
+        new_pwd_label.setStyleSheet(label_style + "border: none; background: none; padding: 0; margin-top: 0; margin-bottom: 2px;")
         self.new_password = QLineEdit()
         self.new_password.setEchoMode(QLineEdit.Password)
         self.new_password.setStyleSheet(input_style)
@@ -84,7 +83,7 @@ class ChangePasswordDialog(QDialog):
 
         # Confirm password
         confirm_pwd_label = QLabel('🔐 Xác nhận mật khẩu:')
-        confirm_pwd_label.setStyleSheet(label_style)
+        confirm_pwd_label.setStyleSheet(label_style + "border: none; background: none; padding: 0; margin-top: 0; margin-bottom: 2px;")
         self.confirm_password = QLineEdit()
         self.confirm_password.setEchoMode(QLineEdit.Password)
         self.confirm_password.setStyleSheet(input_style)
@@ -107,16 +106,16 @@ class ChangePasswordDialog(QDialog):
 
         # Buttons
         buttons_layout = QHBoxLayout()
-        buttons_layout.setSpacing(15)
+        buttons_layout.setSpacing(12)
         btn_cancel = QPushButton('❌ Hủy')
         btn_cancel.setStyleSheet("""
-            QPushButton { background: #6b7280; color: white; border: none; border-radius: 8px; padding: 12px 20px; font-weight: 600; font-size: 14px; }
+            QPushButton { background: #6b7280; color: white; border: none; border-radius: 7px; padding: 11px 22px; font-weight: 600; font-size: 14px; }
             QPushButton:hover { background: #4b5563; }
         """)
         btn_cancel.clicked.connect(self.reject)
         btn_save = QPushButton('🔑 Đổi mật khẩu')
         btn_save.setStyleSheet("""
-            QPushButton { background: #1976D2; color: white; border: none; border-radius: 8px; padding: 12px 20px; font-weight: 600; font-size: 14px; }
+            QPushButton { background: #1976D2; color: white; border: none; border-radius: 7px; padding: 11px 22px; font-weight: 600; font-size: 14px; }
             QPushButton:hover { background: #1256A1; }
         """)
         btn_save.clicked.connect(self.change_password)
@@ -149,15 +148,13 @@ class ChangePasswordDialog(QDialog):
         self.confirm_password.setEchoMode(QLineEdit.Normal if self.show_confirm_pwd else QLineEdit.Password)
         self.toggle_confirm_pwd_action.setIcon(QIcon(self.get_eye_icon(self.show_confirm_pwd)))
 
-    def hash_password(self, password):
-        """Hash mật khẩu với SHA-256"""
-        return hashlib.sha256(password.encode()).hexdigest()
-
     def validate_current_password(self, password):
-        """Kiểm tra mật khẩu hiện tại"""
-        current_password_hash = self.current_user.get('password', '')
-        input_hash = self.hash_password(password)
-        return current_password_hash == input_hash
+        """Kiểm tra mật khẩu hiện tại bằng bcrypt"""
+        user = self.user_manager.get_current_user()
+        if not user:
+            return False
+        current_password_hash = user.get('password', '')
+        return self.user_manager.check_password(password, current_password_hash)
 
     def change_password(self):
         """Xử lý đổi mật khẩu"""
@@ -195,19 +192,23 @@ class ChangePasswordDialog(QDialog):
                 self.current_password.selectAll()
                 return
             
-            # Hash new password
-            new_password_hash = self.hash_password(new_pwd)
+            # Hash new password bằng bcrypt
+            new_password_hash = self.user_manager.hash_password(new_pwd)
             
             # Update user data
-            user_id = self.current_user.get('id')
-            self.user_manager.update_user_password(user_id, new_password_hash)
-            # Update user manager cache if needed
+            user = self.user_manager.get_current_user()
+            user_id = user.get('id') or user.get('user_id')
+            # Cập nhật mật khẩu mới vào user
+            users = self.user_manager.load_users()
+            for u in users:
+                if u.get('id') == user_id or u.get('user_id') == user_id:
+                    u['password'] = new_password_hash
+                    u['updated_at'] = datetime.now().isoformat()
+            self.user_manager.save_users(users)
             if hasattr(self.user_manager, 'users'):
                 self.user_manager.users = self.user_manager.load_users()
-            
             QMessageBox.information(self, '✅ Thành công', 
-                                  'Đã đổi mật khẩu thành công!\n'
-                                  'Vui lòng ghi nhớ mật khẩu mới.')
+                                  'Đã đổi mật khẩu thành công!\nVui lòng ghi nhớ mật khẩu mới.')
             
             self.accept()
             

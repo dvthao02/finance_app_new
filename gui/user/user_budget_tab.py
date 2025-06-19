@@ -402,13 +402,14 @@ class UserBudgetTab(QWidget):
                     category_name = cat_obj.get('name', category_name)
             
             limit = budget.get('limit', 0)
-            
-            # current_amount now represents the REMAINING balance
+           
             remaining = budget.get('current_amount', 0)  # remaining balance
             spent = limit - remaining  # spent = limit - remaining
             
-            # Ensure spent is not negative (in case of data inconsistency)
+            # Đảm bảo chi tiêu không phải là số âm (trong trường hợp dữ liệu không nhất quán)
             spent = max(0, spent)
+            # Clamp remaining so it cannot be less than 0 for display
+            display_remaining = max(0, remaining)
 
             self.budget_table.setItem(row, 0, QTableWidgetItem(str(budget_id)))
             self.budget_table.setItem(row, 1, QTableWidgetItem(category_name))
@@ -418,11 +419,11 @@ class UserBudgetTab(QWidget):
             self.budget_table.setItem(row, 2, limit_item)
 
             # Display spent as a positive number
-            spent_item = QTableWidgetItem(f"{spent:,.0f} đ") # MODIFIED HERE: spent is already abs()
+            spent_item = QTableWidgetItem(f"{spent:,.0f} đ")
             spent_item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
             self.budget_table.setItem(row, 3, spent_item)
 
-            remaining_item = QTableWidgetItem(f"{remaining:,.0f} đ")
+            remaining_item = QTableWidgetItem(f"{display_remaining:,.0f} đ")
             remaining_item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
             if remaining < 0:
                 remaining_item.setForeground(QColor("red"))

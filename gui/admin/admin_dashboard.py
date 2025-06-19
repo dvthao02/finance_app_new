@@ -14,17 +14,15 @@ from gui.admin.admin_audit_tab import AdminAuditTab
 from gui.admin.admin_profile_tab import AdminProfileTab
 
 class AdminDashboard(BaseDashboard):
-    def __init__(self, parent=None):
-        self.user_manager = UserManager()
+    def __init__(self, user_manager, parent=None):
+        self.user_manager = user_manager
         self.category_manager = CategoryManager()
         self.notification_manager = NotificationManager()
         self.audit_log_manager = AuditLogManager()
         self.transaction_manager = TransactionManager()
-        
         super().__init__(parent)
         self.setWindowTitle("Admin Dashboard")
         self.init_admin_content()
-        
         if self.content_stack is not None and self.content_stack.count() > 0:
             self.content_stack.setCurrentIndex(0)
         else:
@@ -51,7 +49,11 @@ class AdminDashboard(BaseDashboard):
             self.category_tab = AdminCategoryTab(self.category_manager)
             self.notify_tab = AdminNotifyTab(self.notification_manager, self.user_manager)
             self.audit_tab = AdminAuditTab(self.audit_log_manager)
-            self.profile_tab = AdminProfileTab()
+            self.profile_tab = AdminProfileTab(self.user_manager)
+
+            # Connect the profile updated signal to the header update
+            self.profile_tab.profile_updated.connect(self.update_header)
+
             if self.content_stack is not None:
                 try:
                     # Make sure all widgets are visible before adding
@@ -108,9 +110,7 @@ class AdminDashboard(BaseDashboard):
             if hasattr(self, 'category_tab'):
                 self.category_tab.refresh_table()
             if hasattr(self, 'notify_tab'):
-                self.notify_tab.load_notifications_table(
-                    current_user_id=self.current_user.get('user_id') if self.current_user else None
-                )
+                self.notify_tab.load_notifications_table()
             if hasattr(self, 'overview_tab'):
                 self.overview_tab.load_dashboard_stats()
             if hasattr(self, 'audit_tab'):
@@ -124,7 +124,6 @@ class AdminDashboard(BaseDashboard):
             tab_names = ["Overview", "Users", "Categories", "Notifications", "Audit", "Profile"]
             if 0 <= index < len(tab_names):
                 print(f"Switched to {tab_names[index]} tab")
-                
                 # Refresh specific tab data when switching
                 if index == 0 and hasattr(self, 'overview_tab'):
                     self.overview_tab.load_dashboard_stats()
@@ -133,9 +132,7 @@ class AdminDashboard(BaseDashboard):
                 elif index == 2 and hasattr(self, 'category_tab'):
                     self.category_tab.refresh_table()
                 elif index == 3 and hasattr(self, 'notify_tab'):
-                    self.notify_tab.load_notifications_table(
-                        current_user_id=self.current_user.get('user_id') if self.current_user else None
-                    )
+                    self.notify_tab.load_notifications_table()
                 elif index == 4 and hasattr(self, 'audit_tab'):
                     self.audit_tab.load_audit_log_table()
         except Exception as e:

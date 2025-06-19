@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame,
                             QTabWidget, QPushButton, QComboBox, QDateEdit, QFileDialog,
                             QCheckBox, QGroupBox, QMessageBox, QDialog, QRadioButton)
 from PyQt5.QtGui import QFont, QColor, QIcon, QPixmap
-from PyQt5.QtCore import Qt, QDate, pyqtSignal
+from PyQt5.QtCore import Qt, QDate, pyqtSignal, QTimer
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 import matplotlib
 matplotlib.use('Agg')
@@ -25,6 +25,12 @@ class UserReport(QWidget):
         self.current_month = datetime.datetime.now().month
         self.current_year = datetime.datetime.now().year
         self.selected_period = "month"  # 'month', 'quarter', 'year'
+
+        # Timer for debouncing report generation
+        self.report_generation_timer = QTimer(self)
+        self.report_generation_timer.setSingleShot(True)
+        self.report_generation_timer.timeout.connect(self.generate_report)
+
         self.init_ui()
         
     def init_ui(self):
@@ -61,19 +67,14 @@ class UserReport(QWidget):
                 background: white;
                 border-radius: 12px;
                 border: 1px solid #e2e8f0;
-                padding: 15px;
+                padding: 10px;
             }
         """)
         filter_layout = QHBoxLayout(filter_frame)
-        filter_layout.setContentsMargins(15, 15, 15, 15)
-        filter_layout.setSpacing(15)
+        filter_layout.setContentsMargins(10, 10, 10, 10)
+        filter_layout.setSpacing(10)
         
         # Period selection
-        period_layout = QVBoxLayout()
-        period_label = QLabel("Thời gian")
-        period_label.setFont(QFont('Segoe UI', 12))
-        period_layout.addWidget(period_label)
-        
         period_combo = QComboBox()
         period_combo.setFont(QFont('Segoe UI', 12))
         period_combo.addItem("Tháng")
@@ -98,15 +99,9 @@ class UserReport(QWidget):
             }
         """)
         period_combo.currentIndexChanged.connect(self.on_period_changed)
-        period_layout.addWidget(period_combo)
-        filter_layout.addLayout(period_layout)
+        filter_layout.addWidget(period_combo)
         
         # Date selection
-        date_layout = QVBoxLayout()
-        date_label = QLabel("Chọn thời gian")
-        date_label.setFont(QFont('Segoe UI', 12))
-        date_layout.addWidget(date_label)
-        
         date_selector = QDateEdit()
         date_selector.setFont(QFont('Segoe UI', 12))
         date_selector.setDisplayFormat("MM/yyyy")
@@ -126,15 +121,9 @@ class UserReport(QWidget):
             }
         """)
         date_selector.dateChanged.connect(self.on_date_changed)
-        date_layout.addWidget(date_selector)
-        filter_layout.addLayout(date_layout)
+        filter_layout.addWidget(date_selector)
         
         # Transaction type filter
-        type_layout = QVBoxLayout()
-        type_label = QLabel("Loại giao dịch")
-        type_label.setFont(QFont('Segoe UI', 12))
-        type_layout.addWidget(type_label)
-        
         type_combo = QComboBox()
         type_combo.setFont(QFont('Segoe UI', 12))
         type_combo.addItem("Tất cả")
@@ -158,8 +147,8 @@ class UserReport(QWidget):
                 border-bottom-right-radius: 8px;
             }
         """)
-        type_layout.addWidget(type_combo)
-        filter_layout.addLayout(type_layout)
+        type_combo.currentIndexChanged.connect(self.schedule_report_generation)
+        filter_layout.addWidget(type_combo)
         
         filter_layout.addStretch()
         
@@ -167,10 +156,13 @@ class UserReport(QWidget):
         action_layout = QHBoxLayout()
         action_layout.setSpacing(10)
         
-        # Generate report button
-        generate_btn = QPushButton("Tạo báo cáo")
-        generate_btn.setFont(QFont('Segoe UI', 12))
-        generate_btn.setStyleSheet("""
+        # Refresh report button
+        refresh_btn = QPushButton(" Làm mới")
+        refresh_btn.setFont(QFont('Segoe UI', 12))
+        icon_path = os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'function', 'refresh.png')
+        if os.path.exists(icon_path):
+            refresh_btn.setIcon(QIcon(icon_path))
+        refresh_btn.setStyleSheet("""
             QPushButton {
                 background: #6366f1;
                 color: white;
@@ -184,8 +176,8 @@ class UserReport(QWidget):
                 background: #4f46e5;
             }
         """)
-        generate_btn.clicked.connect(self.generate_report)
-        action_layout.addWidget(generate_btn)
+        refresh_btn.clicked.connect(self.generate_report)
+        action_layout.addWidget(refresh_btn)
         
         # Export button
         export_btn = QPushButton("Xuất báo cáo")
@@ -229,8 +221,7 @@ class UserReport(QWidget):
                 border-bottom-color: #e2e8f0;
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
-                min-width: 8ex;
-                padding: 10px 20px;
+                padding: 10px 25px; /* Adjust padding */
                 color: #64748b;
                 font-weight: 500;
             }
@@ -267,18 +258,6 @@ class UserReport(QWidget):
         summary_layout.addWidget(self.expense_card)
         
         main_overview.addLayout(summary_layout)
-        
-        # Secondary metrics row - Balance and Savings Rate
-        secondary_layout = QHBoxLayout()
-        secondary_layout.setSpacing(20)
-        
-        self.balance_card = self.create_secondary_card("📊 Chênh Lệch", "0đ", "#3b82f6")
-        self.savings_rate_card = self.create_secondary_card("🎯 Tỷ Lệ Tiết Kiệm", "0%", "#8b5cf6")
-        
-        secondary_layout.addWidget(self.balance_card)
-        secondary_layout.addWidget(self.savings_rate_card)
-        
-        main_overview.addLayout(secondary_layout)
         
         # Income vs Expense chart
         income_expense_frame = QFrame()
@@ -446,35 +425,32 @@ class UserReport(QWidget):
         self.figure3 = figure3
         self.figure4 = figure4
         
+        # Initially generate report for the current period
+        self.schedule_report_generation()
+        
     def create_main_summary_card(self, title, value, color, bg_color):
-        """Create large summary cards for income and expense"""
+        """Create simpler summary cards for income and expense"""
         card = QFrame()
         card.setStyleSheet(f"""
             QFrame {{
                 background: {bg_color};
-                border-radius: 16px;
-                border: 2px solid {color};
-                padding: 25px;
-                min-height: 120px;
-            }}
-            QFrame:hover {{
-                border-color: {color};
-                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+                border-radius: 12px;
+                padding: 20px;
             }}
         """)
         
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(15)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(10)
         
         title_label = QLabel(title)
-        title_label.setFont(QFont('Segoe UI', 16, QFont.Bold))
-        title_label.setStyleSheet(f"color: {color}; margin: 0;")
+        title_label.setFont(QFont('Segoe UI', 14, QFont.Bold))
+        title_label.setStyleSheet(f"color: {color}; margin: 0; background-color: transparent;")
         layout.addWidget(title_label)
         
         value_label = QLabel(value)
-        value_label.setFont(QFont('Segoe UI', 32, QFont.Bold))
-        value_label.setStyleSheet(f"color: {color}; margin: 0;")
+        value_label.setFont(QFont('Segoe UI', 28, QFont.Bold))
+        value_label.setStyleSheet(f"color: {color}; margin: 0; background-color: transparent;")
         layout.addWidget(value_label)
         
         # Store value label for updates
@@ -482,8 +458,8 @@ class UserReport(QWidget):
         
         return card
         
-    def create_secondary_card(self, title, value, color):
-        """Create smaller cards for balance and savings rate"""
+    def create_summary_card(self, title, value, color):
+        """Legacy function - kept for compatibility"""
         card = QFrame()
         card.setStyleSheet(f"""
             QFrame {{
@@ -518,14 +494,11 @@ class UserReport(QWidget):
         
         return card
         
-    def create_summary_card(self, title, value, color):
-        """Legacy function - kept for compatibility"""
-        return self.create_secondary_card(title, value, color)
-        
     def on_date_changed(self, date):
         """Handle date change"""
         self.current_month = date.month()
         self.current_year = date.year()
+        self.schedule_report_generation()
         
     def on_period_changed(self, index):
         """Handle period selection change"""
@@ -538,7 +511,12 @@ class UserReport(QWidget):
         elif index == 2:
             self.selected_period = "year"
             self.date_selector.setDisplayFormat("yyyy")
+        self.schedule_report_generation()
             
+    def schedule_report_generation(self):
+        """Schedules a report generation to avoid rapid updates."""
+        self.report_generation_timer.start(250) # 250ms delay
+
     def generate_report(self):
         """Generate report based on selected period and date"""
         try:
@@ -621,44 +599,50 @@ class UserReport(QWidget):
               # Update cards
         self.income_card.value_label.setText(f"{income_total:,.0f}đ")
         self.expense_card.value_label.setText(f"{expense_total:,.0f}đ")
-        self.balance_card.value_label.setText(f"{balance:,.0f}đ")
         
-        # Update balance card color and style based on value
-        if balance >= 0:
-            self.balance_card.setStyleSheet("""
-                QFrame {
-                    background: white;
-                    border-radius: 12px;
-                    border: 1px solid #10b981;
-                    padding: 15px;
-                    min-height: 80px;
-                }
-                QFrame:hover {
-                    border-color: #10b981;
-                    box-shadow: 0 4px 12px rgba(16,185,129,0.2);
-                }
-            """)
-            self.balance_card.value_label.setStyleSheet("color: #10b981; margin: 0; font-size: 20px; font-weight: bold;")
-        else:
-            self.balance_card.setStyleSheet("""
-                QFrame {
-                    background: white;
-                    border-radius: 12px;
-                    border: 1px solid #ef4444;
-                    padding: 15px;
-                    min-height: 80px;
-                }
-                QFrame:hover {
-                    border-color: #ef4444;
-                    box-shadow: 0 4px 12px rgba(239,68,68,0.2);
-                }
-            """)
-            self.balance_card.value_label.setStyleSheet("color: #ef4444; margin: 0; font-size: 20px; font-weight: bold;")
-            
-        self.savings_rate_card.value_label.setText(f"{savings_rate:.1f}%")
           # Add financial insights based on data
         self.update_financial_insights(income_total, expense_total, balance, savings_rate)
     
+    def update_income_expense_chart(self, transactions):
+        """Update the income vs expense bar chart."""
+        try:
+            self.figure1.clear()
+            ax = self.figure1.add_subplot(111)
+            self.figure1.patch.set_facecolor('white')
+            ax.set_facecolor('white')
+
+            income_total = sum(t.get('amount', 0) for t in transactions if t.get('type') == 'income')
+            expense_total = sum(t.get('amount', 0) for t in transactions if t.get('type') == 'expense')
+
+            labels = ['Thu nhập', 'Chi tiêu']
+            values = [income_total, expense_total]
+            colors = ['#10b981', '#ef4444']
+
+            bars = ax.bar(labels, values, color=colors, width=0.5)
+
+            ax.set_ylabel('Số tiền (VNĐ)', fontdict={'fontsize': 12})
+            
+            # Format y-axis
+            import matplotlib.ticker as ticker
+            formatter = ticker.FuncFormatter(lambda x, p: f'{int(x):,}đ')
+            ax.yaxis.set_major_formatter(formatter)
+            ax.grid(True, axis='y', linestyle='--', alpha=0.7)
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.spines['left'].set_color('#d1d5db')
+            ax.spines['bottom'].set_color('#d1d5db')
+
+            # Add value labels on top of bars
+            for bar in bars:
+                yval = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2.0, yval, f'{int(yval):,}đ', va='bottom', ha='center', fontsize=11, weight='bold')
+
+            self.figure1.tight_layout(pad=2)
+            self.income_expense_canvas.draw()
+
+        except Exception as e:
+            print(f"Error updating income/expense chart: {e}")
+
     def update_financial_insights(self, income_total, expense_total, balance, savings_rate):
         """Show smart financial insights based on the current data"""
         # Clear existing insights

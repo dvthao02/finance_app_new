@@ -1,199 +1,263 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QGroupBox, QFormLayout, QLineEdit, QPushButton, QFileDialog, QMessageBox, QHBoxLayout, QSpacerItem, QSizePolicy, QDateEdit
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import Qt, QDate
-from datetime import datetime
-from utils.file_helper import load_json, save_json, is_valid_email, is_valid_phone, is_strong_password
-from data_manager.user_manager import UserManager
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
+                             QLineEdit, QFrame, QGridLayout, QMessageBox, QFileDialog,
+                             QComboBox, QDateEdit)
+from PyQt5.QtCore import Qt, QDate, pyqtSignal
+from PyQt5.QtGui import QFont, QPixmap, QPainter, QBrush, QColor, QBitmap
 import os
+import shutil
+from data_manager.user_manager import UserManager
+from utils.file_helper import is_strong_password
 
 class AdminProfileTab(QWidget):
-    def __init__(self, parent=None):
+    profile_updated = pyqtSignal()
+
+    def __init__(self, user_manager, parent=None):
         super().__init__(parent)
-        self.user = None
+        self.user_manager = user_manager
+        self.current_user = self.user_manager.get_current_user() or {}
+        self.new_avatar_path = None
         self.init_ui()
+        self.load_user_data()
 
     def init_ui(self):
+        self.setStyleSheet("background-color: #FFFFFF;")
         main_layout = QVBoxLayout(self)
-        # Ảnh đại diện
+        main_layout.setContentsMargins(50, 30, 50, 30)
+        main_layout.setSpacing(30)
+
+        # --- Top section for Avatar and basic info ---
+        top_frame = QFrame(self)
+        top_layout = QHBoxLayout(top_frame)
+        top_layout.setContentsMargins(0, 0, 0, 0)
+        top_layout.setSpacing(20)
+
+        # Avatar
         self.avatar_label = QLabel()
         self.avatar_label.setFixedSize(100, 100)
-        self.avatar_label.setStyleSheet("border:1px solid #ccc; border-radius:50px; background:#f5f5f5;")
         self.avatar_label.setAlignment(Qt.AlignCenter)
-        # Thông tin cá nhân
-        self.info_group = QGroupBox("Thông tin cá nhân")
-        self.form = QFormLayout(self.info_group)
-        self.txt_id = QLabel(); self.txt_role = QLabel()
-        self.input_name = QLineEdit(); self.input_email = QLineEdit(); self.input_phone = QLineEdit()
-        self.input_dob = QDateEdit(calendarPopup=True); self.input_dob.setDisplayFormat("dd-MM-yyyy")
-        self.input_address = QLineEdit(); self.input_avatar = QLineEdit()
-        self.btn_avatar = QPushButton("Chọn ảnh")
-        self.btn_avatar.clicked.connect(self.choose_avatar)
-        avatar_input_layout = QHBoxLayout()
-        avatar_input_layout.addWidget(self.input_avatar)
-        avatar_input_layout.addWidget(self.btn_avatar)
-        # Nút đổi mật khẩu riêng
-        self.btn_change_pw = QPushButton("Đổi mật khẩu")
-        self.btn_change_pw.clicked.connect(self.show_change_password_dialog)
-        # Thêm các trường vào form
-        self.form.addRow("ID:", self.txt_id)
-        self.form.addRow("Vai trò:", self.txt_role)
-        self.form.addRow("Tên hiển thị:", self.input_name)
-        self.form.addRow("Email:", self.input_email)
-        self.form.addRow("Số điện thoại:", self.input_phone)
-        self.form.addRow("Ngày sinh:", self.input_dob)
-        self.form.addRow("Địa chỉ:", self.input_address)
-        self.form.addRow("Ảnh đại diện:", avatar_input_layout)
-        # Nút cập nhật, đổi mật khẩu cùng hàng, căn giữa
-        btn_update = QPushButton("Cập nhật thông tin")
-        btn_update.setMinimumWidth(130)
-        btn_update.clicked.connect(self.update_profile)
-        btn_change_pw = self.btn_change_pw  # Đã tạo ở trên
-        btn_change_pw.setMinimumWidth(110)
-        btns = QHBoxLayout()
-        btns.addStretch(1)
-        btns.addWidget(btn_update)
-        btns.addSpacing(10)
-        btns.addWidget(btn_change_pw)
-        btns.addStretch(1)
-        
-        # Layout tổng hợp
-        top_layout = QHBoxLayout()
-        # Căn giữa avatar theo chiều dọc
-        avatar_vbox = QVBoxLayout()
-        avatar_vbox.addStretch(1)
-        avatar_vbox.addWidget(self.avatar_label, alignment=Qt.AlignCenter)
-        avatar_vbox.addStretch(1)
-        top_layout.addLayout(avatar_vbox)
-        top_layout.addSpacing(20)
-        top_layout.addWidget(self.info_group, 1)
-        main_layout.addLayout(top_layout)
-        main_layout.addSpacing(10)
-        main_layout.addLayout(btns)
-        main_layout.addSpacing(5)
-        main_layout.addStretch(1)
-        self.setLayout(main_layout)
+        self.avatar_label.setStyleSheet("background-color: #E0E0E0; border-radius: 50px; color: #333; font-size: 40px; font-weight: bold;")
 
-    def set_user(self, user):
-        self.user = user
-        if not user:
-            self.txt_id.setText("")
-            self.txt_role.setText("")
-            self.input_name.setText("")
-            self.input_email.setText("")
-            self.input_phone.setText("")
-            self.input_dob.setDate(QDate(2000, 1, 1))
-            self.input_address.setText("")
-            self.input_avatar.setText("")
-            self.avatar_label.clear()
-            return
-        self.txt_id.setText(str(user.get('user_id', '')))
-        self.txt_role.setText(user.get('role', ''))
-        self.input_name.setText(user.get('full_name', ''))
-        self.input_email.setText(user.get('email', ''))
-        self.input_phone.setText(user.get('phone', ''))        # Ngày sinh: ISO -> dd-MM-yyyy
-        dob = user.get('date_of_birth', '')
+        # Admin Info VBox
+        info_vbox = QVBoxLayout()
+        info_vbox.setSpacing(5)
+        info_vbox.addStretch()
+        self.name_display_label = QLabel("Administrator")
+        self.name_display_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #333333;")
+        self.email_display_label = QLabel("admin@email.com")
+        self.email_display_label.setStyleSheet("font-size: 14px; color: #757575;")
+        info_vbox.addWidget(self.name_display_label)
+        info_vbox.addWidget(self.email_display_label)
+        info_vbox.addStretch()
+
+        # Change Avatar Button
+        self.upload_button = QPushButton("Thay đổi ảnh")
+        self.upload_button.setCursor(Qt.PointingHandCursor)
+        self.upload_button.setStyleSheet("""
+            QPushButton {
+                background-color: #F0F0F0;
+                color: #333333;
+                border: 1px solid #DCDCDC;
+                border-radius: 8px;
+                padding: 10px 15px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #E0E0E0;
+            }
+        """)
+        self.upload_button.clicked.connect(self.upload_avatar)
+
+        top_layout.addWidget(self.avatar_label)
+        top_layout.addLayout(info_vbox)
+        top_layout.addStretch()
+        top_layout.addWidget(self.upload_button)
+        
+        main_layout.addWidget(top_frame)
+
+        # --- Bottom section for the form ---
+        form_frame = QFrame(self)
+        form_frame.setObjectName("formFrame")
+        form_frame.setStyleSheet("#formFrame { background-color: #F9F9F9; border-radius: 10px; }")
+        
+        form_layout = QGridLayout(form_frame)
+        form_layout.setContentsMargins(30, 30, 30, 30)
+        form_layout.setSpacing(20)
+
+        fields = {
+            "full_name": "Họ và tên:",
+            "email": "Email:",
+            "date_of_birth": "Ngày sinh:",
+            "phone": "Số điện thoại:",
+            "address": "Địa chỉ:"
+        }
+        
+        label_style = "QLabel { color: #555555; font-weight: bold; }"
+        input_style = """
+            QLineEdit, QDateEdit {
+                border: 1px solid #D0D0D0;
+                border-radius: 8px;
+                padding: 10px;
+                background-color: #FFFFFF;
+                color: #333;
+            }
+            QLineEdit:focus, QDateEdit:focus {
+                border-color: #007BFF;
+            }
+        """
+
+        self.entries = {}
+        for i, (field, label_text) in enumerate(fields.items()):
+            label = QLabel(label_text)
+            label.setStyleSheet(label_style)
+            form_layout.addWidget(label, i, 0)
+            if field == "date_of_birth":
+                self.entries[field] = QDateEdit()
+                self.entries[field].setCalendarPopup(True)
+                self.entries[field].setDisplayFormat('dd/MM/yyyy')
+            else:
+                self.entries[field] = QLineEdit()
+            self.entries[field].setStyleSheet(input_style)
+            form_layout.addWidget(self.entries[field], i, 1)
+
+        main_layout.addWidget(form_frame)
+        main_layout.addStretch()
+
+        # --- Button Frame (Bottom) ---
+        button_frame = QFrame(self)
+        buttons_layout = QHBoxLayout(button_frame)
+        buttons_layout.setContentsMargins(0, 0, 0, 0)
+        buttons_layout.addStretch()
+
+        self.change_password_button = QPushButton("Đổi mật khẩu")
+        self.change_password_button.setCursor(Qt.PointingHandCursor)
+        self.change_password_button.setStyleSheet("""
+            QPushButton { background-color: #6c757d; color: white; border: none; border-radius: 8px; padding: 12px 20px; font-weight: bold; }
+            QPushButton:hover { background-color: #5a6268; }
+        """)
+        self.change_password_button.clicked.connect(self.show_change_password_dialog)
+
+        self.save_button = QPushButton("Lưu thay đổi")
+        self.save_button.setCursor(Qt.PointingHandCursor)
+        self.save_button.setStyleSheet("""
+            QPushButton { background-color: #007BFF; color: white; border: none; border-radius: 8px; padding: 12px 20px; font-weight: bold; }
+            QPushButton:hover { background-color: #0056b3; }
+        """)
+        self.save_button.clicked.connect(self.save_admin_data)
+
+        buttons_layout.addWidget(self.change_password_button)
+        buttons_layout.addWidget(self.save_button)
+        main_layout.addWidget(button_frame)
+
+    def show_avatar(self, image_path):
         try:
-            if dob:
-                dt = datetime.strptime(dob, "%Y-%m-%d")
-                self.input_dob.setDate(QDate(dt.year, dt.month, dt.day))
+            # Ưu tiên dùng đường dẫn tương đối
+            if not os.path.isabs(image_path):
+                abs_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), image_path)
             else:
-                self.input_dob.setDate(QDate(2000, 1, 1))
-        except Exception:
-            self.input_dob.setDate(QDate(2000, 1, 1))
-        self.input_address.setText(user.get('address', ''))
-        self.input_avatar.setText(user.get('avatar', ''))
-        self.load_avatar(user.get('avatar', ''))
-        
-    def choose_avatar(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Chọn ảnh đại diện", "", "Image Files (*.png *.jpg *.jpeg *.bmp)")
-        if file_path:
-            # Nếu người dùng chọn ảnh, lưu đường dẫn và hiển thị preview
-            self.input_avatar.setText(file_path)
-            self.load_avatar(file_path)
-            QMessageBox.information(self, "Thông báo", "Đã chọn ảnh đại diện mới. Nhấn 'Cập nhật thông tin' để lưu thay đổi.")
-            
-    def load_avatar(self, path):
-        if path and os.path.exists(path):
-            pixmap = QPixmap(path)
-            if not pixmap.isNull():
-                self.avatar_label.setPixmap(pixmap.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-                return
-        
-        # Nếu không có ảnh hoặc ảnh không hợp lệ
-        self.avatar_label.setPixmap(QPixmap())
-        self.avatar_label.setText("No\nImage")
-        self.avatar_label.setStyleSheet("border:1px solid #ccc; border-radius:50px; background:#f5f5f5; color:#999;")
-        
-    def update_profile(self):
-        if not self.user:
-            return
-        name = self.input_name.text().strip()
-        email = self.input_email.text().strip()
-        phone = self.input_phone.text().strip()
-        dob = self.input_dob.date().toString("yyyy-MM-dd")
-        address = self.input_address.text().strip()
-        avatar = self.input_avatar.text().strip()
-        
-        # Validate
-        if not name:
-            QMessageBox.warning(self, "Lỗi", "Tên hiển thị không được để trống!")
-            return
-        if email and not is_valid_email(email):
-            QMessageBox.warning(self, "Lỗi", "Email không hợp lệ!")
-            return
-        if phone and not is_valid_phone(phone):
-            QMessageBox.warning(self, "Lỗi", "Số điện thoại không hợp lệ!")
-            return
-            
-        # Kiểm tra ảnh đại diện
-        if avatar and not os.path.exists(avatar):
-            QMessageBox.warning(self, "Lỗi", f"Không tìm thấy tệp ảnh: {avatar}")
-            return
-            
-        # Sao chép avatar vào thư mục assets nếu đường dẫn khác với avatar hiện tại
-        current_avatar = self.user.get('avatar', '')
-        if avatar and avatar != current_avatar:
-            from utils.file_helper import copy_avatar_to_assets
-            user_id = self.user.get('user_id', '')
-            new_avatar_path = copy_avatar_to_assets(avatar, user_id)
-            
-            if new_avatar_path:
-                avatar = new_avatar_path  # Cập nhật đường dẫn avatar thành đường dẫn mới trong assets
+                abs_path = image_path
+            if os.path.exists(abs_path):
+                pixmap = QPixmap(abs_path)
+                pixmap = pixmap.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                mask = QBitmap(pixmap.size())
+                mask.fill(Qt.white)
+                painter = QPainter(mask)
+                painter.setBrush(Qt.black)
+                painter.drawEllipse(0, 0, mask.width(), mask.height())
+                painter.end()
+                pixmap.setMask(mask)
+                self.avatar_label.setPixmap(pixmap)
+                self.avatar_label.setText("")
             else:
-                QMessageBox.warning(self, "Cảnh báo", "Không thể sao chép ảnh đại diện vào thư mục assets. Sử dụng đường dẫn gốc.")
-          # Cập nhật qua UserManager
-        um = UserManager()
-        try:
-            # Kiểm tra xem ảnh đại diện có thay đổi không
-            avatar_changed = avatar and avatar != self.user.get('avatar', '')
-            
-            ok = um.update_user(
-                self.user.get('user_id'),
-                full_name=name,
-                email=email,
-                phone=phone,
-                date_of_birth=dob,
-                address=address,
-                avatar=avatar
-            )
-            
-            if ok:
-                # Thông báo phù hợp với việc có cập nhật ảnh hay không
-                if avatar_changed:
-                    QMessageBox.information(self, "Thành công", "Đã cập nhật thông tin cá nhân và ảnh đại diện!")
-                else:
-                    QMessageBox.information(self, "Thành công", "Đã cập nhật thông tin cá nhân!")
-                
-                # Reload lại user từ file để đồng bộ
-                users = um.load_users()
-                for u in users:
-                    if u.get('user_id') == self.user.get('user_id'):
-                        self.set_user(u)
-                        break
-            else:
-                QMessageBox.warning(self, "Thông báo", "Không có thay đổi hoặc cập nhật thất bại!")
+                self.avatar_label.setPixmap(QPixmap())
+                self.avatar_label.setText("No\nImage")
         except Exception as e:
-            QMessageBox.critical(self, "Lỗi", f"Lỗi: {str(e)}")
+            self.avatar_label.setPixmap(QPixmap())
+            self.avatar_label.setText("No\nImage")
+
+    def upload_avatar(self):
+        if not self.current_user:
+            QMessageBox.critical(self, "Lỗi", "Không có admin nào đang đăng nhập.")
+            return
+        file_path, _ = QFileDialog.getOpenFileName(self, "Chọn ảnh đại diện", "", "Image files (*.png *.jpg *.jpeg *.gif)")
+        if file_path:
+            avatar_dir = os.path.join("assets", "avatar")
+            os.makedirs(avatar_dir, exist_ok=True)
+            file_extension = os.path.splitext(file_path)[1]
+            user_id = self.current_user.get('id') or self.current_user.get('user_id')
+            new_avatar_path = os.path.join(avatar_dir, f"avatar_user_{user_id}{file_extension}")
+            try:
+                shutil.copy(file_path, new_avatar_path)
+                self.new_avatar_path = new_avatar_path.replace("\\", "/") # luôn lưu đường dẫn tương đối chuẩn hóa
+                self.show_avatar(self.new_avatar_path)
+            except Exception as e:
+                QMessageBox.critical(self, "Lỗi", f"Không thể lưu ảnh đại diện: {e}")
+        else:
+            self.new_avatar_path = None
+
+    def load_user_data(self):
+        self.current_user = self.user_manager.get_current_user()
+        if self.current_user:
+            self.name_display_label.setText(self.current_user.get("full_name", "N/A"))
+            self.email_display_label.setText(self.current_user.get("email", "N/A"))
+            self.entries["full_name"].setText(self.current_user.get("full_name", ""))
+            self.entries["email"].setText(self.current_user.get("email", ""))
+            dob_str = self.current_user.get("date_of_birth", "")
+            if dob_str:
+                self.entries["date_of_birth"].setDate(QDate.fromString(dob_str, "dd/MM/yyyy"))
+            self.entries["phone"].setText(self.current_user.get("phone", ""))
+            self.entries["address"].setText(self.current_user.get("address", ""))
+            avatar_path = self.current_user.get("avatar")
+            if avatar_path:
+                self.show_avatar(avatar_path)
+            else:
+                self.show_default_avatar()
+        else:
+            QMessageBox.critical(self, "Lỗi", "Không có admin nào đang đăng nhập.")
+            self.show_default_avatar()
+
+    def save_admin_data(self):
+        if self.current_user:
+            user_id = self.current_user.get('id') or self.current_user.get('user_id')
+            if not user_id:
+                QMessageBox.critical(self, "Lỗi", "Không tìm thấy ID admin.")
+                return
+            full_name = self.entries["full_name"].text().strip()
+            email = self.entries["email"].text().strip()
+            date_of_birth = self.entries["date_of_birth"].date().toString("dd/MM/yyyy")
+            phone = self.entries["phone"].text().strip()
+            address = self.entries["address"].text().strip()
+            # Kiểm tra thay đổi
+            changed = False
+            updated_data = {
+                "full_name": full_name,
+                "email": email,
+                "date_of_birth": date_of_birth,
+                "phone": phone,
+                "address": address,
+            }
+            for key, value in updated_data.items():
+                if value != self.current_user.get(key, ""):
+                    changed = True
+                    break
+            if self.new_avatar_path and self.new_avatar_path != self.current_user.get("avatar"):
+                updated_data["avatar"] = self.new_avatar_path
+                changed = True
+            if not changed:
+                QMessageBox.information(self, "Thông báo", "Không có thông tin nào thay đổi hoặc cập nhật thất bại!")
+                return
+            result = self.user_manager.update_user_profile(user_id, updated_data)
+            if result and result.get("status") == "success":
+                QMessageBox.information(self, "Thành công", "Cập nhật thông tin thành công!")
+                self.new_avatar_path = None
+                self.profile_updated.emit()
+                self.load_user_data()
+            else:
+                error_message = "Không thể cập nhật thông tin."
+                if result and result.get("message"):
+                    error_message = result.get("message")
+                QMessageBox.critical(self, "Lỗi", error_message)
+        else:
+            QMessageBox.critical(self, "Lỗi", "Không có admin nào đang đăng nhập.")
 
     def show_change_password_dialog(self):
         from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QLabel, QPushButton, QHBoxLayout, QToolButton
@@ -252,10 +316,9 @@ class AdminProfileTab(QWidget):
             if not is_strong_password(new_pw):
                 QMessageBox.warning(dialog, "Lỗi", "Mật khẩu mới không đủ mạnh!")
                 return
-            # Đổi mật khẩu qua UserManager
-            um = UserManager()
+            # Đổi mật khẩu qua UserManager, lấy user từ current_user
             try:
-                um.change_password(self.user.get('username'), old_pw, new_pw)
+                self.user_manager.change_password(self.current_user.get('username'), old_pw, new_pw)
                 QMessageBox.information(dialog, "Thành công", "Đã đổi mật khẩu!")
                 dialog.accept()
             except Exception as e:
@@ -263,3 +326,11 @@ class AdminProfileTab(QWidget):
         btn_ok.clicked.connect(do_change)
         btn_cancel.clicked.connect(dialog.reject)
         dialog.exec_()
+
+    def set_user(self, user):
+        self.current_user = user
+        self.load_user_data()
+
+    def show_default_avatar(self):
+        self.avatar_label.setPixmap(QPixmap())
+        self.avatar_label.setText("No\nImage")

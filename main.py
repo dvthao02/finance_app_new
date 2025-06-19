@@ -55,14 +55,15 @@ class ApplicationManager:
         except Exception as e:
             logger.error(f"Không thể lưu lịch sử: {e}")
 
-    def handle_admin_login(self, user):
+    def handle_admin_login(self, user, user_manager):
         """Xử lý đăng nhập cho tài khoản admin
         
         Args:
             user: Thông tin người dùng admin
+            user_manager: Quản lý người dùng đã đăng nhập
         """
         try:
-            self.admin_dashboard = AdminDashboard()
+            self.admin_dashboard = AdminDashboard(user_manager=user_manager)
             self.admin_dashboard.set_current_user(user)
             self.admin_dashboard.logout_signal.connect(self.handle_admin_logout)
             self.admin_dashboard.show()
@@ -136,7 +137,7 @@ class ApplicationManager:
         self.log_history(user_id, 'login')
 
         if user.get('role') == 'admin':
-            self.handle_admin_login(user)
+            self.handle_admin_login(user, user_manager)
         elif user.get('role') == 'user':
             self.handle_user_login(user, user_manager)
         else:

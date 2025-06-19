@@ -47,7 +47,7 @@
     "year": 2025,
     "note": "",
     "created_at": "2025-06-18T20:52:13.113077",
-    "updated_at": "2025-06-18T20:53:02.644520",
+    "updated_at": "2025-06-19T15:14:53.932767",
     "current_amount": 300000.0,
     "id": "budget_004"
   },
@@ -60,8 +60,34 @@
     "year": 2025,
     "note": "",
     "created_at": "2025-06-19T08:13:03.516037",
-    "updated_at": "2025-06-19T08:14:59.754680",
-    "current_amount": -58000.0,
+    "updated_at": "2025-06-19T15:24:42.656425",
+    "current_amount": 62000.0,
     "id": "budget_005"
+  },
+  {
+    "user_id": "user_004",
+    "category": "Di chuyển",
+    "category_id": "cat_004",
+    "limit": 200000.0,
+    "month": 6,
+    "year": 2025,
+    "note": "",
+    "created_at": "2025-06-19T14:57:50.794258",
+    "updated_at": "2025-06-19T15:00:02.343759",
+    "current_amount": -840000.0,
+    "id": "budget_007"
+  },
+  {
+    "user_id": "user_002",
+    "category": "Mua sắm",
+    "category_id": "cat_005",
+    "limit": 100000.0,
+    "month": 6,
+    "year": 2025,
+    "note": "",
+    "created_at": "2025-06-19T15:16:07.116760",
+    "updated_at": "2025-06-19T15:21:29.989604",
+    "current_amount": 100000.0,
+    "id": "budget_008"
   }
 ]

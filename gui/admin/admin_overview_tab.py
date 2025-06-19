@@ -8,6 +8,8 @@ from PyQt5.QtWidgets import (QComboBox, QFrame, QGroupBox, QHBoxLayout,
                              QHeaderView, QLabel, QSizePolicy, QTableWidget,
                              QTableWidgetItem, QVBoxLayout, QWidget)
 
+from utils.ui_styles import TableStyleHelper
+
 # Conditional import for Matplotlib
 try:
     import matplotlib
@@ -151,33 +153,13 @@ class AdminOverviewTab(QWidget):
         users_layout = QVBoxLayout(recent_users_group)
 
         self.recent_table = QTableWidget(0, 3)
+        TableStyleHelper.apply_common_table_style(self.recent_table)
         self.recent_table.setHorizontalHeaderLabels(["ID", "Tên", "Ngày đăng ký"])
-        
-        # CHANGE: Specific styling applied to match the screenshot perfectly.
-        self.recent_table.verticalHeader().setVisible(False)
-        self.recent_table.setShowGrid(False)
-        self.recent_table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.recent_table.setSelectionMode(QTableWidget.SingleSelection)
-        self.recent_table.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.recent_table.setStyleSheet("""
-            QTableWidget { background-color: white; border: none; font-size: 13px; }
-            QTableWidget::item { padding: 10px; border-bottom: 1px solid #f1f5f9; }
-            QHeaderView::section {
-                background-color: #f8fafc;
-                padding: 10px;
-                border: none;
-                font-size: 12px;
-                font-weight: bold;
-                color: #475569;
-                text-align: left;
-            }
-        """)
-
+        # Chỉ giữ lại các thiết lập cần thiết, loại bỏ style thủ công để đồng bộ giao diện
         header = self.recent_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        
         self.recent_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         users_layout.addWidget(self.recent_table)
         self.main_layout.addWidget(recent_users_group)
@@ -296,9 +278,6 @@ class AdminOverviewTab(QWidget):
                 # If all parsing fails, return a very old date
                 return datetime.min
 
-        # --- THIS IS THE FIX ---
-        # If the parsed datetime object is "aware" (has tzinfo),
-        # convert it to "naive" by removing the timezone.
         if dt and dt.tzinfo is not None:
             return dt.replace(tzinfo=None)
 

@@ -67,6 +67,7 @@ class AdminAuditTab(QWidget):
         
         # Table
         self.audit_table = QTableWidget(0, 2)
+        TableStyleHelper.apply_common_table_style(self.audit_table)
         self.audit_table.setHorizontalHeaderLabels(["Thời gian", "Hành động"])
         
         # Áp dụng styling chung

@@ -140,6 +140,8 @@ class UserDashboard(BaseDashboard):
             self.settings_tab = UserSettings(self.user_manager, self.wallet_manager, self.category_manager, self.settings_manager)
             
             self.profile_tab = UserProfileTab(self.user_manager)
+            # Connect the profile updated signal to the header update
+            self.profile_tab.profile_updated.connect(self.update_header)
             
             # Clear existing widgets
             while self.content_stack.count():

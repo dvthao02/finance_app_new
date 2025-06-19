@@ -314,8 +314,7 @@ def get_asset_path(filename, asset_type='function'):
             logger.debug(f"Đã tìm thấy asset: {asset_path}")
             return asset_path
         else:
-            logger.warning(f"Không tìm thấy file asset: {asset_path}")
-            
+            # logger.warning(f"Không tìm thấy file asset: {asset_path}")  # Tắt warning này để không log ra nữa
             # Fallback mechanism - try to find the file in the old structure
             legacy_path = os.path.join(base_dir, 'assets', filename)
             if os.path.exists(legacy_path):
