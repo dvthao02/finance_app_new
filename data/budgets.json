@@ -3,13 +3,13 @@
     "user_id": "user_002",
     "category": "Di chuyển",
     "category_id": "cat_004",
-    "limit": 1000000.0,
+    "limit": 500000.0,
     "month": 6,
     "year": 2025,
     "note": "",
-    "created_at": "2025-06-18T08:32:38.509748",
-    "updated_at": "2025-06-18T20:51:46.973244",
-    "current_amount": 1000000.0,
+    "created_at": "2025-06-19T08:16:42.694902",
+    "updated_at": "2025-06-19T08:17:09.900945",
+    "current_amount": 451000.0,
     "id": "budget_001"
   },
   {
@@ -50,5 +50,18 @@
     "updated_at": "2025-06-18T20:53:02.644520",
     "current_amount": 300000.0,
     "id": "budget_004"
+  },
+  {
+    "user_id": "user_002",
+    "category": "Cà phê trà sữa",
+    "category_id": "cat_015",
+    "limit": 200000.0,
+    "month": 6,
+    "year": 2025,
+    "note": "",
+    "created_at": "2025-06-19T08:13:03.516037",
+    "updated_at": "2025-06-19T08:14:59.754680",
+    "current_amount": -58000.0,
+    "id": "budget_005"
   }
 ]

@@ -1,13 +1,13 @@
 [
   {
     "user_id": "user_002",
-    "description": "TE",
+    "description": "FE",
     "amount": 10000000.0,
-    "category_id": "cat_010",
+    "category_id": "cat_014",
     "date": "2025-06-18T00:00:00",
     "type": "income",
     "transaction_id": "txn_002",
-    "updated_at": "2025-06-18T22:03:38.877711",
+    "updated_at": "2025-06-19T08:06:56.029876",
     "created_at": "2025-06-18T15:34:47.908881"
   },
   {
@@ -20,17 +20,6 @@
     "created_at": "2025-06-18T20:53:01.899958",
     "updated_at": "2025-06-18T20:53:01.899974",
     "transaction_id": "txn_003"
-  },
-  {
-    "user_id": "user_002",
-    "description": "Bán hàng",
-    "amount": 1000000000.0,
-    "category_id": "cat_013",
-    "date": "2025-06-18T00:00:00",
-    "type": "income",
-    "created_at": "2025-06-18T21:28:17.058406",
-    "updated_at": "2025-06-18T21:28:17.058422",
-    "transaction_id": "txn_004"
   },
   {
     "user_id": "user_002",
@@ -64,5 +53,170 @@
     "created_at": "2025-06-18T21:31:10.563188",
     "updated_at": "2025-06-18T21:31:10.563200",
     "transaction_id": "txn_007"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Thưởng T1",
+    "amount": 3000000.0,
+    "category_id": "cat_012",
+    "date": "2025-01-31T00:00:00",
+    "type": "income",
+    "created_at": "2025-06-19T08:01:20.112801",
+    "updated_at": "2025-06-19T08:01:20.112817",
+    "transaction_id": "txn_008"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Thưởng T2",
+    "amount": 2500000.0,
+    "category_id": "cat_012",
+    "date": "2025-02-28T00:00:00",
+    "type": "income",
+    "created_at": "2025-06-19T08:02:10.388956",
+    "updated_at": "2025-06-19T08:02:10.388979",
+    "transaction_id": "txn_009"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Lương T1",
+    "amount": 15000000.0,
+    "category_id": "cat_010",
+    "date": "2025-01-15T00:00:00",
+    "type": "income",
+    "created_at": "2025-06-19T08:02:46.176959",
+    "updated_at": "2025-06-19T08:02:46.176973",
+    "transaction_id": "txn_010"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Lương T2",
+    "amount": 15000000.0,
+    "category_id": "cat_010",
+    "date": "2025-02-19T00:00:00",
+    "type": "income",
+    "created_at": "2025-06-19T08:03:11.934691",
+    "updated_at": "2025-06-19T08:03:11.934705",
+    "transaction_id": "txn_011"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Lương T3",
+    "amount": 15000000.0,
+    "category_id": "cat_010",
+    "date": "2025-03-19T00:00:00",
+    "type": "income",
+    "created_at": "2025-06-19T08:03:35.781881",
+    "updated_at": "2025-06-19T08:03:35.781896",
+    "transaction_id": "txn_012"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Lương T4",
+    "amount": 15500000.0,
+    "category_id": "cat_013",
+    "date": "2025-04-19T00:00:00",
+    "type": "income",
+    "transaction_id": "txn_013",
+    "updated_at": "2025-06-19T08:04:49.354536",
+    "created_at": "2025-06-19T08:04:02.877731"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Lương T5",
+    "amount": 15000000.0,
+    "category_id": "cat_010",
+    "date": "2025-05-19T00:00:00",
+    "type": "income",
+    "created_at": "2025-06-19T08:05:26.862371",
+    "updated_at": "2025-06-19T08:05:26.862379",
+    "transaction_id": "txn_014"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Lương T6",
+    "amount": 16000000.0,
+    "category_id": "cat_010",
+    "date": "2025-06-19T00:00:00",
+    "type": "income",
+    "created_at": "2025-06-19T08:06:11.544870",
+    "updated_at": "2025-06-19T08:06:11.544895",
+    "transaction_id": "txn_015"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Điện T1",
+    "amount": 423500.0,
+    "category_id": "cat_003",
+    "date": "2025-01-19T00:00:00",
+    "type": "expense",
+    "transaction_id": "txn_016",
+    "updated_at": "2025-06-19T08:07:43.457959",
+    "created_at": "2025-06-19T08:07:32.134692"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Cơm Sườn",
+    "amount": 30000.0,
+    "category_id": "cat_001",
+    "date": "2025-06-01T00:00:00",
+    "type": "expense",
+    "created_at": "2025-06-19T08:11:40.329875",
+    "updated_at": "2025-06-19T08:11:40.329891",
+    "transaction_id": "txn_018"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Cà phê sáng",
+    "amount": 15000.0,
+    "category_id": "cat_015",
+    "date": "2025-06-01T00:00:00",
+    "type": "expense",
+    "created_at": "2025-06-19T08:13:24.289538",
+    "updated_at": "2025-06-19T08:13:24.289555",
+    "transaction_id": "txn_019"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Trà sữa Châu viên",
+    "amount": 45000.0,
+    "category_id": "cat_015",
+    "date": "2025-06-02T00:00:00",
+    "type": "expense",
+    "created_at": "2025-06-19T08:14:07.887430",
+    "updated_at": "2025-06-19T08:14:07.887449",
+    "transaction_id": "txn_020"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Phúc Long",
+    "amount": 120000.0,
+    "category_id": "cat_015",
+    "date": "2025-06-19T00:00:00",
+    "type": "expense",
+    "created_at": "2025-06-19T08:14:26.945097",
+    "updated_at": "2025-06-19T08:14:26.945140",
+    "transaction_id": "txn_021"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Highlands Coffe",
+    "amount": 78000.0,
+    "category_id": "cat_015",
+    "date": "2025-06-19T00:00:00",
+    "type": "expense",
+    "created_at": "2025-06-19T08:14:58.152495",
+    "updated_at": "2025-06-19T08:14:58.152509",
+    "transaction_id": "txn_022"
+  },
+  {
+    "user_id": "user_002",
+    "description": "Book Be",
+    "amount": 49000.0,
+    "category_id": "cat_004",
+    "date": "2025-06-19T00:00:00",
+    "type": "expense",
+    "created_at": "2025-06-19T08:17:08.920167",
+    "updated_at": "2025-06-19T08:17:08.920187",
+    "transaction_id": "txn_023"
   }
 ]

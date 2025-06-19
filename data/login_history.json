@@ -2283,5 +2283,25 @@
     "user_id": "user_002",
     "action": "login",
     "timestamp": "2025-06-19T00:59:40.036448"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-19T07:59:34.569436"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-19T08:45:15.145512"
+  },
+  {
+    "user_id": "user_002",
+    "action": "login",
+    "timestamp": "2025-06-19T12:24:49.781671"
+  },
+  {
+    "user_id": null,
+    "action": "logout",
+    "timestamp": "2025-06-19T12:26:11.359449"
   }
 ]

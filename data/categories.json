@@ -165,5 +165,17 @@
     "created_at": "2025-06-18T23:18:15.635148",
     "updated_at": "2025-06-18T23:18:15.635155",
     "user_id": "system"
+  },
+  {
+    "category_id": "cat_016",
+    "name": "Đá banh",
+    "type": "expense",
+    "icon": "👟",
+    "color": "#55ff00",
+    "description": "",
+    "is_active": true,
+    "created_at": "2025-06-19T08:19:16.007712",
+    "updated_at": "2025-06-19T08:19:27.636492",
+    "user_id": "user_002"
   }
 ]
