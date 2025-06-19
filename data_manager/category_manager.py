@@ -6,21 +6,20 @@ import logging
 from datetime import datetime
 from utils.file_helper import load_json, save_json, generate_id, get_current_datetime, format_datetime_display
 from data_manager.user_manager import UserManager
-
+#kwargs là từ khóa đối số, cho phép truyền vào các tham số tùy ý
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 class CategoryManager:
     def __init__(self, file_path='categories.json'):
-        # Get the directory where the package is installed
+        # Lấy thư mục nơi gói được cài đặt
         package_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         data_dir = os.path.join(package_dir, 'data')
-        # Create data directory if it doesn't exist
+        # Tạo thư mục data nếu nó không tồn tại
         os.makedirs(data_dir, exist_ok=True)
         self.file_path = os.path.join(data_dir, file_path)
-        
-        # Initialize categories file if it doesn't exist
+
+        # Khởi tạo tệp categories nếu nó không tồn tại  
         if not os.path.exists(self.file_path):
             logger.info(f"Creating new categories file at {self.file_path}")
             self.save_categories([])
@@ -29,7 +28,6 @@ class CategoryManager:
         self.user_manager = UserManager()
         self.current_user_id = None
 
-        # Ensure default categories exist
         self.ensure_default_categories()
 
     def ensure_default_categories(self):
@@ -54,7 +52,7 @@ class CategoryManager:
             return False
 
     def _create_default_categories(self):
-        """Create default income and expense categories"""
+        """Tạo các danh mục mặc định nếu chưa có danh mục nào"""
         default_categories = [
             # Income categories
             {"name": "Lương", "type": "income", "icon": "💰", "color": "#34a853"},
@@ -104,21 +102,21 @@ class CategoryManager:
         try:
             if user_id and self.user_manager.get_user_by_id(user_id):
                 self.current_user_id = user_id
-                logger.debug(f"Set current user to: {user_id}")
+                logger.debug(f"Đã thiết lập người dùng hiện tại: {user_id}")
                 return True
             return False
         except Exception as e:
-            logger.error(f"Error setting current user: {str(e)}")
+            logger.error(f"lỗi khi thiết lập người dùng hiện tại: {str(e)}")
             return False
 
     def load_categories(self):
         """Tải danh sách categories từ file"""
         try:
             categories = load_json(self.file_path)
-            logger.debug(f"Loaded {len(categories)} categories from {self.file_path}")
+            logger.debug(f"Đã tải {len(categories)} danh mục từ {self.file_path}")
             return categories
         except Exception as e:
-            logger.error(f"Error loading categories: {str(e)}")
+            logger.error(f"lỗi khi tải danh sách categories: {str(e)}")
             return []
 
     def save_categories(self, categories=None):
@@ -127,11 +125,11 @@ class CategoryManager:
             if categories is None:
                 categories = self.categories
             save_json(self.file_path, categories)
-            logger.debug(f"Saved {len(categories)} categories to {self.file_path}")
+            logger.debug(f"Đã lưu {len(categories)} danh mục vào {self.file_path}")
             return True
         except Exception as e:
-            logger.error(f"Error saving categories: {str(e)}")
-            return False    
+            logger.error(f"lỗi khi lưu danh sách categories: {str(e)}")
+            return False
         
     def get_all_categories(self, user_id=None, category_type=None, active_only=True):
         """Lấy tất cả categories"""
@@ -208,7 +206,7 @@ class CategoryManager:
             return None
             
         except Exception as e:
-            logger.error(f"Error getting category by name: {str(e)}")
+            logger.error(f"lỗi khi lấy danh mục theo tên: {str(e)}")
             return None
 
     def get_category_stats(self):
@@ -219,11 +217,11 @@ class CategoryManager:
                 'active': len([c for c in self.categories if c.get('is_active', True)]),
                 'income': len([c for c in self.categories if c.get('type') == 'income']),
                 'expense': len([c for c in self.categories if c.get('type') == 'expense'])
-            }
+            }# Thống kê tổng số danh mục, danh mục hoạt động, thu nhập và chi tiêu
             return stats
             
         except Exception as e:
-            logger.error(f"Error getting category stats: {str(e)}")
+            logger.error(f"lỗi khi lấy thống kê danh mục: {str(e)}")
             return {
                 'total': 0,
                 'active': 0,
@@ -232,7 +230,7 @@ class CategoryManager:
             }
 
     def create_category(self, user_id=None, name=None, category_type=None, icon="📝", color="#808080", description="", is_active=True):
-        """Tạo category mới. Raises ValueError for bad input, Exception for save errors."""
+        """Tạo category mới. Trả về category dict nếu thành công, raise ValueError nếu thiếu trường bắt buộc hoặc đã tồn tại."""
         if user_id is None:
             user_id = self.current_user_id
         
@@ -241,12 +239,9 @@ class CategoryManager:
             
         if category_type not in ['income', 'expense']:
             raise ValueError(f"Loại danh mục không hợp lệ: {category_type}. Phải là 'income' hoặc 'expense'.")
-            
-        # Reload categories to ensure uniqueness check is against the latest data
         self.categories = self.load_categories()
         existing = self.get_category_by_name(name)
-        # Allow if existing is for a different user AND not a system category.
-        # Or, more strictly, prevent if name exists for current user_id or system.
+        # Kiểm tra xem danh mục đã tồn tại cho người dùng này hoặc là danh mục hệ thống
         if existing and (existing.get('user_id') == user_id or existing.get('user_id') == "system"):
             raise ValueError(f"Tên danh mục '{name}' đã tồn tại cho người dùng này hoặc là danh mục hệ thống.")
 
@@ -265,12 +260,12 @@ class CategoryManager:
 
         self.categories.append(new_category)
         if self.save_categories():
-            logger.info(f"Created new category: {name} with ID {new_category['category_id']}")
-            return new_category # Return the created category dict on success
+            logger.info(f"Đã tạo danh mục mới: {name} với ID {new_category['category_id']}")
+            return new_category # Trả về category mới nếu lưu thành công
         else:
-            # Attempt to remove the category if save failed to keep self.categories consistent
+            # Nếu lưu không thành công, xóa category mới khỏi danh sách
             self.categories.pop()
-            logger.error(f"Failed to save after appending new category: {name}")
+            logger.error(f"Không thể lưu danh mục mới: {name}")
             raise Exception("Lưu danh mục mới thất bại.")
 
     def update_category(self, category_id, current_user_id, is_admin, **kwargs):
@@ -283,7 +278,7 @@ class CategoryManager:
         self.categories = self.load_categories() 
         category_to_update = None
         category_index = -1
-        for i, cat in enumerate(self.categories):
+        for i, cat in enumerate(self.categories):# Lặp qua danh sách categories
             if cat.get('category_id') == category_id:
                 category_to_update = cat
                 category_index = i
@@ -292,7 +287,7 @@ class CategoryManager:
         if not category_to_update:
             raise ValueError(f"Danh mục với ID '{category_id}' không tìm thấy.")
 
-        # Ownership/Permission Check
+        # Kiểm tra quyền sở hữu
         owner_id = category_to_update.get('user_id')
         if owner_id == "system" and not is_admin:
             raise PermissionError("Bạn không có quyền sửa danh mục hệ thống.")
@@ -301,9 +296,9 @@ class CategoryManager:
 
         updated = False
         if 'name' in kwargs and kwargs['name'] != category_to_update.get('name'):
-            new_name = kwargs['name']
+            new_name = kwargs['name'] # Lấy tên mới từ kwargs 
             existing_for_name = self.get_category_by_name(new_name)
-            # Check if new name conflicts with another category owned by the same user or a system category
+            # Kiểm tra xem tên mới có xung đột với danh mục khác do cùng người dùng sở hữu hoặc là danh mục hệ thống không
             if (existing_for_name and 
                 existing_for_name.get('category_id') != category_id and
                 (existing_for_name.get('user_id') == owner_id or existing_for_name.get('user_id') == "system")):
@@ -312,7 +307,7 @@ class CategoryManager:
         allowed_fields = ['name', 'type', 'icon', 'color', 'description', 'is_active']
         for field in allowed_fields:
             if field in kwargs:
-                # For system categories, non-admins cannot change 'type'
+                # Đối với các danh mục hệ thống, người dùng không phải quản trị viên không thể thay đổi 'type'
                 if owner_id == "system" and not is_admin and field == 'type' and category_to_update.get(field) != kwargs[field]:
                     raise PermissionError("Bạn không có quyền thay đổi loại của danh mục hệ thống.")
                 if category_to_update.get(field) != kwargs[field]:
@@ -334,9 +329,9 @@ class CategoryManager:
     def delete_category(self, category_id, current_user_id, is_admin):
         """Xóa category. Raises ValueError for bad input or not found/not allowed, Exception for save errors."""
         if not category_id:
-            raise ValueError("Category ID is required for deletion.")
+            raise ValueError("Danh mục ID là bắt buộc để xóa.")
         if not current_user_id:
-            raise ValueError("Current user ID is required for deletion.")
+            raise ValueError("ID người dùng hiện tại là bắt buộc để xóa.")
 
         self.categories = self.load_categories()
         category_to_delete = None
@@ -350,14 +345,13 @@ class CategoryManager:
         
         if not category_to_delete:
             raise ValueError(f"Danh mục với ID '{category_id}' không tìm thấy.")
-        
-        # Ownership/Permission Check
+
+        # Kiểm tra quyền sở hữu
         owner_id = category_to_delete.get('user_id')
         if owner_id == "system":
             if not is_admin:
                 raise PermissionError("Bạn không có quyền xóa danh mục hệ thống. Bạn có thể đặt nó thành không hoạt động.")
-            # Admins can proceed to delete system categories if that's intended (current code allows physical delete)
-        elif owner_id != current_user_id and not is_admin: # Not system, not owner, and not admin
+        elif owner_id != current_user_id and not is_admin: # Nếu không phải quản trị viên và không phải chủ sở hữu
             raise PermissionError("Bạn không có quyền xóa danh mục này.")
             
         del self.categories[category_index]

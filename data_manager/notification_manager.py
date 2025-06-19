@@ -2,11 +2,13 @@ import os
 from utils.file_helper import load_json, save_json, generate_id, get_current_datetime
 from PyQt5.QtCore import pyqtSignal, QObject # Add QObject and pyqtSignal
 
-class NotificationManager(QObject): # Inherit from QObject
-    notification_added = pyqtSignal(dict) # Signal that emits the new notification
+class NotificationManager(QObject): # Thừa kế từ QObject để sử dụng tín hiệu
+    """Quản lý thông báo trong ứng dụng"""
+    notification_added = pyqtSignal(dict) # Tín hiệu phát ra thông báo mới
 
     def __init__(self, file_path='notifications.json'):
-        super().__init__() # Call QObject constructor
+        super().__init__() # Gọi khởi tạo của QObject
+        # Đặt đường dẫn đến file thông báo
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         data_dir = os.path.join(base_dir, 'data')
         os.makedirs(data_dir, exist_ok=True)

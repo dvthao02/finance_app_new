@@ -9,7 +9,7 @@ import random
 import string
 from datetime import datetime
 
-# Add the parent directory to sys.path to make imports work
+# THêm đường dẫn gốc của package vào sys.path để import các module
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.file_helper import (
@@ -17,45 +17,33 @@ from utils.file_helper import (
     is_valid_email, is_valid_phone, is_strong_password # Import new validation functions
 )
 
-# Set up logging
+# Thiết lập cấu hình logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class UserManager:
+class UserManager: # Quản lý người dùng
+    """Quản lý người dùng trong ứng dụng."""
     def __init__(self, user_file='users.json'):
-       # print('[DEBUG] UserManager __init__ start')
-        # Get the directory where the package is installed
         package_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         data_dir = os.path.join(package_dir, 'data')
-        # Create data directory if it doesn't exist
         os.makedirs(data_dir, exist_ok=True)
         self.user_file = os.path.join(data_dir, user_file)
-        #print(f'[DEBUG] user_file path: {self.user_file}')
-        # Initialize users file if it doesn't exist
         if not os.path.exists(self.user_file):
-            #print(f'[DEBUG] Creating new users file at {self.user_file}')
             self.save_users([])
             
-        # Create default admin if no users exist
         users = self.load_users()
-        #print(f'[DEBUG] Loaded users: {users}')
         if not users:
-            #print('[DEBUG] Creating default admin user')
             self.add_user(
                 username="admin",
                 password="Admin@123",
                 full_name="Administrator",
-                role="admin" # Changed from is_admin=True
+                role="admin" # Tạo user admin mặc định nếu chưa có
             )
-        #print('[DEBUG] UserManager __init__ end')
-
     def set_current_user(self, user_id):
         """Thiết lập người dùng hiện tại cho manager.
         Args:
             user_id (str): ID của người dùng
         """
-        # This manager typically loads all users, but setting current_user_id 
-        # can be useful for context-specific operations or logging.
         self.current_user_id = user_id
         logger.debug(f"UserManager current user set to: {user_id}")
 
@@ -84,15 +72,17 @@ class UserManager:
             logger.error(f"Error hashing password: {str(e)}")
             raise ValueError("Error processing password")
 
-    def check_password(self, password, hashed):
+    def check_password(self, password, hashed):# Kiểm tra mật khẩu
+        """Kiểm tra mật khẩu với hash đã lưu."""
         try:
             return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
         except Exception as e:
             logger.error(f"Error checking password: {str(e)}")
             return False
 
-    def is_email_unique(self, email, user_id_to_exclude=None):
-        if not email: # Empty email is considered unique in terms of not clashing
+    def is_email_unique(self, email, user_id_to_exclude=None):# Kiểm tra tính duy nhất của email
+        """Kiểm tra xem email có duy nhất không, ngoại trừ user_id_to_exclude nếu có."""
+        if not email: 
             return True
         users = self.load_users()
         for user in users:
@@ -102,8 +92,9 @@ class UserManager:
                 return False
         return True
 
-    def is_phone_unique(self, phone, user_id_to_exclude=None):
-        if not phone: # Empty phone is considered unique
+    def is_phone_unique(self, phone, user_id_to_exclude=None):# Kiểm tra tính duy nhất của số điện thoại
+        """Kiểm tra xem số điện thoại có duy nhất không, ngoại trừ user_id_to_exclude nếu có."""
+        if not phone: # Nếu không có số điện thoại thì coi như duy nhất
             return True
         users = self.load_users()
         for user in users:
@@ -114,6 +105,7 @@ class UserManager:
         return True
 
     def is_username_unique(self, username, user_id_to_exclude=None):
+        """Kiểm tra xem username có duy nhất không, ngoại trừ user_id_to_exclude nếu có."""
         if not username:
             return True
         users = self.load_users()
@@ -348,7 +340,7 @@ class UserManager:
             user_found = False
             for i, user in enumerate(users):
                 if user.get('id') == user_id or user.get('user_id') == user_id:
-                    # Update the user's dictionary with new data
+                    # Cập nhật các trường hợp có trong updated_data
                     users[i].update(updated_data)
                     users[i]['updated_at'] = datetime.now().isoformat()
                     user_found = True
@@ -359,7 +351,7 @@ class UserManager:
 
             if self.save_users(users):
                 logger.info(f"Cập nhật hồ sơ thành công cho user ID: {user_id}")
-                # Return the fully updated user object
+                # Trả về thông tin người dùng đã cập nhật
                 updated_user = self.get_user_by_id(user_id)
                 return {"status": "success", "user": updated_user}
             else:
